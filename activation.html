@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="pageTitle">Aktivasi Lisensi — Mikhmon Desktop by NODERA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      user-select: none;
+      -webkit-app-region: drag;
+    }
+    .no-drag {
+      -webkit-app-region: no-drag;
+    }
+    .tabular-nums {
+      font-variant-numeric: tabular-nums;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0B132B;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #1C2B54;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body class="bg-[#0B132B] text-white flex items-center justify-center min-h-screen p-4 sm:p-6 overflow-y-auto">
+  <div class="w-full max-w-lg bg-[#131E3D] border border-blue-900/60 rounded-2xl p-6 sm:p-7 shadow-2xl space-y-5 relative my-auto">
+    
+    <!-- Language Selector Pill -->
+    <div class="absolute top-4 right-4 flex items-center bg-[#0B132B]/90 border border-blue-800/60 rounded-lg p-0.5 no-drag text-[10px] font-bold z-10 shadow">
+      <button type="button" data-lang="id" class="lang-btn px-2 py-0.5 rounded transition-all text-white bg-blue-600">ID</button>
+      <button type="button" data-lang="fr" class="lang-btn px-2 py-0.5 rounded transition-all text-blue-300 hover:text-white">FR</button>
+      <button type="button" data-lang="en" class="lang-btn px-2 py-0.5 rounded transition-all text-blue-300 hover:text-white">EN</button>
+    </div>
+
+    <!-- Header with Branding -->
+    <div class="text-center space-y-1.5 pt-1">
+      <div class="inline-flex items-center justify-center w-12 h-12 p-2.5 rounded-2xl bg-gradient-to-tr from-[#0073C6] to-cyan-500 shadow-lg shadow-blue-500/25 mb-1">
+        <svg class="w-6 h-6 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>
+        </svg>
+      </div>
+      <h1 id="i18nHeaderTitle" class="text-xl font-extrabold tracking-tight text-white">Aktivasi Lisensi Mikhmon Desktop</h1>
+      <p id="i18nHeaderSubtitle" class="text-xs text-blue-300/80 font-medium">Standalone Application by PT Nodera Digital Network</p>
+    </div>
+
+    <!-- Status Alert Box -->
+    <div id="alertBox" class="hidden p-3.5 rounded-xl text-xs font-semibold border transition-all"></div>
+
+    <!-- Free Trial Banner & Button -->
+    <div class="bg-gradient-to-r from-cyan-950/60 to-blue-950/60 border border-cyan-800/40 rounded-xl p-3.5 space-y-2 no-drag">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center w-6 h-6 rounded-lg bg-cyan-500/20 text-cyan-300">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+            </svg>
+          </span>
+          <span id="i18nTrialTitle" class="text-xs font-bold text-cyan-200">Baru Pertama Kali Menggunakan?</span>
+        </div>
+        <span id="i18nTrialBadge" class="text-[10px] font-extrabold bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full border border-cyan-500/30">7 HARI GRATIS</span>
+      </div>
+      <p id="i18nTrialDesc" class="text-[11px] text-blue-200/80 leading-relaxed">
+        Gunakan seluruh fitur Mikhmon Desktop tanpa batas selama 7 hari masa percobaan gratis.
+      </p>
+      <button 
+        type="button" 
+        id="trialBtn"
+        class="w-full py-2.5 px-3 bg-cyan-600/30 hover:bg-cyan-600/50 active:bg-cyan-600/60 border border-cyan-500/50 text-cyan-200 font-bold text-xs rounded-lg transition-all flex items-center justify-center gap-2"
+      >
+        <span id="trialBtnText">Mulai Masa Percobaan 7 Hari Gratis</span>
+        <svg id="trialSpinner" class="hidden w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" stroke-width="4" class="opacity-25"></circle>
+          <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" class="opacity-75"></path>
+        </svg>
+      </button>
+    </div>
+
+    <!-- Divider -->
+    <div class="relative flex py-1 items-center no-drag">
+      <div class="flex-grow border-t border-blue-900/60"></div>
+      <span id="i18nDividerText" class="flex-shrink mx-3 text-[11px] font-semibold text-blue-400/60 uppercase tracking-wider">Atau Masukkan License Key</span>
+      <div class="flex-grow border-t border-blue-900/60"></div>
+    </div>
+
+    <!-- Activation Form -->
+    <form id="activationForm" class="space-y-4 no-drag">
+      <div>
+        <label id="i18nKeyLabel" class="block text-xs font-bold text-blue-200 mb-1.5 uppercase tracking-wider">
+          NODERA License Key
+        </label>
+        <input 
+          type="text" 
+          id="licenseKeyInput" 
+          placeholder="NDR-MKH-XXXX-XXXX-XXXX-XXXX"
+          required
+          autocomplete="off"
+          spellcheck="false"
+          class="w-full px-4 py-3 bg-[#0B132B] border border-blue-800/80 rounded-xl text-sm font-bold tracking-wider text-cyan-300 placeholder-blue-600 focus:outline-none focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 tabular-nums uppercase transition-all"
+        />
+        <p id="i18nKeySubtext" class="text-[11px] text-blue-300/70 mt-1">
+          Masukkan 20+ karakter key lisensi resmi yang terdaftar di Cloud Panel NODERA.
+        </p>
+      </div>
+
+      <!-- Hardware ID Box -->
+      <div class="bg-[#0B132B]/90 border border-blue-900/80 rounded-xl p-3 space-y-1">
+        <div class="flex items-center justify-between text-xs">
+          <span id="i18nHwidLabel" class="text-blue-300/75 font-medium">Hardware ID (HWID Perangkat Ini):</span>
+          <button 
+            type="button" 
+            id="copyHwidBtn"
+            class="text-[11px] font-bold text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 bg-cyan-950/50 px-2 py-0.5 rounded border border-cyan-800/40"
+          >
+            <span id="copyHwidText">Salin HWID</span>
+          </button>
+        </div>
+        <div id="hwidDisplay" class="font-mono text-xs font-bold text-cyan-300 truncate select-all">
+          Memuat HWID...
+        </div>
+      </div>
+
+      <!-- Information & Guide Box -->
+      <div class="bg-blue-950/40 border border-blue-800/50 rounded-xl p-3 space-y-1.5 text-xs text-blue-200/90 leading-relaxed">
+        <div class="flex items-start gap-2">
+          <svg class="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div id="i18nGuideText">
+            <b>Panduan:</b> Dapatkan license key resmi melalui <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-cyan-400 font-bold underline hover:text-cyan-300 external-link">Portal Cloud NODERA</a> atau hubungi CS kami di bawah ini untuk pendaftaran/pemindahan perangkat.
+          </div>
+        </div>
+      </div>
+
+      <!-- CS Support Contacts Box -->
+      <div class="bg-[#0B132B]/90 border border-emerald-900/50 rounded-xl p-3 space-y-2">
+        <div id="i18nCsTitle" class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.81 13.47 3.81 11.91C3.81 7.37 7.5 3.67 12.05 3.67Z"/>
+          </svg>
+          Layanan Bantuan &amp; Customer Service (CS)
+        </div>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <!-- CS Indonesia -->
+          <a 
+            href="#" 
+            id="csIndonesiaBtn"
+            class="flex items-center gap-2 p-2 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/60 transition-all group"
+          >
+            <span class="text-xs font-bold text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-800/80">ID</span>
+            <div class="text-left overflow-hidden">
+              <div id="i18nCsIdLabel" class="text-[11px] font-bold text-white group-hover:text-emerald-300 transition-colors">CS Indonesia</div>
+              <div class="text-[10px] text-emerald-400/90 font-mono font-semibold">0851-5517-3547</div>
+            </div>
+            <svg class="w-3.5 h-3.5 text-emerald-400 ml-auto opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+
+          <!-- CS Côte d'Ivoire (Pantai Gading) -->
+          <a 
+            href="#" 
+            id="csAfricaBtn"
+            class="flex items-center gap-2 p-2 rounded-lg bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/60 transition-all group"
+          >
+            <span class="text-xs font-bold text-emerald-400 bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-800/80">CI</span>
+            <div class="text-left overflow-hidden">
+              <div id="i18nCsCiLabel" class="text-[11px] font-bold text-white group-hover:text-emerald-300 transition-colors">CS Côte d'Ivoire</div>
+              <div class="text-[10px] text-emerald-400/90 font-mono font-semibold">+255 07 88 22 26 99</div>
+            </div>
+            <svg class="w-3.5 h-3.5 text-emerald-400 ml-auto opacity-70 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+
+      <!-- Action Button -->
+      <button 
+        type="submit" 
+        id="submitBtn"
+        class="w-full py-3.5 px-4 bg-gradient-to-r from-[#0073C6] to-cyan-600 hover:from-[#0062A8] hover:to-cyan-500 active:scale-[0.99] text-white font-bold text-sm rounded-xl shadow-lg shadow-blue-500/25 transition-all flex items-center justify-center gap-2"
+      >
+        <span id="btnText">Aktivasi Lisensi Sekarang</span>
+        <svg id="spinner" class="hidden w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+          <circle cx="12" cy="12" r="10" stroke-width="4" class="opacity-25"></circle>
+          <path fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" class="opacity-75"></path>
+        </svg>
+      </button>
+    </form>
+
+    <!-- Footer Links -->
+    <div class="text-center pt-2 border-t border-blue-900/50 no-drag space-y-1">
+      <div class="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-cyan-400">
+        <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" id="buyLink" class="hover:text-cyan-300 hover:underline transition-colors external-link flex items-center gap-1">
+          <span id="i18nFooterLink">Kelola Lisensi di Cloud Panel NODERA</span> &rarr;
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('activationForm');
+    const input = document.getElementById('licenseKeyInput');
+    const hwidDisplay = document.getElementById('hwidDisplay');
+    const copyHwidBtn = document.getElementById('copyHwidBtn');
+    const copyHwidText = document.getElementById('copyHwidText');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const spinner = document.getElementById('spinner');
+    const trialBtn = document.getElementById('trialBtn');
+    const trialBtnText = document.getElementById('trialBtnText');
+    const trialSpinner = document.getElementById('trialSpinner');
+    const alertBox = document.getElementById('alertBox');
+    const buyLink = document.getElementById('buyLink');
+    const csIndonesiaBtn = document.getElementById('csIndonesiaBtn');
+    const csAfricaBtn = document.getElementById('csAfricaBtn');
+
+    // Multilingual Dictionary (ID, FR, EN)
+    const translations = {
+      id: {
+        pageTitle: "Aktivasi Lisensi — Mikhmon Desktop by NODERA",
+        headerTitle: "Aktivasi Lisensi Mikhmon Desktop",
+        headerSubtitle: "Standalone Application by PT Nodera Digital Network",
+        trialTitle: "Baru Pertama Kali Menggunakan?",
+        trialBadge: "7 HARI GRATIS",
+        trialDesc: "Gunakan seluruh fitur Mikhmon Desktop tanpa batas selama 7 hari masa percobaan gratis.",
+        trialBtnText: "Mulai Masa Percobaan 7 Hari Gratis",
+        trialActivating: "Mengaktifkan Free Trial...",
+        dividerText: "Atau Masukkan License Key",
+        keyLabel: "NODERA License Key",
+        keySubtext: "Masukkan 20+ karakter key lisensi resmi yang terdaftar di Cloud Panel NODERA.",
+        hwidLabel: "Hardware ID (HWID Perangkat Ini):",
+        copyHwidText: "Salin HWID",
+        copiedText: "Tersalin!",
+        guideText: '<b>Panduan:</b> Dapatkan license key resmi melalui <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-cyan-400 font-bold underline hover:text-cyan-300 external-link">Portal Cloud NODERA</a> atau hubungi CS kami di bawah ini untuk pendaftaran/pemindahan perangkat.',
+        csTitle: "Layanan Bantuan & Customer Service (CS)",
+        csIdLabel: "CS Indonesia",
+        csCiLabel: "CS Côte d'Ivoire",
+        btnText: "Aktivasi Lisensi Sekarang",
+        verifyingText: "Memverifikasi Lisensi...",
+        footerLink: "Kelola Lisensi di Cloud Panel NODERA",
+        trialExpiredAlert: "Masa percobaan 7 hari gratis Anda telah berakhir. Silakan masukkan License Key resmi untuk melanjutkan penggunaan Mikhmon Desktop.",
+        licenseExpiredAlert: "Masa aktif lisensi Anda telah berakhir. Silakan perbarui lisensi di Cloud Panel atau masukkan License Key baru.",
+        trialExpiredBtn: "Masa Percobaan Telah Berakhir",
+        trialBadgeExpired: "KEDALUWARSA",
+        trialSuccess: "Masa percobaan 7 hari gratis berhasil diaktifkan! Membuka Mikhmon...",
+        trialFail: "Gagal mengklaim Free Trial. Perangkat mungkin sudah pernah menggunakan trial.",
+        trialNetError: "Gagal menghubungi server aktivasi NODERA. Pastikan koneksi internet aktif.",
+        actSuccess: "Aktivasi berhasil! Membuka Mikhmon...",
+        actFail: "Aktivasi gagal. Periksa kembali license key Anda.",
+        actNetError: "Gagal menghubungi server lisensi NODERA. Pastikan koneksi internet aktif.",
+        csIdMsg: "Halo Admin NODERA Indonesia, saya butuh bantuan aktivasi/pembelian lisensi Mikhmon Desktop Standalone.\nHardware ID (HWID): ",
+        csCiMsg: "Bonjour Support NODERA Côte d'Ivoire, j'ai besoin d'aide pour l'activation/achat de la licence Mikhmon Desktop Standalone.\nHardware ID (HWID): "
+      },
+      fr: {
+        pageTitle: "Activation de Licence — Mikhmon Desktop par NODERA",
+        headerTitle: "Activation de Licence Mikhmon Desktop",
+        headerSubtitle: "Application autonome par PT Nodera Digital Network",
+        trialTitle: "Première utilisation ?",
+        trialBadge: "7 JOURS GRATUITS",
+        trialDesc: "Profitez de toutes les fonctionnalités de Mikhmon Desktop sans limite pendant 7 jours d'essai gratuit.",
+        trialBtnText: "Démarrer l'essai gratuit de 7 jours",
+        trialActivating: "Activation de l'essai gratuit...",
+        dividerText: "Ou entrez une clé de licence",
+        keyLabel: "Clé de Licence NODERA",
+        keySubtext: "Entrez votre clé de licence officielle à 20+ caractères enregistrée sur le Cloud Panel NODERA.",
+        hwidLabel: "ID Matériel (HWID de cet appareil) :",
+        copyHwidText: "Copier le HWID",
+        copiedText: "Copié !",
+        guideText: '<b>Guide :</b> Obtenez votre clé de licence officielle via le <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-cyan-400 font-bold underline hover:text-cyan-300 external-link">Portail Cloud NODERA</a> ou contactez notre support ci-dessous pour l\'enregistrement/transfert d\'appareil.',
+        csTitle: "Support Client & Service Après-Vente (SAV)",
+        csIdLabel: "Support Indonésie",
+        csCiLabel: "Support Côte d'Ivoire",
+        btnText: "Activer la Licence Maintenant",
+        verifyingText: "Vérification de la licence...",
+        footerLink: "Gérer les licences sur le Cloud Panel NODERA",
+        trialExpiredAlert: "Votre période d'essai gratuit de 7 jours a expiré. Veuillez saisir une clé de licence officielle pour continuer à utiliser Mikhmon Desktop.",
+        licenseExpiredAlert: "Votre licence a expiré. Veuillez renouveler votre licence sur le Cloud Panel ou saisir une nouvelle clé de licence.",
+        trialExpiredBtn: "Période d'essai expirée",
+        trialBadgeExpired: "EXPIRÉ",
+        trialSuccess: "Essai gratuit de 7 jours activé avec succès ! Ouverture de Mikhmon...",
+        trialFail: "Échec de l'activation de l'essai gratuit. Cet appareil a peut-être déjà utilisé l'essai.",
+        trialNetError: "Impossible de contacter le serveur d'activation NODERA. Vérifiez votre connexion Internet.",
+        actSuccess: "Activation réussie ! Ouverture de Mikhmon...",
+        actFail: "Échec de l'activation. Veuillez vérifier votre clé de licence.",
+        actNetError: "Impossible de contacter le serveur de licence NODERA. Vérifiez votre connexion Internet.",
+        csIdMsg: "Halo Admin NODERA Indonesia, saya butuh bantuan aktivasi/pembelian lisensi Mikhmon Desktop Standalone.\nHardware ID (HWID): ",
+        csCiMsg: "Bonjour Support NODERA Côte d'Ivoire, j'ai besoin d'aide pour l'activation/achat de la licence Mikhmon Desktop Standalone.\nHardware ID (HWID): "
+      },
+      en: {
+        pageTitle: "License Activation — Mikhmon Desktop by NODERA",
+        headerTitle: "Mikhmon Desktop License Activation",
+        headerSubtitle: "Standalone Application by PT Nodera Digital Network",
+        trialTitle: "First Time Using Mikhmon?",
+        trialBadge: "7 DAYS FREE",
+        trialDesc: "Enjoy all Mikhmon Desktop features without limits for a 7-day free trial period.",
+        trialBtnText: "Start 7-Day Free Trial",
+        trialActivating: "Activating Free Trial...",
+        dividerText: "Or Enter License Key",
+        keyLabel: "NODERA License Key",
+        keySubtext: "Enter your official 20+ character license key registered on the NODERA Cloud Panel.",
+        hwidLabel: "Hardware ID (This Device's HWID):",
+        copyHwidText: "Copy HWID",
+        copiedText: "Copied!",
+        guideText: '<b>Guide:</b> Get your official license key via the <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-cyan-400 font-bold underline hover:text-cyan-300 external-link">NODERA Cloud Portal</a> or contact our support below for device registration/transfer.',
+        csTitle: "Help Desk & Customer Support",
+        csIdLabel: "Support Indonesia",
+        csCiLabel: "Support Côte d'Ivoire",
+        btnText: "Activate License Now",
+        verifyingText: "Verifying License...",
+        footerLink: "Manage Licenses in NODERA Cloud Panel",
+        trialExpiredAlert: "Your 7-day free trial has expired. Please enter an official License Key to continue using Mikhmon Desktop.",
+        licenseExpiredAlert: "Your license has expired. Please renew your license on Cloud Panel or enter a new License Key.",
+        trialExpiredBtn: "Trial Period Expired",
+        trialBadgeExpired: "EXPIRED",
+        trialSuccess: "7-day free trial activated successfully! Opening Mikhmon...",
+        trialFail: "Failed to claim Free Trial. This device may have already used a trial.",
+        trialNetError: "Failed to reach NODERA activation server. Ensure internet connection is active.",
+        actSuccess: "Activation successful! Opening Mikhmon...",
+        actFail: "Activation failed. Please check your license key.",
+        actNetError: "Failed to reach NODERA license server. Ensure internet connection is active.",
+        csIdMsg: "Halo Admin NODERA Indonesia, saya butuh bantuan aktivasi/pembelian lisensi Mikhmon Desktop Standalone.\nHardware ID (HWID): ",
+        csCiMsg: "Bonjour Support NODERA Côte d'Ivoire, j'ai besoin d'aide pour l'activation/achat de la licence Mikhmon Desktop Standalone.\nHardware ID (HWID): "
+      }
+    };
+
+    let currentLang = 'id';
+    let currentHwid = '';
+    let isExpiredState = false;
+    let expiredTypeIsTrial = false;
+
+    function setLanguage(lang) {
+      if (!translations[lang]) lang = 'id';
+      currentLang = lang;
+      try { localStorage.setItem('nodera_mikhmon_lang', lang); } catch (e) {}
+
+      const t = translations[lang];
+      document.title = t.pageTitle;
+      document.getElementById('i18nHeaderTitle').textContent = t.headerTitle;
+      document.getElementById('i18nHeaderSubtitle').textContent = t.headerSubtitle;
+      document.getElementById('i18nTrialTitle').textContent = t.trialTitle;
+      document.getElementById('i18nTrialBadge').textContent = isExpiredState ? t.trialBadgeExpired : t.trialBadge;
+      document.getElementById('i18nTrialDesc').textContent = t.trialDesc;
+      trialBtnText.textContent = isExpiredState ? t.trialExpiredBtn : t.trialBtnText;
+      document.getElementById('i18nDividerText').textContent = t.dividerText;
+      document.getElementById('i18nKeyLabel').textContent = t.keyLabel;
+      document.getElementById('i18nKeySubtext').textContent = t.keySubtext;
+      document.getElementById('i18nHwidLabel').textContent = t.hwidLabel;
+      copyHwidText.textContent = t.copyHwidText;
+      document.getElementById('i18nGuideText').innerHTML = t.guideText;
+      document.getElementById('i18nCsTitle').innerHTML = `
+        <svg class="w-3.5 h-3.5 text-emerald-400" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91C2.13 13.66 2.59 15.36 3.45 16.86L2.05 22L7.3 20.62C8.75 21.41 10.38 21.83 12.04 21.83C17.5 21.83 21.95 17.38 21.95 11.92C21.95 9.27 20.92 6.78 19.05 4.91C17.18 3.03 14.69 2 12.04 2M12.05 3.67C14.25 3.67 16.31 4.53 17.87 6.09C19.42 7.65 20.28 9.72 20.28 11.92C20.28 16.46 16.58 20.15 12.04 20.15C10.56 20.15 9.11 19.76 7.85 19L7.55 18.83L4.43 19.65L5.26 16.61L5.06 16.29C4.24 14.99 3.81 13.47 3.81 11.91C3.81 7.37 7.5 3.67 12.05 3.67Z"/>
+        </svg>
+        ${t.csTitle}
+      `;
+      document.getElementById('i18nCsIdLabel').textContent = t.csIdLabel;
+      document.getElementById('i18nCsCiLabel').textContent = t.csCiLabel;
+      btnText.textContent = t.btnText;
+      document.getElementById('i18nFooterLink').textContent = t.footerLink;
+
+      if (isExpiredState) {
+        const expiredMsg = expiredTypeIsTrial ? t.trialExpiredAlert : t.licenseExpiredAlert;
+        alertBox.innerHTML = `
+          <div class="flex items-start gap-2">
+            <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>${expiredMsg}</div>
+          </div>
+        `;
+      }
+
+      // Update pill buttons state
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        if (btn.getAttribute('data-lang') === lang) {
+          btn.className = 'lang-btn px-2 py-0.5 rounded transition-all text-white bg-blue-600 shadow';
+        } else {
+          btn.className = 'lang-btn px-2 py-0.5 rounded transition-all text-blue-300 hover:text-white';
+        }
+      });
+    }
+
+    function openUrl(url) {
+      if (window.noderaDesktop && typeof window.noderaDesktop.openExternal === 'function') {
+        window.noderaDesktop.openExternal(url);
+      } else {
+        window.open(url, '_blank', 'noopener,noreferrer');
+      }
+    }
+
+    // Load HWID & language on start
+    window.addEventListener('DOMContentLoaded', async () => {
+      // Auto-detect language (French if system/browser is French, or saved in storage)
+      let initialLang = 'id';
+      try {
+        const saved = localStorage.getItem('nodera_mikhmon_lang');
+        if (saved && translations[saved]) {
+          initialLang = saved;
+        } else if (navigator.language && navigator.language.toLowerCase().startsWith('fr')) {
+          initialLang = 'fr';
+        } else if (navigator.language && navigator.language.toLowerCase().startsWith('en')) {
+          initialLang = 'en';
+        }
+      } catch (e) {}
+      setLanguage(initialLang);
+
+      // Language buttons listener
+      document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const target = btn.getAttribute('data-lang');
+          setLanguage(target);
+        });
+      });
+
+      try {
+        if (window.noderaDesktop) {
+          currentHwid = await window.noderaDesktop.getHwid();
+          hwidDisplay.textContent = currentHwid || 'NDR-HWID-STANDALONE';
+
+          // Detect previously expired license/trial or auto-restore active trial
+          const savedLic = await window.noderaDesktop.getLicenseInfo();
+          if (!savedLic || !savedLic.license_key) {
+            try {
+              const resAuto = await window.noderaDesktop.activateTrial();
+              if (resAuto && resAuto.success) {
+                alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 block';
+                alertBox.textContent = resAuto.message || 'Lisensi/Trial aktif terdeteksi. Membuka aplikasi...';
+                return;
+              }
+            } catch (e) {}
+          }
+          if (savedLic && savedLic.license_key) {
+            const expStr = savedLic.expires_at || '';
+            let isExpired = false;
+            if (expStr && expStr !== 'LIFETIME') {
+              const expTime = new Date(expStr).getTime();
+              const endOfDay = expStr.length <= 10 ? 86399000 : 0;
+              if (!isNaN(expTime) && Date.now() > (expTime + endOfDay)) {
+                isExpired = true;
+              }
+            }
+            if (savedLic.status === 'EXPIRED') {
+              isExpired = true;
+            }
+
+            if (isExpired) {
+              isExpiredState = true;
+              expiredTypeIsTrial = Boolean(savedLic.is_trial || (savedLic.license_key && savedLic.license_key.startsWith('NDR-TRL-')));
+              const t = translations[currentLang];
+              const expiredMsg = expiredTypeIsTrial ? t.trialExpiredAlert : t.licenseExpiredAlert;
+              alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-amber-950/80 border border-amber-500/60 text-amber-200 block shadow-lg';
+              alertBox.innerHTML = `
+                <div class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                  </svg>
+                  <div>${expiredMsg}</div>
+                </div>
+              `;
+
+              // Disable trial button as trial already expired
+              trialBtn.disabled = true;
+              trialBtn.classList.add('opacity-50', 'cursor-not-allowed');
+              trialBtnText.textContent = t.trialExpiredBtn;
+              const trialBadge = document.getElementById('i18nTrialBadge');
+              if (trialBadge) {
+                trialBadge.textContent = t.trialBadgeExpired;
+                trialBadge.className = 'text-[10px] font-extrabold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30';
+              }
+
+              // Auto focus to license key input
+              setTimeout(() => {
+                input.focus();
+              }, 400);
+            }
+          }
+        }
+      } catch (err) {
+        hwidDisplay.textContent = 'ERROR-GET-HWID';
+      }
+    });
+
+    // Copy HWID
+    copyHwidBtn.addEventListener('click', () => {
+      const textToCopy = currentHwid || hwidDisplay.textContent.trim();
+      const t = translations[currentLang];
+      if (textToCopy && textToCopy !== 'Memuat HWID...') {
+        navigator.clipboard.writeText(textToCopy);
+        copyHwidText.textContent = t.copiedText;
+        copyHwidText.classList.add('text-emerald-400');
+        setTimeout(() => {
+          copyHwidText.textContent = t.copyHwidText;
+          copyHwidText.classList.remove('text-emerald-400');
+        }, 2000);
+      }
+    });
+
+    // Handle External Links via Event Delegation (so dynamically updated elements like i18nGuideText always work)
+    document.addEventListener('click', (e) => {
+      const targetLink = e.target.closest('a');
+      if (!targetLink) return;
+
+      const href = targetLink.getAttribute('href');
+      const isExternalClass = targetLink.classList.contains('external-link');
+      const isHttp = href && (href.startsWith('http://') || href.startsWith('https://'));
+
+      if (isExternalClass || (isHttp && !href.startsWith('http://127.0.0.1') && !href.startsWith('http://localhost'))) {
+        e.preventDefault();
+        openUrl(href || 'https://panel.dgtlnetsolution.com/desktop-licenses');
+      }
+    });
+
+    // CS Indonesia WhatsApp Click
+    csIndonesiaBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const hw = currentHwid || 'STANDALONE';
+      const t = translations[currentLang];
+      const msg = encodeURIComponent(`${t.csIdMsg}${hw}`);
+      openUrl(`https://wa.me/6285155173547?text=${msg}`);
+    });
+
+    // CS Côte d'Ivoire WhatsApp Click
+    csAfricaBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const hw = currentHwid || 'STANDALONE';
+      const t = translations[currentLang];
+      const msg = encodeURIComponent(`${t.csCiMsg}${hw}`);
+      openUrl(`https://wa.me/2550788222699?text=${msg}`);
+    });
+
+    // Claim Free Trial 7 Hari
+    trialBtn.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const t = translations[currentLang];
+      trialBtn.disabled = true;
+      submitBtn.disabled = true;
+      trialSpinner.classList.remove('hidden');
+      trialBtnText.textContent = t.trialActivating;
+      alertBox.classList.add('hidden');
+
+      try {
+        if (window.noderaDesktop && typeof window.noderaDesktop.activateTrial === 'function') {
+          const res = await window.noderaDesktop.activateTrial();
+          if (res.success) {
+            alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 block';
+            alertBox.textContent = res.message || t.trialSuccess;
+            setTimeout(() => {
+              // Main process redirects window to Mikhmon app
+            }, 1000);
+          } else {
+            alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-rose-950/80 border border-rose-500/50 text-rose-300 block';
+            alertBox.textContent = res.message || t.trialFail;
+            trialBtn.disabled = false;
+            submitBtn.disabled = false;
+            trialSpinner.classList.add('hidden');
+            trialBtnText.textContent = t.trialBtnText;
+          }
+        }
+      } catch (err) {
+        alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-rose-950/80 border border-rose-500/50 text-rose-300 block';
+        alertBox.textContent = t.trialNetError;
+        trialBtn.disabled = false;
+        submitBtn.disabled = false;
+        trialSpinner.classList.add('hidden');
+        trialBtnText.textContent = t.trialBtnText;
+      }
+    });
+
+    // Form Submit (Manual License Key)
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const t = translations[currentLang];
+      const key = input.value.trim().toUpperCase();
+      if (!key) return;
+
+      submitBtn.disabled = true;
+      trialBtn.disabled = true;
+      spinner.classList.remove('hidden');
+      btnText.textContent = t.verifyingText;
+      alertBox.classList.add('hidden');
+
+      try {
+        if (window.noderaDesktop) {
+          const res = await window.noderaDesktop.activateLicense(key);
+          if (res.success) {
+            alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 block';
+            alertBox.textContent = res.message || t.actSuccess;
+            setTimeout(() => {
+              // Main process redirects window to Mikhmon app
+            }, 1000);
+          } else {
+            alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-rose-950/80 border border-rose-500/50 text-rose-300 block';
+            alertBox.textContent = res.message || t.actFail;
+            submitBtn.disabled = false;
+            trialBtn.disabled = false;
+            spinner.classList.add('hidden');
+            btnText.textContent = t.btnText;
+          }
+        }
+      } catch (err) {
+        alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-rose-950/80 border border-rose-500/50 text-rose-300 block';
+        alertBox.textContent = t.actNetError;
+        submitBtn.disabled = false;
+        trialBtn.disabled = false;
+        spinner.classList.add('hidden');
+        btnText.textContent = t.btnText;
+      }
+    });
+  </script>
+</body>
+</html>
