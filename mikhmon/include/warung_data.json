@@ -1,0 +1,14 @@
+{
+    "warungs": [],
+    "profile_prices": [],
+    "transactions": [],
+    "topup_orders": [],
+    "settings": {
+        "stock_mode": "auto",
+        "voucher_prefix": "VC-",
+        "char_length": 6,
+        "char_format": "mix_lower",
+        "auto_purge_days": 30,
+        "last_purged_at": 1791368227
+    }
+}

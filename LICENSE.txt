@@ -1,0 +1,9 @@
+MIKHMON DESKTOP STANDALONE BY NODERA
+Copyright (C) 2026 NODERA. All rights reserved.
+
+Perjanjian Penggunaan Lisensi Perangkat Lunak:
+1. Perangkat lunak ini dilisensikan secara resmi oleh NODERA.
+2. Setiap lisensi terikat pada 1 perangkat (Hardware ID) yang didaftarkan saat aktivasi.
+3. Dilarang mendistribusikan ulang, membongkar, atau memodifikasi binary aplikasi tanpa izin tertulis dari NODERA.
+
+Untuk bantuan dan perpanjangan lisensi, hubungi https://dgtlnetsolution.com

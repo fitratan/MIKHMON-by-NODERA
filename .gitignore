@@ -1,0 +1,18 @@
+# Dependency directories
+node_modules/
+dist/
+build/windows/
+*.tmp
+*.log
+
+# Windows specific
+bin/php-win/dev/
+bin/php-win/lib/
+*.zip
+*.tar.gz
+
+# Environment & local files
+.env
+.DS_Store
+Thumbs.db
+mikhmon/include/login_throttle.json
