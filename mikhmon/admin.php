@@ -45,7 +45,8 @@ include_once('./include/license.php');
 
 if (function_exists('mikhmon_is_licensed') && !mikhmon_is_licensed()) {
     $allowedIds = ['login', 'update'];
-    if (!in_array($id, $allowedIds) && (!isset($_POST['action']) || $_POST['action'] !== 'ajax_activate_desktop_license')) {
+    $isAction = !empty($_POST['action']) || !empty($_GET['action']) || !empty($_REQUEST['action']);
+    if (!in_array($id, $allowedIds) && !$isAction) {
         if ($id !== "login") {
             if (session_status() === PHP_SESSION_ACTIVE) {
                 @session_destroy();
