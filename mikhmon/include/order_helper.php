@@ -338,9 +338,14 @@ if (!function_exists('mikhmon_safe_fulfill_order')) {
             include_once __DIR__ . '/telegram_helper.php';
             if (function_exists('mikhmon_send_active_voucher_telegram')) {
                 $tgRes = mikhmon_send_active_voucher_telegram($session, $order, $voucherData, 'Rp', null);
-                if ($tgRes['ok'] ?? false) {
+                if (is_array($tgRes) && !empty($tgRes['ok'])) {
                     $order['tg_sent'] = true;
                     $order['tg_sent_at'] = date('Y-m-d H:i:s');
+                    mikhmon_save_order($ordersFile, $order);
+                } else {
+                    // Force mark tg_sent to prevent infinite blocking loops if Telegram API rate limited or timeout
+                    $order['tg_sent'] = true;
+                    $order['tg_sent_error'] = is_array($tgRes) ? ($tgRes['description'] ?? 'unknown') : 'failed';
                     mikhmon_save_order($ordersFile, $order);
                 }
             }
