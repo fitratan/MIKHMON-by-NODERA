@@ -478,7 +478,7 @@ function submitDesktopLicense() {
   }
 }
 
-<?php if ( && !): ?>
+<?php if (!empty($isDesktop) && empty($isLicensed)): ?>
 window.addEventListener("DOMContentLoaded", function() {
   setTimeout(function() {
     openDesktopLicenseModal();
