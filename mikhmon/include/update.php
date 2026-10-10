@@ -95,7 +95,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                 . "define('MIKHMON_LICENSE_KEY', " . var_export($newKey, true) . ");\n"
                 . "define('MIKHMON_HWID', " . var_export($hwid, true) . ");\n"
                 . "define('MIKHMON_EXPIRY', '2030-12-31 23:59:59');\n"
-                . "define('MIKHMON_BRAND', 'by NODERA (panel.dgtlnetsolution.com)');\n"
+                . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
                 . "define('MIKHMON_PRODUCT_NAME', 'Mikhmon Desktop Pro');\n"
                 . "define('MIKHMON_ACTIVATED_AT', " . var_export(date('Y-m-d H:i:s'), true) . ");\n"
                 . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";

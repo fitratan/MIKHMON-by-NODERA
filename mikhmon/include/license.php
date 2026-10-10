@@ -1,6 +1,6 @@
 <?php
 /**
- * LICENSE LOADER — MIKHMON by NODERA (panel.dgtlnetsolution.com)
+ * LICENSE LOADER — MIKHMON by dgtlnetsolution.com
  * Handles desktop HWID license verification, 7-day free trial on first launch,
  * expiration date checking, and multi-tenant subscription gating.
  */
@@ -290,7 +290,7 @@ if (!function_exists('mikhmon_save_desktop_license_data')) {
             . "define('MIKHMON_LICENSE_KEY', " . var_export($licenseKey, true) . ");\n"
             . "define('MIKHMON_HWID', " . var_export($hwid, true) . ");\n"
             . "define('MIKHMON_EXPIRY', " . var_export($expFormatted, true) . ");\n"
-            . "define('MIKHMON_BRAND', 'by NODERA (panel.dgtlnetsolution.com)');\n"
+            . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
             . "define('MIKHMON_PRODUCT_NAME', " . var_export($prodName, true) . ");\n"
             . "define('MIKHMON_ACTIVATED_AT', " . var_export(date('Y-m-d H:i:s'), true) . ");\n"
             . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
@@ -414,7 +414,7 @@ if (!function_exists('mikhmon_activate_desktop_license')) {
             . "define('MIKHMON_LICENSE_KEY', " . var_export($licenseKey, true) . ");\n"
             . "define('MIKHMON_HWID', " . var_export($hwid, true) . ");\n"
             . "define('MIKHMON_EXPIRY', " . var_export($expFormatted, true) . ");\n"
-            . "define('MIKHMON_BRAND', 'by NODERA (panel.dgtlnetsolution.com)');\n"
+            . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
             . "define('MIKHMON_PRODUCT_NAME', " . var_export($prodName, true) . ");\n"
             . "define('MIKHMON_ACTIVATED_AT', " . var_export(date('Y-m-d H:i:s'), true) . ");\n"
             . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
@@ -500,7 +500,7 @@ if (!function_exists('mikhmon_activate_trial_license')) {
                 . "define('MIKHMON_LICENSE_KEY', " . var_export($licenseKey, true) . ");\n"
                 . "define('MIKHMON_HWID', " . var_export($hwid, true) . ");\n"
                 . "define('MIKHMON_EXPIRY', " . var_export($expFormatted, true) . ");\n"
-                . "define('MIKHMON_BRAND', 'by NODERA (panel.dgtlnetsolution.com)');\n"
+                . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
                 . "define('MIKHMON_PRODUCT_NAME', " . var_export($prodName, true) . ");\n"
                 . "define('MIKHMON_ACTIVATED_AT', " . var_export(date('Y-m-d H:i:s'), true) . ");\n"
                 . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
@@ -541,7 +541,7 @@ if (!function_exists('mikhmon_activate_trial_license')) {
             . "define('MIKHMON_LICENSE_KEY', " . var_export($licenseKey, true) . ");\n"
             . "define('MIKHMON_HWID', " . var_export($hwid, true) . ");\n"
             . "define('MIKHMON_EXPIRY', " . var_export($expFormatted, true) . ");\n"
-            . "define('MIKHMON_BRAND', 'by NODERA (panel.dgtlnetsolution.com)');\n"
+            . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
             . "define('MIKHMON_PRODUCT_NAME', " . var_export($prodName, true) . ");\n"
             . "define('MIKHMON_ACTIVATED_AT', " . var_export(date('Y-m-d H:i:s'), true) . ");\n"
             . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
