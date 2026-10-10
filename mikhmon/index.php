@@ -36,7 +36,7 @@ $session = $_GET['session'];
 
 // license check
 include_once __DIR__ . '/include/license.php';
-if (function_exists('mikhmon_is_expired') && mikhmon_is_expired()) {
+if (function_exists('mikhmon_is_licensed') && !mikhmon_is_licensed()) {
   @session_destroy();
   header("Location:./admin.php?id=login");
   exit;

@@ -43,14 +43,17 @@ $ids = array(
 // license
 include_once('./include/license.php');
 
-if (function_exists('mikhmon_is_expired') && mikhmon_is_expired() && !mikhmon_is_desktop_mode()) {
-    if ($id !== "login") {
-        if (session_status() === PHP_SESSION_ACTIVE) {
-            @session_destroy();
+if (function_exists('mikhmon_is_licensed') && !mikhmon_is_licensed()) {
+    $allowedIds = ['login', 'update'];
+    if (!in_array($id, $allowedIds) && (!isset($_POST['action']) || $_POST['action'] !== 'ajax_activate_desktop_license')) {
+        if ($id !== "login") {
+            if (session_status() === PHP_SESSION_ACTIVE) {
+                @session_destroy();
+            }
+            header("Location:./admin.php?id=login");
+            echo "<script>window.location='./admin.php?id=login'</script>";
+            exit;
         }
-        header("Location:./admin.php?id=login");
-        echo "<script>window.location='./admin.php?id=login'</script>";
-        exit;
     }
 }
 

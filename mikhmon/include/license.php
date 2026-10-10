@@ -104,11 +104,21 @@ if (!function_exists('mikhmon_is_licensed')) {
             if (!defined('MIKHMON_HWID') || empty(trim(MIKHMON_HWID))) {
                 return false;
             }
-            // Wajibkan strict HWID matching (hapus celah AUTO-LOCAL-DEVICE)
+            // Wajibkan strict HWID matching
             $currentHwid = mikhmon_get_hwid();
             if (empty(MIKHMON_HWID) || strcasecmp(trim(MIKHMON_HWID), trim($currentHwid)) !== 0) {
                 return false;
             }
+
+            // Real-time Cloud Verification Check (Validasi ulang ke Cloud setiap akses agar tombol reset/block di panel langsung berdampak)
+            $verifyRes = mikhmon_verify_desktop_license(MIKHMON_LICENSE_KEY, $currentHwid);
+            if (empty($verifyRes['success'])) {
+                return false;
+            }
+            if (isset($verifyRes['data']['status']) && in_array(strtoupper($verifyRes['data']['status']), ['SUSPENDED', 'DISABLED', 'BLOCKED', 'EXPIRED', 'INACTIVE'], true)) {
+                return false;
+            }
+
             return !mikhmon_is_expired();
         }
 
