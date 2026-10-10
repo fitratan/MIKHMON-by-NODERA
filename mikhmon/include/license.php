@@ -43,9 +43,6 @@ if (!function_exists('mikhmon_is_desktop_mode')) {
 
 if (!function_exists('mikhmon_get_hwid')) {
     function mikhmon_get_hwid(): string {
-        if (defined('MIKHMON_HWID') && !empty(MIKHMON_HWID)) {
-            return (string) MIKHMON_HWID;
-        }
         $raw = php_uname('s') . '-' . php_uname('n') . '-' . php_uname('m') . '-' . (getenv('COMPUTERNAME') ?: '') . '-' . (getenv('USER') ?: get_current_user());
         if (function_exists('disk_total_space')) {
             $raw .= '-' . @disk_total_space(__DIR__);
@@ -107,12 +104,10 @@ if (!function_exists('mikhmon_is_licensed')) {
             if (!defined('MIKHMON_HWID') || empty(trim(MIKHMON_HWID))) {
                 return false;
             }
-            // Bypass strict HWID mismatch for offline/standalone default template
-            if (trim(MIKHMON_HWID) !== 'AUTO-LOCAL-DEVICE') {
-                $currentHwid = mikhmon_get_hwid();
-                if (strcasecmp(trim(MIKHMON_HWID), trim($currentHwid)) !== 0) {
-                    return false;
-                }
+            // Wajibkan strict HWID matching (hapus celah AUTO-LOCAL-DEVICE)
+            $currentHwid = mikhmon_get_hwid();
+            if (empty(MIKHMON_HWID) || strcasecmp(trim(MIKHMON_HWID), trim($currentHwid)) !== 0) {
+                return false;
             }
             return !mikhmon_is_expired();
         }

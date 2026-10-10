@@ -81,29 +81,35 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
 
     if ($action === 'save_license') {
         $newKey = trim($_POST['license_key'] ?? ($_GET['license_key'] ?? ''));
-        $cfgFile = __DIR__ . '/config.php';
-        $cfgData = [];
-        if (file_exists($cfgFile)) {
-            @include $cfgFile;
-            if (isset($data) && is_array($data)) {
-                $cfgData = $data;
-            }
-        }
-        if (!isset($cfgData['desktop_license']) || !is_array($cfgData['desktop_license'])) {
-            $cfgData['desktop_license'] = [];
-        }
-        $cfgData['desktop_license']['license_key'] = $newKey;
-        $cfgData['desktop_license']['updated_at'] = date('Y-m-d H:i:s');
+        $hwid = mikhmon_get_hwid();
 
-        $exportedData = var_export($cfgData, true);
-        $headerGuard = "if (isset(\$_SERVER['REQUEST_URI']) && substr(\$_SERVER['REQUEST_URI'], -10) == 'config.php') { header('Location:./'); exit; }";
-        $fileContent = "<?php\n" . $headerGuard . "\n\$data = " . $exportedData . ";\n";
-        file_put_contents($cfgFile, $fileContent);
+        if (!empty($newKey)) {
+            // Tulis ulang config/license.php agar langsung aktif secara native
+            $licensePhp = "<?php\n"
+                . "/**\n"
+                . " * LICENSE MIKHMON DESKTOP STANDALONE — NODERA\n"
+                . " * Diperbarui manual via Dashboard Pengguna.\n"
+                . " */\n"
+                . "define('MIKHMON_MODE', 'DESKTOP');\n"
+                . "define('MIKHMON_STATUS', 'ACTIVE');\n"
+                . "define('MIKHMON_LICENSE_KEY', " . var_export($newKey, true) . ");\n"
+                . "define('MIKHMON_HWID', " . var_export($hwid, true) . ");\n"
+                . "define('MIKHMON_EXPIRY', '2030-12-31 23:59:59');\n"
+                . "define('MIKHMON_BRAND', 'by NODERA (panel.dgtlnetsolution.com)');\n"
+                . "define('MIKHMON_PRODUCT_NAME', 'Mikhmon Desktop Pro');\n"
+                . "define('MIKHMON_ACTIVATED_AT', " . var_export(date('Y-m-d H:i:s'), true) . ");\n"
+                . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
+
+            $configFile = __DIR__ . '/../config/license.php';
+            @file_put_contents($configFile, $licensePhp);
+        } else {
+            mikhmon_reset_local_license();
+        }
 
         echo json_encode([
             'success' => true,
-            'message' => !empty($newKey) ? "Kunci lisensi {$newKey} berhasil disimpan & diaktifkan!" : "Kembali ke mode Free Trial.",
-            'license_key' => $newKey ?: 'STANDALONE-FREE-TIER',
+            'message' => !empty($newKey) ? "Kunci lisensi {$newKey} berhasil disimpan & diaktifkan!" : "Lisensi berhasil di-reset.",
+            'license_key' => $newKey ?: 'UNLICENSED',
         ]);
         exit;
     }
