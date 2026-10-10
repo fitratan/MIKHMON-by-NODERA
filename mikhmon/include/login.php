@@ -16,7 +16,7 @@ $expiryDateText = function_exists('mikhmon_expiry_text') ? mikhmon_expiry_text()
 $remainingDays = function_exists('mikhmon_remaining_days') ? mikhmon_remaining_days() : 999;
 $hwid = function_exists('mikhmon_get_hwid') ? mikhmon_get_hwid() : '';
 $licenseKey = defined('MIKHMON_LICENSE_KEY') ? MIKHMON_LICENSE_KEY : '';
-$brand = defined('MIKHMON_BRAND') ? MIKHMON_BRAND : 'by NODERA (panel.dgtlnetsolution.com)';
+$brand = defined('MIKHMON_BRAND') ? MIKHMON_BRAND : 'by dgtlnetsolution.com';
 
 // Resolve custom uploaded logo
 $adminLogo = 'img/logo.png';

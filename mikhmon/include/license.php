@@ -17,7 +17,7 @@ if (file_exists($__licenseFile)) {
 }
 
 if (!defined('MIKHMON_BRAND')) {
-    define('MIKHMON_BRAND', 'by NODERA (panel.dgtlnetsolution.com)');
+    define('MIKHMON_BRAND', 'by dgtlnetsolution.com');
 }
 if (!defined('MIKHMON_SUBDOMAIN')) {
     $folder = basename(dirname(__DIR__));
