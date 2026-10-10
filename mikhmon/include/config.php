@@ -3,8 +3,8 @@ if (isset($_SERVER['REQUEST_URI']) && substr($_SERVER['REQUEST_URI'], -10) == 'c
 $data = array (
   'mikhmon' => 
   array (
-    1 => 'mikhmon<|<admin',
-    2 => 'mikhmon>|>aWNlbA==',
+    1 => 'mikhmon<|<nodera',
+    2 => 'mikhmon>|>bm9kZXJh',
   ),
   'desktop_license' => 
   array (
