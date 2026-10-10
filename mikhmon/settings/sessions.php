@@ -419,24 +419,21 @@ function copyHwid() {
 }
 function submitDesktopLicense() {
   var key = document.getElementById('ndrLicenseKeyInput').value.trim();
-  var hwidEl = document.getElementById('ndrDeviceHwid');
-  var hwid = (hwidEl ? hwidEl.value.trim() : '');
   var alertBox = document.getElementById('ndrLicenseAlert');
   var btn = document.getElementById('ndrBtnSubmitLicense');
   if (!key) {
-    showError(<?= json_encode($_license_key_required ?? 'License Key wajib diisi!') ?>);
+    showError('License Key wajib diisi!');
     return;
   }
   btn.disabled = true;
-  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + <?= json_encode($_connecting_to_cloud ?? 'Menghubungkan ke Cloud Server...') ?>;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Menyimpan...';
   if (alertBox) alertBox.style.display = 'none';
 
-  // 1. Coba via PHP lokal
   var fd = new FormData();
-  fd.append('action', 'ajax_activate_desktop_license');
+  fd.append('action', 'save_license');
   fd.append('license_key', key);
 
-  fetch('./admin.php', {
+  fetch('./admin.php?id=update&action=save_license', {
     method: 'POST',
     body: fd
   })
@@ -445,75 +442,33 @@ function submitDesktopLicense() {
     if (data && data.success) {
       showSuccessAndReload(data);
     } else {
-      tryDirectBrowserActivation(key, hwid);
+      showError(data ? data.message : 'Gagal menyimpan lisensi.');
     }
   })
-  .catch(function() {
-    tryDirectBrowserActivation(key, hwid);
+  .catch(function(err) {
+    showError('Terjadi kesalahan: ' + err.message);
   });
 
-  function tryDirectBrowserActivation(licenseKey, deviceHwid) {
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + <?= json_encode($_validating_cloud_direct ?? 'Validasi Cloud Direct HTTPS...') ?>;
-    fetch('https://panel.dgtlnetsolution.com/api/v1/desktop-license/activate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        license_key: licenseKey,
-        hwid: deviceHwid || 'DESKTOP-AUTO',
-        device_name: window.navigator.userAgent || 'Windows PC'
-      })
-    })
-    .then(function(res) { return res.json(); })
-    .then(function(cloudRes) {
-      if (cloudRes && cloudRes.success && cloudRes.data) {
-        var saveFd = new FormData();
-        saveFd.append('action', 'ajax_save_activated_license');
-        saveFd.append('data', JSON.stringify(cloudRes.data));
-        fetch('./admin.php', { method: 'POST', body: saveFd })
-        .then(function() {
-          showSuccessAndReload(cloudRes);
-        })
-        .catch(function() {
-          showSuccessAndReload(cloudRes);
-        });
-      } else {
-        showError(cloudRes ? cloudRes.message : <?= json_encode($_license_activation_failed ?? 'Aktivasi lisensi gagal. Periksa kembali License Key Anda.') ?>);
-      }
-    })
-    .catch(function(err) {
-      showError((<?= json_encode($_failed_connect_cloud_license ?? 'Gagal terhubung ke Cloud License Server: ') ?>) + err.message);
-    });
-  }
-
   function showSuccessAndReload(data) {
-    var btn = document.getElementById('ndrBtnSubmitLicense');
-    var alertBox = document.getElementById('ndrLicenseAlert');
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-check-circle"></i> Berhasil';
     }
-    btn.innerHTML = '<i class="fa fa-check-circle"></i> <?= $_activate_now ?? "Aktivasi Sekarang"; ?>';
     if (alertBox) {
       alertBox.className = 'box bg-green';
       alertBox.style.cssText = 'display:block; margin:0 0 12px 0; padding:8px 10px; border-radius:3px; font-size:12px; font-weight:bold; color:#ffffff;';
-      alertBox.innerHTML = '<i class="fa fa-check"></i> ' + (data.message || 'Lisensi berhasil diaktivasi!') + '<br><small style="font-weight:normal;">Masa aktif s/d: ' + (data.expires_at || (data.data && data.data.expires_at) || '-') + '</small>';
+      alertBox.innerHTML = '<i class="fa fa-check"></i> ' + (data.message || 'Lisensi berhasil disimpan & diaktifkan!');
     }
     setTimeout(function() {
       location.reload();
-    }, 1500);
+    }, 1200);
   }
 
   function showError(msg) {
-    var btn = document.getElementById('ndrBtnSubmitLicense');
-    var alertBox = document.getElementById('ndrLicenseAlert');
     if (btn) {
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-check"></i> Simpan &amp; Verifikasi';
     }
-    btn.innerHTML = '<i class="fa fa-check-circle"></i> <?= $_activate_now ?? "Aktivasi Sekarang"; ?>';
     if (alertBox) {
       alertBox.className = 'box bg-danger';
       alertBox.style.cssText = 'display:block; margin:0 0 12px 0; padding:8px 10px; border-radius:3px; font-size:12px; font-weight:bold; color:#ffffff;';
