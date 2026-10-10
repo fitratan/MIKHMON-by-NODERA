@@ -400,8 +400,21 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
       </div>
 
       <!-- Box Info Native Mikhmon -->
-      <div class="box box-bordered" style="margin:8px 0 15px 0; padding:8px 10px; font-size:11.5px; line-height:1.45;">
-        <i class="fa fa-info-circle text-primary"></i> Masukkan kunci lisensi dari <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline;"><b>Portal Cloud NODERA</b></a> atau hubungi bantuan <a href="https://wa.me/6285155173547?text=Halo%20Admin%20NODERA,%20saya%20butuh%20bantuan%20aktivasi%20lisensi%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="text-green" style="text-decoration:underline;"><b><i class="fa fa-whatsapp"></i> CS WhatsApp (085155173547)</b></a>. Kosongkan untuk Free Trial.
+      <div class="box box-bordered" style="margin:8px 0 15px 0; padding:10px 12px; font-size:11.5px; line-height:1.5; background:rgba(0,0,0,0.05);">
+        <div style="margin-bottom:6px;">
+          <i class="fa fa-info-circle text-primary"></i> <b>Panduan:</b> Masukkan License Key resmi dari <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">Portal Cloud NODERA</a> atau kosongkan untuk klaim <b>Free Trial 7 Hari</b>.
+        </div>
+        <div style="border-top:1px dashed rgba(120,120,120,0.25); padding-top:6px; margin-top:6px;">
+          <b><i class="fa fa-whatsapp text-green"></i> Layanan Bantuan &amp; CS WhatsApp:</b>
+          <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
+            <a href="https://wa.me/6285155173547?text=Halo%20Admin%20NODERA%20Indonesia,%20saya%20butuh%20bantuan%20aktivasi%20lisensi%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="btn bg-green" style="font-size:11px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
+              🇮🇩 CS Indonesia (0851-5517-3547)
+            </a>
+            <a href="https://wa.me/2550788222699?text=Bonjour%20Support%20NODERA%20C%C3%B4te%20d%27Ivoire,%20j%27ai%20besoin%20d%27aide%20pour%20activer%20la%20licence%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="btn bg-green" style="font-size:11px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
+              🇨🇮 CS Côte d'Ivoire (+255 07 88 22 26 99)
+            </a>
+          </div>
+        </div>
       </div>
 
       <!-- Action Buttons -->
