@@ -257,14 +257,14 @@ if (!$order) {
 // Fulfill voucher safely using exclusive locking mutex
 $voucherData = mikhmon_safe_fulfill_order(
     $orderId, 
-    $ordersFile, 
     $session, 
+    $iphost ?? '', 
     $m_user ?? '', 
     $m_pass ?? '', 
-    $iphost ?? '', 
-    $order['profile'] ?? '', 
-    $order['customer_phone'] ?? '', 
-    $data[$session] ?? []
+    $hotspotname ?? '', 
+    $dnsname ?? '', 
+    $npCfg ?? [], 
+    $ordersFile
 );
 
 if (!empty($voucherData['success'])) {
