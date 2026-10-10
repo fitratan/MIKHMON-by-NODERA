@@ -110,12 +110,15 @@ if (!function_exists('mikhmon_is_licensed')) {
                 return false;
             }
 
-            // Real-time Cloud Verification Check (Validasi ulang ke Cloud setiap akses agar tombol reset/block di panel langsung berdampak)
+            // Real-time Cloud Verification Check (Validasi ulang ke Cloud setiap akses)
             $verifyRes = mikhmon_verify_desktop_license(MIKHMON_LICENSE_KEY, $currentHwid);
             if (empty($verifyRes['success'])) {
+                // Beri penanda pop-up informasi di file konfigurasi lokal
+                @file_put_contents(__DIR__ . '/../config/.reset_alert', 'Lisensi Anda telah di-reset/dinonaktifkan dari Cloud Panel. Silakan masukkan License Key baru.');
                 return false;
             }
             if (isset($verifyRes['data']['status']) && in_array(strtoupper($verifyRes['data']['status']), ['SUSPENDED', 'DISABLED', 'BLOCKED', 'EXPIRED', 'INACTIVE'], true)) {
+                @file_put_contents(__DIR__ . '/../config/.reset_alert', 'Lisensi Anda telah ditangguhkan/kedaluwarsa di Cloud Panel.');
                 return false;
             }
 
