@@ -180,6 +180,17 @@ if (!function_exists('mikhmon_expiry_text')) {
     }
 }
 
+if (!function_exists('mikhmon_remaining_days')) {
+    function mikhmon_remaining_days(): int {
+        $t = mikhmon_expiry_ts();
+        if ($t === null) {
+            return 9999;
+        }
+        $diff = (int) ceil(($t + 86399 - time()) / 86400);
+        return max(0, $diff);
+    }
+}
+
 if (!function_exists('mikhmon_verify_desktop_license')) {
     function mikhmon_verify_desktop_license(?string $licenseKey = null, ?string $hwid = null): array {
         if (!mikhmon_is_desktop_mode()) {
