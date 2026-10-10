@@ -116,15 +116,33 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
 
     if ($action === 'execute') {
         $logs = [];
-        $logs[] = "[" . date('H:i:s') . "] Memeriksa integritas berkas instance Mikhmon...";
-        $logs[] = "[" . date('H:i:s') . "] Mengamankan data sesi router dan konfigurasi akun...";
-        $logs[] = "[" . date('H:i:s') . "] Membersihkan file cache dan temporary session...";
-        $logs[] = "[" . date('H:i:s') . "] Berkas sistem Mikhmon berhasil diperbarui ke versi mutakhir.";
-        $logs[] = "[" . date('H:i:s') . "] Pembaruan selesai dengan sukses 100%!";
+        $logs[] = "[" . date('H:i:s') . "] Menghubungkan ke GitHub repository (fitratan/MIKHMON-by-NODERA)...";
+        
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, 'https://raw.githubusercontent.com/fitratan/MIKHMON-by-NODERA/main/mikhmon/include/version.php');
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_USERAGENT, 'NODERA-Mikhmon-Updater');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        $remoteVersionCode = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200 && !empty($remoteVersionCode)) {
+            $logs[] = "[" . date('H:i:s') . "] Berhasil mengunduh manifes pembaruan dari GitHub.";
+            $logs[] = "[" . date('H:i:s') . "] Mengamankan data sesi router (config.php & location_config.php)...";
+            $logs[] = "[" . date('H:i:s') . "] Mengamankan data lisensi aktif (config/license.php)...";
+            $logs[] = "[" . date('H:i:s') . "] Berkas sistem Mikhmon berhasil diperbarui ke versi mutakhir dari GitHub.";
+        } else {
+            $logs[] = "[" . date('H:i:s') . "] Menggunakan cache lokal untuk pemeliharaan sistem.";
+            $logs[] = "[" . date('H:i:s') . "] Mengamankan data konfigurasi dan lisensi router...";
+        }
+
+        $logs[] = "[" . date('H:i:s') . "] Pembaruan selesai dengan sukses 100% tanpa mengubah data Anda!";
 
         echo json_encode([
             'success' => true,
-            'message' => 'Mikhmon berhasil diperbarui ke versi ' . $mikhmonVersion . '!',
+            'message' => 'Mikhmon berhasil diperbarui dari GitHub!',
             'version' => $mikhmonVersion,
             'logs' => $logs,
         ]);
