@@ -209,10 +209,11 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
       if (isset($data[$ip])) {
         $item = $data[$ip];
         if (!empty($item['locked_until']) && $item['locked_until'] > $now) {
-          $remMinutes = max(1, ceil(($item['locked_until'] - $now) / 60));
-          return ['locked' => true, 'remaining_minutes' => $remMinutes];
+          $remSeconds = max(1, $item['locked_until'] - $now);
+          $remMinutes = max(1, ceil($remSeconds / 60));
+          return ['locked' => true, 'remaining_seconds' => $remSeconds, 'remaining_minutes' => $remMinutes];
         }
-        if (!empty($item['last_attempt']) && ($now - $item['last_attempt']) > 300 && empty($item['locked_until'])) {
+        if (!empty($item['last_attempt']) && ($now - $item['last_attempt']) > 60 && empty($item['locked_until'])) {
           unset($data[$ip]);
           @file_put_contents($file, json_encode($data, JSON_UNESCAPED_SLASHES));
         }
@@ -231,13 +232,13 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
         }
       }
       $item = $data[$ip] ?? ['attempts' => 0, 'last_attempt' => 0];
-      if (($now - ($item['last_attempt'] ?? 0)) > 300) {
+      if (($now - ($item['last_attempt'] ?? 0)) > 60) {
         $item['attempts'] = 0;
       }
       $item['attempts'] = ($item['attempts'] ?? 0) + 1;
       $item['last_attempt'] = $now;
       if ($item['attempts'] >= 5) {
-        $item['locked_until'] = $now + 900;
+        $item['locked_until'] = $now + 60; // 1 menit (60 detik)
       }
       $data[$ip] = $item;
       @file_put_contents($file, json_encode($data, JSON_UNESCAPED_SLASHES));
@@ -259,7 +260,7 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
 
   if (isset($_POST['login'])) {
     if ($throttleStatus['locked']) {
-      $error = '<div style="width: 100%; padding:8px 5px; border-radius:5px;" class="bg-danger text-center"><i class="fa fa-ban"></i> ' . ($_too_many_failed_logins ?? 'Terlalu banyak percobaan login gagal!') . '<br>' . ($_account_locked_temporary ?? 'Akun terkunci sementara demi keamanan.') . '<br>' . ($_please_try_again_in ?? 'Silakan coba kembali dalam') . ' ' . $throttleStatus['remaining_minutes'] . ' ' . ($_minutes ?? 'menit.') . '</div>';
+      $error = '<div style="width: 100%; padding:8px 5px; border-radius:5px;" class="bg-danger text-center"><i class="fa fa-ban"></i> ' . ($_too_many_failed_logins ?? 'Terlalu banyak percobaan login gagal!') . '<br>' . ($_account_locked_temporary ?? 'Akun terkunci sementara demi keamanan.') . '<br>' . ($_please_try_again_in ?? 'Silakan coba kembali dalam') . ' ' . ($throttleStatus['remaining_seconds'] ?? 60) . ' ' . ($_seconds ?? 'detik.') . '</div>';
     } elseif (function_exists('mikhmon_is_suspended') && mikhmon_is_suspended()) {
       $error = '<div style="width: 100%; padding:8px 5px; border-radius:5px;" class="bg-danger text-center"><i class="fa fa-ban"></i> ' . ($_access_denied ?? 'Akses Ditolak !') . '<br>' . ($_service_suspended ?? 'Layanan MIKHMON ini sedang ditangguhkan.') . '<br>' . ($_contact_support_at ?? 'Silakan hubungi bantuan di panel.dgtlnetsolution.com.') . '</div>';
     } elseif (function_exists('mikhmon_is_expired') && mikhmon_is_expired()) {
@@ -283,7 +284,7 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
         mikhmon_record_failed_login($clientIp, $throttleFile);
         $updatedThrottle = mikhmon_check_login_throttle($clientIp, $throttleFile);
         if ($updatedThrottle['locked']) {
-          $error = '<div style="width: 100%; padding:8px 5px; border-radius:5px;" class="bg-danger text-center"><i class="fa fa-ban"></i> ' . ($_too_many_failed_logins ?? 'Terlalu banyak percobaan login gagal!') . '<br>' . ($_account_locked_temporary ?? 'Akun terkunci sementara demi keamanan.') . '<br>' . ($_please_try_again_in ?? 'Silakan coba kembali dalam') . ' ' . $updatedThrottle['remaining_minutes'] . ' ' . ($_minutes ?? 'menit.') . '</div>';
+          $error = '<div style="width: 100%; padding:8px 5px; border-radius:5px;" class="bg-danger text-center"><i class="fa fa-ban"></i> ' . ($_too_many_failed_logins ?? 'Terlalu banyak percobaan login gagal!') . '<br>' . ($_account_locked_temporary ?? 'Akun terkunci sementara demi keamanan.') . '<br>' . ($_please_try_again_in ?? 'Silakan coba kembali dalam') . ' ' . ($updatedThrottle['remaining_seconds'] ?? 60) . ' ' . ($_seconds ?? 'detik.') . '</div>';
         } else {
           $error = '<div style="width: 100%; padding:5px 0px 5px 0px; border-radius:5px;" class="bg-danger text-center"><i class="fa fa-ban"></i> ' . (!empty($_alert) ? $_alert : 'Peringatan !') . '<br>' . (!empty($_username_or_password_incorrect) ? $_username_or_password_incorrect : 'Username atau password salah.') . '</div>';
         }
