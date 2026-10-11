@@ -4,7 +4,7 @@
  */
 $m_version = '3.20.4-v7';
 $m_build = '2026-10-11';
-$m_commit = 'ad429f0';
+$m_commit = 'a0fe75f';
 
 if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
     @session_start();
