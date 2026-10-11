@@ -27,6 +27,32 @@ ob_start("ob_gzhandler");
 // check url
 $url = $_SERVER['REQUEST_URI'];
 
+// lang
+include_once(__DIR__ . '/lang/isocodelang.php');
+if (!empty($_GET['setlang']) && !empty($isocodelang[$_GET['setlang']])) {
+  $langid = $_GET['setlang'];
+  $_SESSION['lang'] = $langid;
+  $_SESSION['m_lang'] = $langid;
+  @setcookie('mikhmon_lang', $langid, time() + 31536000, '/');
+  @file_put_contents(__DIR__ . '/include/lang.php', '<?php $langid="' . addslashes($langid) . '";?>');
+} else {
+  $langid = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? '';
+  if (empty($langid) || empty($isocodelang[$langid])) {
+    if (file_exists(__DIR__ . '/include/lang.php')) {
+      include(__DIR__ . '/include/lang.php');
+    }
+    if (empty($langid) || empty($isocodelang[$langid])) {
+      $langid = 'id';
+    }
+  }
+}
+$_SESSION['lang'] = $langid;
+$_SESSION['m_lang'] = $langid;
+if (!file_exists(__DIR__ . '/lang/'.$langid.'.php')) {
+  $langid = 'id';
+}
+include_once(__DIR__ . '/lang/'.$langid.'.php');
+
 // load session MikroTik
 $session = $_GET['session'];
 $id = $_GET['id'];
@@ -119,32 +145,6 @@ if ((isset($_POST['action']) && $_POST['action'] === 'ajax_activate_addon') || (
     echo json_encode(warung_activate_addon($subdomain));
     exit;
 }
-
-// lang
-include_once(__DIR__ . '/lang/isocodelang.php');
-if (!empty($_GET['setlang']) && !empty($isocodelang[$_GET['setlang']])) {
-  $langid = $_GET['setlang'];
-  $_SESSION['lang'] = $langid;
-  $_SESSION['m_lang'] = $langid;
-  @setcookie('mikhmon_lang', $langid, time() + 31536000, '/');
-  @file_put_contents(__DIR__ . '/include/lang.php', '<?php $langid="' . addslashes($langid) . '";?>');
-} else {
-  $langid = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? '';
-  if (empty($langid) || empty($isocodelang[$langid])) {
-    if (file_exists(__DIR__ . '/include/lang.php')) {
-      include(__DIR__ . '/include/lang.php');
-    }
-    if (empty($langid) || empty($isocodelang[$langid])) {
-      $langid = 'id';
-    }
-  }
-}
-$_SESSION['lang'] = $langid;
-$_SESSION['m_lang'] = $langid;
-if (!file_exists(__DIR__ . '/lang/'.$langid.'.php')) {
-  $langid = 'id';
-}
-include_once(__DIR__ . '/lang/'.$langid.'.php');
 
 // quick bt
 include('./include/quickbt.php');
@@ -264,7 +264,7 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
     } elseif (function_exists('mikhmon_is_suspended') && mikhmon_is_suspended()) {
       $error = '<div style="width: 100%; padding:8px 5px; border-radius:5px;" class="bg-danger text-center"><i class="fa fa-ban"></i> ' . ($_access_denied ?? 'Akses Ditolak !') . '<br>' . ($_service_suspended ?? 'Layanan MIKHMON ini sedang ditangguhkan.') . '<br>' . ($_contact_support_at ?? 'Silakan hubungi bantuan di panel.dgtlnetsolution.com.') . '</div>';
     } elseif (function_exists('mikhmon_is_expired') && mikhmon_is_expired()) {
-      $error = '<div style="width: 100%; padding:8px 5px; border-radius:5px;" class="bg-danger text-center"><i class="fa fa-ban"></i> ' . ($_subscription_expired ?? 'Masa Aktif Berakhir !') . '<br>' . ($_subscription_expired_desc ?? 'Masa aktif langganan telah berakhir pada') . ' ' . htmlspecialchars(mikhmon_expiry_text()) . '.<br>' . ($_please_renew_at ?? 'Silakan perpanjang lisensi di <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">Portal Cloud NODERA</a> atau hubungi CS: <a href="https://wa.me/6285155173547" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">🇮🇩 085155173547</a> / <a href="https://wa.me/2550788222699" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">🇨🇮 +2550788222699</a>.') . '</div>';
+      $error = '<div style="width: 100%; padding:8px 5px; border-radius:5px;" class="bg-danger text-center"><i class="fa fa-ban"></i> ' . ($_subscription_expired ?? 'Masa Aktif Berakhir !') . '<br>' . ($_subscription_expired_desc ?? 'Masa aktif langganan telah berakhir pada') . ' ' . htmlspecialchars(mikhmon_expiry_text()) . '.<br>' . ($_please_renew_at ?? 'Silakan perpanjang lisensi di <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">Portal Cloud NODERA</a> atau hubungi CS: <a href="https://wa.me/6285155173547" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">ID: 085155173547</a> / <a href="https://wa.me/2550788222699" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">CI: +2550788222699</a>.') . '</div>';
     } else {
       $user = $_POST['user'];
       $pass = $_POST['pass'];

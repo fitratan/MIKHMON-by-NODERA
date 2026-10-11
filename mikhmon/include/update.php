@@ -592,7 +592,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                     <strong style="font-size: 13px;"><i class="fa fa-key text-yellow"></i> <?= htmlspecialchars($tr($_update_license_section_title ?? null, 'Lisensi Mikhmon Standalone')); ?></strong>
                   </div>
                   <div>
-                    <button type="button" onclick="openDesktopLicenseModal()" class="btn btn-sm bg-secondary" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer;" title="Ganti Lisensi">
+                    <button type="button" onclick="openDesktopLicenseModal()" class="btn btn-sm bg-secondary" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer;" title="<?= htmlspecialchars($tr($_update_change_license ?? null, 'Ganti Lisensi')); ?>">
                       <i class="fa fa-pencil text-primary"></i> <?= htmlspecialchars($tr($_update_change_license ?? null, 'Ganti')); ?>
                     </button>
                   </div>
@@ -603,7 +603,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                     <span style="opacity: 0.8;"><?= htmlspecialchars($tr($_update_license_key_label ?? null, 'Kunci Lisensi:')); ?></span>
                     <span style="display: flex; align-items: center; gap: 4px;">
                       <code id="activeKeyText" style="font-size: 11px; font-weight: bold; padding: 1px 6px; border-radius: 4px;"><?= htmlspecialchars($activeKeyDisplay); ?></code>
-                      <button type="button" onclick="copyMikhmonKey()" class="btn btn-default btn-xs" style="padding: 0 4px; font-size: 10px;" title="Salin Kunci">
+                      <button type="button" onclick="copyMikhmonKey()" class="btn btn-default btn-xs" style="padding: 0 4px; font-size: 10px;" title="<?= htmlspecialchars($_copy ?? 'Salin'); ?>">
                         <i class="fa fa-copy"></i>
                       </button>
                     </span>
@@ -617,7 +617,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                     <strong class="<?= $isTrial ? 'text-yellow' : 'text-green' ?>">
                       <?= htmlspecialchars($expiryDateText) ?>
                       <?php if ($isTrial && $remainingDays > 0): ?>
-                        <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(<?= $remainingDays ?> hari lagi)</span>
+                        <span style="font-size: 11px; font-weight: normal; opacity: 0.85;">(<?= $remainingDays . ' ' . ($_days_left ?? 'hari lagi'); ?>)</span>
                       <?php endif; ?>
                     </strong>
                   </div>
@@ -740,10 +740,10 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                 </p>
                 <div style="display: flex; flex-direction: column; gap: 8px;">
                   <a href="https://wa.me/6285155173547?text=Halo%20Admin%20NODERA,%20saya%20butuh%20bantuan%20update%20Mikhmon" target="_blank" class="btn bg-green" style="display: block; text-align: center; padding: 7px; font-weight: bold; border-radius: 6px; text-decoration: none;">
-                    <i class="fa fa-whatsapp"></i> CS Indonesia (0851-5517-3547)
+                    <i class="fa fa-whatsapp"></i> <?= htmlspecialchars($tr($_cs_indonesia ?? null, 'CS Indonesia (0851-5517-3547)')); ?>
                   </a>
                   <a href="https://wa.me/2550788222699?text=Bonjour%20Support%20NODERA,%20j%27ai%20besoin%20d%27aide%20pour%20la%20mise%20a%20jour%20Mikhmon" target="_blank" class="btn bg-green" style="display: block; text-align: center; padding: 7px; font-weight: bold; border-radius: 6px; text-decoration: none;">
-                    <i class="fa fa-whatsapp"></i> CS Côte d'Ivoire (+255 07 88 22 26 99)
+                    <i class="fa fa-whatsapp"></i> <?= htmlspecialchars($tr($_cs_ivory_coast ?? null, 'CS Côte d\'Ivoire (+255 07 88 22 26 99)')); ?>
                   </a>
                 </div>
               </div>
@@ -763,7 +763,14 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
       <h3 class="card-title" style="margin:0; font-size:15px;">
         <i class="fa fa-key text-primary"></i> <?= htmlspecialchars($tr($_update_modal_title ?? null, 'Aktivasi / Ganti Lisensi')); ?>
       </h3>
-      <button type="button" onclick="closeDesktopLicenseModal()" style="background:none; border:none; color:inherit; font-size:20px; line-height:1; cursor:pointer; opacity:0.8;" title="Tutup">&times;</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:inline-flex; background:rgba(0,0,0,0.12); border-radius:4px; padding:1px; border:1px solid rgba(120,120,120,0.25); font-size:10px; font-weight:bold;">
+          <a href="./admin.php?id=update&setlang=id" style="padding:2px 7px; border-radius:3px; text-decoration:none; <?= (($langid ?? 'id') === 'id') ? 'background:#0073C6; color:#ffffff;' : 'color:inherit; opacity:0.75;' ?>">ID</a>
+          <a href="./admin.php?id=update&setlang=fr" style="padding:2px 7px; border-radius:3px; text-decoration:none; <?= (($langid ?? 'id') === 'fr') ? 'background:#0073C6; color:#ffffff;' : 'color:inherit; opacity:0.75;' ?>">FR</a>
+          <a href="./admin.php?id=update&setlang=en" style="padding:2px 7px; border-radius:3px; text-decoration:none; <?= (($langid ?? 'id') === 'en') ? 'background:#0073C6; color:#ffffff;' : 'color:inherit; opacity:0.75;' ?>">EN</a>
+        </div>
+        <button type="button" onclick="closeDesktopLicenseModal()" style="background:none; border:none; color:inherit; font-size:20px; line-height:1; cursor:pointer; opacity:0.8;" title="<?= htmlspecialchars($tr($_close ?? null, 'Tutup')); ?>">&times;</button>
+      </div>
     </div>
     <div class="card-body" style="padding:15px;">
       <div id="ndrLicenseAlert" style="display:none; padding:8px 12px; border-radius:3px; font-size:12px; margin-bottom:12px;"></div>
@@ -773,7 +780,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
         <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;"><?= htmlspecialchars($tr($_update_hwid_label ?? null, 'Hardware ID (HWID Perangkat Ini):')); ?></label>
         <div style="display:flex; gap:5px;">
           <input type="text" id="ndrDeviceHwid" value="<?= htmlspecialchars($hwid ?: 'STANDALONE') ?>" readonly class="form-control" style="flex:1; font-family:monospace; font-size:12.5px; font-weight:bold;">
-          <button type="button" onclick="copyHwid()" class="btn bg-secondary" style="margin:0; padding:5px 12px;" title="Salin HWID">
+          <button type="button" onclick="copyHwid()" class="btn bg-secondary" style="margin:0; padding:5px 12px;" title="<?= htmlspecialchars($tr($_update_btn_copy ?? null, 'Salin')); ?> HWID">
             <i class="fa fa-copy" id="copyHwidIcon"></i> <?= htmlspecialchars($tr($_update_btn_copy ?? null, 'Salin')); ?>
           </button>
         </div>
@@ -788,16 +795,16 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
       <!-- Box Info Native Mikhmon -->
       <div class="box box-bordered" style="margin:8px 0 15px 0; padding:10px 12px; font-size:11.5px; line-height:1.5; background:rgba(0,0,0,0.05);">
         <div style="margin-bottom:6px;">
-          <i class="fa fa-info-circle text-primary"></i> <b>Panduan:</b> Masukkan License Key resmi dari <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">Portal Cloud NODERA</a> atau kosongkan untuk klaim <b>Free Trial 7 Hari</b>.
+          <i class="fa fa-info-circle text-primary"></i> <b><?= htmlspecialchars($tr($_guide ?? null, 'Panduan')); ?>:</b> <?= $tr($_license_guide_text ?? null, 'Masukkan License Key resmi dari <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">Portal Cloud NODERA</a> atau kosongkan untuk klaim <b>Free Trial 7 Hari</b>.'); ?>
         </div>
         <div style="border-top:1px dashed rgba(120,120,120,0.25); padding-top:6px; margin-top:6px;">
-          <b><i class="fa fa-whatsapp text-green"></i> Layanan Bantuan &amp; CS WhatsApp:</b>
+          <b><i class="fa fa-whatsapp text-green"></i> <?= htmlspecialchars($tr($_support_cs_whatsapp ?? null, 'Layanan Bantuan & CS WhatsApp:')); ?></b>
           <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
             <a href="https://wa.me/6285155173547?text=Halo%20Admin%20NODERA%20Indonesia,%20saya%20butuh%20bantuan%20aktivasi%20lisensi%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="btn bg-green" style="font-size:11px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
-              CS Indonesia (0851-5517-3547)
+              <?= htmlspecialchars($tr($_cs_indonesia ?? null, 'CS Indonesia (0851-5517-3547)')); ?>
             </a>
             <a href="https://wa.me/2550788222699?text=Bonjour%20Support%20NODERA%20C%C3%B4te%20d%27Ivoire,%20j%27ai%20besoin%20d%27aide%20pour%20activer%20la%20licence%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="btn bg-green" style="font-size:11px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
-              CS Côte d'Ivoire (+255 07 88 22 26 99)
+              <?= htmlspecialchars($tr($_cs_ivory_coast ?? null, 'CS Côte d\'Ivoire (+255 07 88 22 26 99)')); ?>
             </a>
           </div>
         </div>
@@ -820,9 +827,9 @@ function copyMikhmonKey() {
   if (el) {
     var txt = el.innerText.trim();
     navigator.clipboard.writeText(txt).then(function() {
-      alert('Kunci lisensi berhasil disalin: ' + txt);
+      alert((<?= json_encode($_license_code_copied ?? 'Kunci lisensi berhasil disalin:') ?>) + ' ' + txt);
     }).catch(function() {
-      alert('Kunci lisensi: ' + txt);
+      alert((<?= json_encode($_license_key ?? 'Kunci lisensi:') ?>) + ' ' + txt);
     });
   }
 }
@@ -842,7 +849,7 @@ function copyHwid() {
   if (h) {
     h.select();
     navigator.clipboard.writeText(h.value).then(function() {
-      alert('Hardware ID berhasil disalin ke clipboard: ' + h.value);
+      alert((<?= json_encode($_hwid_copied_clipboard ?? 'Hardware ID berhasil disalin ke clipboard:') ?>) + ' ' + h.value);
     });
   }
 }
@@ -852,11 +859,11 @@ function submitDesktopLicense() {
   var alertBox = document.getElementById('ndrLicenseAlert');
   var btn = document.getElementById('ndrBtnSubmitLicense');
   if (!key) {
-    showError('License Key wajib diisi!');
+    showError(<?= json_encode($_license_key_required ?? 'License Key wajib diisi!') ?>);
     return;
   }
   btn.disabled = true;
-  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Menyimpan...';
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + <?= json_encode($_saving ?? 'Menyimpan...') ?>;
   if (alertBox) alertBox.style.display = 'none';
 
   var fd = new FormData();
@@ -872,22 +879,22 @@ function submitDesktopLicense() {
     if (data && data.success) {
       showSuccessAndReload(data);
     } else {
-      showError(data ? data.message : 'Gagal menyimpan lisensi.');
+      showError(data ? data.message : <?= json_encode($_license_save_failed ?? 'Gagal menyimpan lisensi.') ?>);
     }
   })
   .catch(function(err) {
-    showError('Terjadi kesalahan: ' + err.message);
+    showError((<?= json_encode($_error ?? 'Terjadi kesalahan:') ?>) + ' ' + err.message);
   });
 
   function showSuccessAndReload(data) {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-check-circle"></i> Berhasil';
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> ' + <?= json_encode($_success ?? 'Berhasil') ?>;
     }
     if (alertBox) {
       alertBox.className = 'box bg-green';
       alertBox.style.cssText = 'display:block; margin:0 0 12px 0; padding:8px 10px; border-radius:3px; font-size:12px; font-weight:bold; color:#ffffff;';
-      alertBox.innerHTML = '<i class="fa fa-check"></i> ' + (data.message || 'Lisensi berhasil disimpan & diaktifkan!');
+      alertBox.innerHTML = '<i class="fa fa-check"></i> ' + (data.message || <?= json_encode($_license_save_success ?? 'Lisensi berhasil disimpan & diaktifkan!') ?>);
     }
     setTimeout(function() {
       location.reload();
@@ -897,7 +904,7 @@ function submitDesktopLicense() {
   function showError(msg) {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-check"></i> Simpan &amp; Verifikasi';
+      btn.innerHTML = '<i class="fa fa-check"></i> ' + <?= json_encode($_update_btn_save_verify ?? 'Simpan & Verifikasi') ?>;
     }
     if (alertBox) {
       alertBox.className = 'box bg-danger';

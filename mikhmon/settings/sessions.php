@@ -100,7 +100,7 @@ if (!isset($_SESSION["mikhmon"])) {
         <div class="box box-bordered" style="margin-bottom: 18px; padding: 14px 16px; border-radius: 8px;">
           <div style="font-size: 13px; font-weight: bold; margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(128,128,128,0.2); padding-bottom: 8px;">
             <span><i class="fa fa-key text-yellow"></i> <?= $_active_license ?? "Lisensi Mikhmon Standalone" ?></span>
-            <button type="button" onclick="openDesktopLicenseModal()" class="btn btn-sm bg-secondary" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer;" title="Ganti Lisensi">
+            <button type="button" onclick="openDesktopLicenseModal()" class="btn btn-sm bg-secondary" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; cursor: pointer;" title="<?= $_change_license ?? "Ganti Lisensi" ?>">
               <i class="fa fa-pencil text-primary"></i> <?= $_change_license ?? "Ganti" ?>
             </button>
           </div>
@@ -109,7 +109,7 @@ if (!isset($_SESSION["mikhmon"])) {
               <span style="opacity: 0.8;"><?= $_license_key ?? "Kunci Lisensi" ?>:</span>
               <span style="display: flex; align-items: center; gap: 4px;">
                 <code id="sessionActiveKeyText" style="font-size: 11px; font-weight: bold; padding: 1px 6px; border-radius: 4px;"><?= htmlspecialchars($licenseKey ?: 'STANDALONE-FREE-TIER'); ?></code>
-                <button type="button" onclick="copySessionLicenseKey()" class="btn btn-default btn-xs" style="padding: 0 4px; font-size: 10px;" title="Salin Kunci">
+                <button type="button" onclick="copySessionLicenseKey()" class="btn btn-default btn-xs" style="padding: 0 4px; font-size: 10px;" title="<?= $_copy_key ?? "Salin Kunci" ?>">
                   <i class="fa fa-copy"></i>
                 </button>
               </span>
@@ -129,7 +129,7 @@ if (!isset($_SESSION["mikhmon"])) {
             </div>
             <div style="display: flex; justify-content: space-between;">
               <span style="opacity: 0.8;">Router &amp; Voucher:</span>
-              <strong class="text-green">Unlimited (Tanpa Batas Kuota)</strong>
+              <strong class="text-green"><?= $_unlimited_no_quota ?? 'Unlimited (Tanpa Batas Kuota)'; ?></strong>
             </div>
           </div>
           <div style="margin-top: 10px; padding-top: 6px; border-top: 1px solid rgba(128,128,128,0.15); display: flex; justify-content: space-between; align-items: center;">
@@ -321,7 +321,7 @@ if (!isset($_SESSION["mikhmon"])) {
                   <input class="group-item group-item-l" type="submit" style="cursor: pointer;" name="save" value="<?= $_save ?>"/>
                 </div>
                 <div class="input-group-2">
-                  <div style="cursor: pointer;" class="group-item group-item-r pd-2p5 text-center" onclick="location.reload();" title="Reload Data"><i class="fa fa-refresh"></i></div>
+                  <div style="cursor: pointer;" class="group-item group-item-r pd-2p5 text-center" onclick="location.reload();" title="<?= $_refresh ?? 'Reload Data'; ?>"><i class="fa fa-refresh"></i></div>
                 </div>
                 </div>
           </td>
@@ -346,43 +346,50 @@ if (!isset($_SESSION["mikhmon"])) {
   <div class="card" style="width:92%; max-width:480px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border-radius:4px; margin:0; padding:0; overflow:hidden;">
     <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px;">
       <h3 class="card-title" style="margin:0; font-size:15px;">
-        <i class="fa fa-key text-primary"></i> Aktivasi / Ganti Lisensi
+        <i class="fa fa-key text-primary"></i> <?= $_update_modal_title ?? "Aktivasi / Ganti Lisensi"; ?>
       </h3>
-      <button type="button" onclick="closeDesktopLicenseModal()" style="background:none; border:none; color:inherit; font-size:20px; line-height:1; cursor:pointer; opacity:0.8;" title="Tutup">&times;</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:inline-flex; background:rgba(0,0,0,0.12); border-radius:4px; padding:1px; border:1px solid rgba(120,120,120,0.25); font-size:10px; font-weight:bold;">
+          <a href="./admin.php?id=sessions&setlang=id" style="padding:2px 7px; border-radius:3px; text-decoration:none; <?= (($langid ?? 'id') === 'id') ? 'background:#0073C6; color:#ffffff;' : 'color:inherit; opacity:0.75;' ?>">ID</a>
+          <a href="./admin.php?id=sessions&setlang=fr" style="padding:2px 7px; border-radius:3px; text-decoration:none; <?= (($langid ?? 'id') === 'fr') ? 'background:#0073C6; color:#ffffff;' : 'color:inherit; opacity:0.75;' ?>">FR</a>
+          <a href="./admin.php?id=sessions&setlang=en" style="padding:2px 7px; border-radius:3px; text-decoration:none; <?= (($langid ?? 'id') === 'en') ? 'background:#0073C6; color:#ffffff;' : 'color:inherit; opacity:0.75;' ?>">EN</a>
+        </div>
+        <button type="button" onclick="closeDesktopLicenseModal()" style="background:none; border:none; color:inherit; font-size:20px; line-height:1; cursor:pointer; opacity:0.8;" title="<?= $_close ?? 'Tutup'; ?>">&times;</button>
+      </div>
     </div>
     <div class="card-body" style="padding:15px;">
       <div id="ndrLicenseAlert" style="display:none; padding:8px 12px; border-radius:3px; font-size:12px; margin-bottom:12px;"></div>
 
       <!-- HWID Field -->
       <div style="margin-bottom:12px;">
-        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Hardware ID (HWID Perangkat Ini):</label>
+        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;"><?= $_hwid_this_device ?? "Hardware ID (HWID Perangkat Ini):"; ?></label>
         <div style="display:flex; gap:5px;">
           <input type="text" id="ndrDeviceHwid" value="<?= htmlspecialchars($hwid ?: 'STANDALONE') ?>" readonly class="form-control" style="flex:1; font-family:monospace; font-size:12.5px; font-weight:bold;">
-          <button type="button" onclick="copyHwid()" class="btn bg-secondary" style="margin:0; padding:5px 12px;" title="Salin HWID">
-            <i class="fa fa-copy" id="copyHwidIcon"></i> Salin
+          <button type="button" onclick="copyHwid()" class="btn bg-secondary" style="margin:0; padding:5px 12px;" title="<?= $_copy ?? "Salin"; ?> HWID">
+            <i class="fa fa-copy" id="copyHwidIcon"></i> <?= $_copy ?? "Salin"; ?>
           </button>
         </div>
       </div>
 
       <!-- License Key Field -->
       <div style="margin-bottom:10px;">
-        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Kode Kunci Lisensi (License Key):</label>
+        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;"><?= $_license_key_label ?? "Kode Kunci Lisensi (License Key):"; ?></label>
         <input type="text" id="ndrLicenseKeyInput" name="license_key" value="<?= htmlspecialchars($licenseKey) ?>" placeholder="Contoh: NDR-STD-XXXX-XXXX-XXXX-XXXX" class="form-control" style="font-family:monospace; font-size:12.5px; font-weight:bold;">
       </div>
 
       <!-- Box Info Native Mikhmon -->
       <div class="box box-bordered" style="margin:8px 0 15px 0; padding:10px 12px; font-size:11.5px; line-height:1.5; background:rgba(0,0,0,0.05);">
         <div style="margin-bottom:6px;">
-          <i class="fa fa-info-circle text-primary"></i> <b>Panduan:</b> Masukkan License Key resmi dari <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">Portal Cloud NODERA</a> atau kosongkan untuk klaim <b>Free Trial 7 Hari</b>.
+          <i class="fa fa-info-circle text-primary"></i> <b><?= $_guide ?? "Panduan"; ?>:</b> <?= $_license_guide_text ?? 'Masukkan License Key resmi dari <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">Portal Cloud NODERA</a> atau kosongkan untuk klaim <b>Free Trial 7 Hari</b>.'; ?>
         </div>
         <div style="border-top:1px dashed rgba(120,120,120,0.25); padding-top:6px; margin-top:6px;">
-          <b><i class="fa fa-whatsapp text-green"></i> Layanan Bantuan &amp; CS WhatsApp:</b>
+          <b><i class="fa fa-whatsapp text-green"></i> <?= $_support_cs_whatsapp ?? "Layanan Bantuan &amp; CS WhatsApp:"; ?></b>
           <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
             <a href="https://wa.me/6285155173547?text=Halo%20Admin%20NODERA%20Indonesia,%20saya%20butuh%20bantuan%20aktivasi%20lisensi%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="btn bg-green" style="font-size:11px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
-              🇮🇩 CS Indonesia (0851-5517-3547)
+              <?= $_cs_indonesia ?? "CS Indonesia (0851-5517-3547)"; ?>
             </a>
             <a href="https://wa.me/2550788222699?text=Bonjour%20Support%20NODERA%20C%C3%B4te%20d%27Ivoire,%20j%27ai%20besoin%20d%27aide%20pour%20activer%20la%20licence%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="btn bg-green" style="font-size:11px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
-              🇨🇮 CS Côte d'Ivoire (+255 07 88 22 26 99)
+              <?= $_cs_ivory_coast ?? "CS Côte d'Ivoire (+255 07 88 22 26 99)"; ?>
             </a>
           </div>
         </div>
@@ -390,9 +397,9 @@ if (!isset($_SESSION["mikhmon"])) {
 
       <!-- Action Buttons -->
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
-        <button type="button" onclick="closeDesktopLicenseModal()" class="btn bg-secondary" style="margin:0;">Batal</button>
+        <button type="button" onclick="closeDesktopLicenseModal()" class="btn bg-secondary" style="margin:0;"><?= $_cancel ?? "Batal"; ?></button>
         <button type="button" id="ndrBtnSubmitLicense" onclick="submitDesktopLicense()" class="btn bg-primary" style="margin:0;">
-          <i class="fa fa-check"></i> Simpan &amp; Verifikasi
+          <i class="fa fa-check"></i> <?= $_save_and_verify ?? "Simpan &amp; Verifikasi"; ?>
         </button>
       </div>
     </div>
@@ -416,9 +423,9 @@ function copySessionLicenseKey() {
   if (el) {
     var txt = el.innerText.trim();
     navigator.clipboard.writeText(txt).then(function() {
-      alert('Kunci lisensi berhasil disalin: ' + txt);
+      alert((<?= json_encode($_license_code_copied ?? 'Kunci lisensi berhasil disalin:') ?>) + ' ' + txt);
     }).catch(function() {
-      alert('Kunci lisensi: ' + txt);
+      alert((<?= json_encode($_license_key ?? 'Kunci lisensi:') ?>) + ' ' + txt);
     });
   }
 }
@@ -427,7 +434,7 @@ function copyHwid() {
   if (h) {
     h.select();
     document.execCommand("copy");
-    alert("Hardware ID berhasil disalin ke clipboard: " + h.value);
+    alert((<?= json_encode($_hwid_copied_clipboard ?? 'Hardware ID berhasil disalin ke clipboard:') ?>) + ' ' + h.value);
   }
 }
 
@@ -436,11 +443,11 @@ function submitDesktopLicense() {
   var alertBox = document.getElementById("ndrLicenseAlert");
   var btn = document.getElementById("ndrBtnSubmitLicense");
   if (!key) {
-    showError("License Key wajib diisi!");
+    showError(<?= json_encode($_license_key_required ?? 'License Key wajib diisi!') ?>);
     return;
   }
   btn.disabled = true;
-  btn.innerHTML = "<i class=\"fa fa-spinner fa-spin\"></i> Menyimpan...";
+  btn.innerHTML = "<i class=\"fa fa-spinner fa-spin\"></i> " + <?= json_encode($_saving ?? 'Menyimpan...') ?>;
   if (alertBox) alertBox.style.display = "none";
 
   var fd = new FormData();
@@ -456,22 +463,22 @@ function submitDesktopLicense() {
     if (data && data.success) {
       showSuccessAndReload(data);
     } else {
-      showError(data ? data.message : "Gagal menyimpan lisensi.");
+      showError(data ? data.message : <?= json_encode($_license_save_failed ?? 'Gagal menyimpan lisensi.') ?>);
     }
   })
   .catch(function(err) {
-    showError("Terjadi kesalahan: " + err.message);
+    showError((<?= json_encode($_error ?? 'Terjadi kesalahan:') ?>) + " " + err.message);
   });
 
   function showSuccessAndReload(data) {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = "<i class=\"fa fa-check-circle\"></i> Berhasil";
+      btn.innerHTML = "<i class=\"fa fa-check-circle\"></i> " + <?= json_encode($_success ?? 'Berhasil') ?>;
     }
     if (alertBox) {
       alertBox.className = "box bg-green";
       alertBox.style.cssText = "display:block; margin:0 0 12px 0; padding:8px 10px; border-radius:3px; font-size:12px; font-weight:bold; color:#ffffff;";
-      alertBox.innerHTML = "<i class=\"fa fa-check\"></i> " + (data.message || "Lisensi berhasil disimpan & diaktifkan!");
+      alertBox.innerHTML = "<i class=\"fa fa-check\"></i> " + (data.message || <?= json_encode($_license_save_success ?? 'Lisensi berhasil disimpan & diaktifkan!') ?>);
     }
     setTimeout(function() {
       location.reload();
@@ -481,7 +488,7 @@ function submitDesktopLicense() {
   function showError(msg) {
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = "<i class=\"fa fa-check\"></i> Simpan &amp; Verifikasi";
+      btn.innerHTML = "<i class=\"fa fa-check\"></i> " + <?= json_encode($_save_and_verify ?? 'Simpan &amp; Verifikasi') ?>;
     }
     if (alertBox) {
       alertBox.className = "box bg-danger";

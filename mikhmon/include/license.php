@@ -189,25 +189,47 @@ if (!function_exists('mikhmon_is_suspended')) {
 }
 
 if (!function_exists('mikhmon_expiry_text')) {
-    function mikhmon_expiry_text(): string {
+    function mikhmon_expiry_text(?string $langParam = null): string {
+        $lang = $langParam ?: ($_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? 'id');
+        if (!in_array($lang, ['id', 'fr', 'en'])) {
+            $lang = 'id';
+        }
         if (mikhmon_is_desktop_mode() && (!defined('MIKHMON_LICENSE_KEY') || empty(trim(MIKHMON_LICENSE_KEY)) || MIKHMON_STATUS === 'UNLICENSED')) {
+            if ($lang === 'fr') return 'Non Activé (Licence Requise)';
+            if ($lang === 'en') return 'Unactivated (License Required)';
             return 'Belum Teraktivasi (Lisensi Diperlukan)';
         }
         if (mikhmon_is_suspended()) {
+            if ($lang === 'fr') return 'Suspendu (Suspended)';
+            if ($lang === 'en') return 'Suspended';
             return 'Ditangguhkan (Suspended)';
         }
         $t = mikhmon_expiry_ts();
         if ($t === null) {
+            if ($lang === 'fr') return 'Permanent (À Vie)';
+            if ($lang === 'en') return 'Permanent (Lifetime)';
             return 'Permanen (Lifetime)';
         }
         $diff = (int) ceil(($t + 86399 - time()) / 86400);
         if ($diff < 0) {
+            if ($lang === 'fr') return 'Expiré (' . date('d M Y', $t) . ')';
+            if ($lang === 'en') return 'Expired (' . date('d M Y', $t) . ')';
             return 'Kedaluwarsa (' . date('d M Y', $t) . ')';
         }
         if ($diff == 0) {
+            if ($lang === 'fr') return 'Expire Aujourd\'hui (' . date('d M Y', $t) . ')';
+            if ($lang === 'en') return 'Expires Today (' . date('d M Y', $t) . ')';
             return 'Berakhir Hari Ini (' . date('d M Y', $t) . ')';
         }
+        if ($lang === 'fr') return $diff . ' Jours Restants (jusqu\'au ' . date('d M Y', $t) . ')';
+        if ($lang === 'en') return $diff . ' Days Left (until ' . date('d M Y', $t) . ')';
         return $diff . ' Hari Lagi (s/d ' . date('d M Y', $t) . ')';
+    }
+}
+
+if (!function_exists('mikhmon_get_license_expiry_text')) {
+    function mikhmon_get_license_expiry_text(?string $langParam = null): string {
+        return mikhmon_expiry_text($langParam);
     }
 }
 
@@ -395,8 +417,10 @@ if (!function_exists('mikhmon_reset_local_license')) {
 if (!function_exists('mikhmon_activate_desktop_license')) {
     function mikhmon_activate_desktop_license(string $licenseKey): array {
         $licenseKey = trim($licenseKey);
+        $lang = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? 'id';
         if (empty($licenseKey)) {
-            return ['success' => false, 'message' => 'Kunci lisensi wajib diisi.'];
+            $msgEmpty = ($lang === 'fr' ? 'La clé de licence est obligatoire.' : ($lang === 'en' ? 'License Key is required.' : 'Kunci lisensi wajib diisi.'));
+            return ['success' => false, 'message' => $msgEmpty];
         }
 
         $hwid = mikhmon_get_hwid();
@@ -449,22 +473,29 @@ if (!function_exists('mikhmon_activate_desktop_license')) {
         }
 
         if (!$response) {
+            $msgNet = ($lang === 'fr' 
+                ? 'Impossible de contacter le serveur de licence Cloud. Assurez-vous d\'une connexion Internet active. (' . ($lastErr ?: 'Timeout') . ')'
+                : ($lang === 'en'
+                    ? 'Failed to connect to Cloud License Server. Ensure internet connection is active. (' . ($lastErr ?: 'Timeout') . ')'
+                    : 'Gagal terhubung ke Cloud License Server. Pastikan koneksi internet aktif. (' . ($lastErr ?: 'Timeout') . ')'));
             return [
                 'success' => false,
-                'message' => 'Gagal terhubung ke Cloud License Server. Pastikan koneksi internet aktif. (' . ($lastErr ?: 'Timeout') . ')',
+                'message' => $msgNet,
             ];
         }
 
         if (empty($response['success'])) {
+            $defaultFail = ($lang === 'fr' ? 'Échec de l\'activation de la licence.' : ($lang === 'en' ? 'License activation failed.' : 'Aktivasi lisensi gagal.'));
             return [
                 'success' => false,
-                'message' => $response['message'] ?? 'Aktivasi lisensi gagal.',
+                'message' => $response['message'] ?? $defaultFail,
             ];
         }
 
+        $defaultSuccess = ($lang === 'fr' ? 'Licence Desktop NODERA activée avec succès !' : ($lang === 'en' ? 'NODERA Desktop License activated successfully!' : 'Lisensi Desktop NODERA berhasil diaktivasi!'));
         $data = $response['data'] ?? [];
         $savedRes = mikhmon_save_desktop_license_data($data);
-        $savedRes['message'] = $response['message'] ?? 'Lisensi Desktop NODERA berhasil diaktivasi!';
+        $savedRes['message'] = $response['message'] ?? $defaultSuccess;
         return $savedRes;
     }
 }
@@ -525,16 +556,23 @@ if (!function_exists('mikhmon_activate_trial_license')) {
         }
 
         if ($response && isset($response['code']) && $response['code'] === 'TRIAL_ALREADY_USED') {
+            $lang = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? 'id';
+            $msgTrialUsed = ($lang === 'fr' 
+                ? 'Cet appareil a déjà utilisé la période d\'essai gratuit de 7 jours.' 
+                : ($lang === 'en' 
+                    ? 'This device has already used the 7-day free trial.' 
+                    : 'Perangkat ini sudah pernah menggunakan masa percobaan 7 hari gratis.'));
             return [
                 'success' => false,
-                'message' => $response['message'] ?? 'Perangkat ini sudah pernah menggunakan masa percobaan 7 hari gratis.',
+                'message' => $response['message'] ?? $msgTrialUsed,
             ];
         }
 
         // Offline Fallback for first launch
+        $lang = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? 'id';
         $expFormatted = date('Y-m-d H:i:s', time() + (7 * 86400));
         $licenseKey = 'NDR-TRL-' . strtoupper(substr(md5($hwid . 'NODERA_TRIAL_2026'), 0, 12));
-        $prodName = 'Mikhmon Desktop (Trial 7 Hari)';
+        $prodName = ($lang === 'fr' ? 'Mikhmon Desktop (Essai 7 Jours)' : ($lang === 'en' ? 'Mikhmon Desktop (7-Day Trial)' : 'Mikhmon Desktop (Trial 7 Hari)'));
 
         $data = [
             'license_key'  => $licenseKey,

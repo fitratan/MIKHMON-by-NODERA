@@ -41,6 +41,16 @@ foreach ($logoCandidates as $cand) {
 ?>
 
 <div class="login-box" style="padding-top: 15px; margin: 15px auto;">
+  <!-- Language Switcher Bar -->
+  <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 12px;">
+    <span style="font-size: 11px; font-weight: bold; opacity: 0.7; text-transform: uppercase;"><?= $_choose_language ?? 'Bahasa'; ?>:</span>
+    <div style="display: inline-flex; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 2px; border: 1px solid rgba(120,120,120,0.3);">
+      <a href="./admin.php?id=login&setlang=id" style="font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 4px; text-decoration: none; <?= (($langid ?? 'id') === 'id') ? 'background: #0073C6; color: #ffffff;' : 'color: inherit; opacity: 0.75;' ?>">ID</a>
+      <a href="./admin.php?id=login&setlang=fr" style="font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 4px; text-decoration: none; <?= (($langid ?? 'id') === 'fr') ? 'background: #0073C6; color: #ffffff;' : 'color: inherit; opacity: 0.75;' ?>">FR</a>
+      <a href="./admin.php?id=login&setlang=en" style="font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 4px; text-decoration: none; <?= (($langid ?? 'id') === 'en') ? 'background: #0073C6; color: #ffffff;' : 'color: inherit; opacity: 0.75;' ?>">EN</a>
+    </div>
+  </div>
+
   <div class="card">
     <div class="card-header text-center">
       <h3><?= $_please_login ?></h3>
@@ -85,12 +95,12 @@ foreach ($logoCandidates as $cand) {
                   <i class="fa fa-shield"></i> Mikhmon Desktop by NODERA
                 </span>
                 <span style="font-size: 10px; padding: 2px 7px; background: #27ae60; color: #fff; border-radius: 4px; font-weight: bold;">
-                  <?= $remainingDays > 365 ? 'LIFETIME' : $remainingDays . ' Hari Tersisa' ?>
+                  <?= $remainingDays > 365 ? 'LIFETIME' : $remainingDays . ' ' . ($_days_left ?? 'Hari Tersisa') ?>
                 </span>
               </div>
               <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 10.5px; opacity: 0.85;">
                 <span style="font-family: monospace;"><?= htmlspecialchars(substr($licenseKey, 0, 11) . '...') ?></span>
-                <a href="javascript:void(0)" onclick="openDesktopLicenseModal()" style="color: inherit; text-decoration: underline; font-weight: bold;">Ganti Key</a>
+                <a href="javascript:void(0)" onclick="openDesktopLicenseModal()" style="color: inherit; text-decoration: underline; font-weight: bold;"><?= $_change_key ?? "Ganti Key"; ?></a>
               </div>
             </div>
           <?php endif; ?>
@@ -153,7 +163,7 @@ foreach ($logoCandidates as $cand) {
 
         <div style="margin-bottom: 6px; width: 100%;">
           <button type="button" id="btnInstallPwa" class="btn-login bg-secondary pointer btn-pwa-install" onclick="triggerPwaInstall()" style="width: 100%; height: 36px; margin: 0 !important; display: none;">
-            <i class="fa fa-download" style="margin-right: 6px;"></i> Install Mikhmon
+            <i class="fa fa-download" style="margin-right: 6px;"></i> <?= $_install_mikhmon ?? "Install Mikhmon"; ?>
           </button>
         </div>
       </form>
@@ -179,7 +189,14 @@ foreach ($logoCandidates as $cand) {
       <h3 class="card-title" style="margin:0; font-size:15px;">
         <i class="fa fa-key text-primary"></i> <?= $_desktop_license_activation ?? "Aktivasi Lisensi Desktop"; ?>
       </h3>
-      <button type="button" onclick="closeDesktopLicenseModal()" style="background:none; border:none; color:inherit; font-size:20px; line-height:1; cursor:pointer; opacity:0.8;" title="Tutup">&times;</button>
+      <div style="display:flex; align-items:center; gap:8px;">
+        <div style="display:inline-flex; background:rgba(0,0,0,0.12); border-radius:4px; padding:1px; border:1px solid rgba(120,120,120,0.25); font-size:10px; font-weight:bold;">
+          <a href="./admin.php?id=login&setlang=id" style="padding:2px 7px; border-radius:3px; text-decoration:none; <?= (($langid ?? 'id') === 'id') ? 'background:#0073C6; color:#ffffff;' : 'color:inherit; opacity:0.75;' ?>">ID</a>
+          <a href="./admin.php?id=login&setlang=fr" style="padding:2px 7px; border-radius:3px; text-decoration:none; <?= (($langid ?? 'id') === 'fr') ? 'background:#0073C6; color:#ffffff;' : 'color:inherit; opacity:0.75;' ?>">FR</a>
+          <a href="./admin.php?id=login&setlang=en" style="padding:2px 7px; border-radius:3px; text-decoration:none; <?= (($langid ?? 'id') === 'en') ? 'background:#0073C6; color:#ffffff;' : 'color:inherit; opacity:0.75;' ?>">EN</a>
+        </div>
+        <button type="button" onclick="closeDesktopLicenseModal()" style="background:none; border:none; color:inherit; font-size:20px; line-height:1; cursor:pointer; opacity:0.8;" title="<?= $_close ?? 'Tutup'; ?>">&times;</button>
+      </div>
     </div>
     <div class="card-body" style="padding:15px;">
       <div id="ndrLicenseAlert" style="display:none; padding:8px 12px; border-radius:3px; font-size:12px; margin-bottom:12px;"></div>
@@ -210,10 +227,10 @@ foreach ($logoCandidates as $cand) {
           <b><i class="fa fa-whatsapp text-green"></i> <?= $_support_cs_whatsapp ?? "Layanan Bantuan &amp; CS WhatsApp:"; ?></b>
           <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
             <a href="https://wa.me/6285155173547?text=Halo%20Admin%20NODERA%20Indonesia,%20saya%20butuh%20bantuan%20aktivasi%20lisensi%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="btn bg-green" style="font-size:11px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
-              🇮🇩 CS Indonesia (0851-5517-3547)
+              <?= $_cs_indonesia ?? "CS Indonesia (0851-5517-3547)"; ?>
             </a>
             <a href="https://wa.me/2550788222699?text=Bonjour%20Support%20NODERA%20C%C3%B4te%20d%27Ivoire,%20j%27ai%20besoin%20d%27aide%20pour%20activer%20la%20licence%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="btn bg-green" style="font-size:11px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
-              🇨🇮 CS Côte d'Ivoire (+255 07 88 22 26 99)
+              <?= $_cs_ivory_coast ?? "CS Côte d'Ivoire (+255 07 88 22 26 99)"; ?>
             </a>
           </div>
         </div>
@@ -358,7 +375,7 @@ function tryDirectBrowserActivation(licenseKey, deviceHwid) {
     ];
     var tryFetch = function(idx) {
       if (idx >= apis.length) {
-        showError('Gagal menghubungi server aktivasi NODERA.');
+        showError(<?= json_encode($_license_connect_error ?? 'Gagal menghubungi server aktivasi NODERA.') ?>);
         return;
       }
       fetch(apis[idx], {
@@ -376,7 +393,7 @@ function tryDirectBrowserActivation(licenseKey, deviceHwid) {
           .then(function() { showSuccessAndReload(cloudRes); })
           .catch(function() { showSuccessAndReload(cloudRes); });
         } else {
-          showError(cloudRes ? cloudRes.message : 'Aktivasi lisensi gagal.');
+          showError(cloudRes ? cloudRes.message : <?= json_encode($_license_activation_failed ?? 'Aktivasi lisensi gagal.') ?>);
         }
       })
       .catch(function() {
@@ -391,7 +408,7 @@ function claimTrialLicenseLogin() {
     var btn = document.getElementById('ndrBtnClaimTrial');
     if (btn) {
       btn.disabled = true;
-      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Mengaktifkan Free Trial...';
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + <?= json_encode($_trial_activating ?? 'Mengaktifkan Free Trial...') ?>;
     }
     if (alertBox) alertBox.style.display = 'none';
 
@@ -421,27 +438,27 @@ function claimTrialLicenseLogin() {
             fetch('./admin.php', { method: 'POST', body: saveFd })
             .then(function() { showSuccessAndReload(cRes); });
           } else {
-            showError(cRes ? cRes.message : 'Gagal mengklaim Free Trial.');
+            showError(cRes ? cRes.message : <?= json_encode($_claim_trial_failed ?? 'Gagal mengklaim Free Trial.') ?>);
             if (btn) {
               btn.disabled = false;
-              btn.innerHTML = '<i class="fa fa-star"></i> Coba Gratis 7 Hari (Free Trial)';
+              btn.innerHTML = '<i class="fa fa-star"></i> ' + <?= json_encode($_free_trial_7d ?? 'Coba Gratis 7 Hari (Free Trial)') ?>;
             }
           }
         })
         .catch(function(err) {
-          showError('Gagal mengklaim Free Trial: ' + err.message);
+          showError((<?= json_encode($_claim_trial_failed ?? 'Gagal mengklaim Free Trial:') ?>) + ' ' + err.message);
           if (btn) {
             btn.disabled = false;
-            btn.innerHTML = '<i class="fa fa-star"></i> Coba Gratis 7 Hari (Free Trial)';
+            btn.innerHTML = '<i class="fa fa-star"></i> ' + <?= json_encode($_free_trial_7d ?? 'Coba Gratis 7 Hari (Free Trial)') ?>;
           }
         });
       }
     })
     .catch(function() {
-      showError('Gagal mengklaim Free Trial. Periksa koneksi internet.');
+      showError(<?= json_encode($_claim_trial_net_error ?? 'Gagal mengklaim Free Trial. Periksa koneksi internet.') ?>);
       if (btn) {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa fa-star"></i> Coba Gratis 7 Hari (Free Trial)';
+        btn.innerHTML = '<i class="fa fa-star"></i> ' + <?= json_encode($_free_trial_7d ?? 'Coba Gratis 7 Hari (Free Trial)') ?>;
       }
     });
 }
@@ -451,12 +468,12 @@ function showSuccessAndReload(data) {
     var alertBox = document.getElementById('ndrLicenseAlert');
     if (btn) {
       btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-check-circle"></i> Berhasil';
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> ' + <?= json_encode($_success ?? 'Berhasil') ?>;
     }
     if (alertBox) {
       alertBox.className = 'box bg-green';
       alertBox.style.cssText = 'display:block; margin:0 0 12px 0; padding:8px 10px; border-radius:3px; font-size:12px; font-weight:bold; color:#ffffff;';
-      alertBox.innerHTML = '<i class="fa fa-check"></i> ' + (data.message || 'Lisensi berhasil diaktivasi!') + '<br><small style="font-weight:normal;">Masa aktif s/d: ' + (data.expires_at || (data.data && data.data.expires_at) || '-') + '</small>';
+      alertBox.innerHTML = '<i class="fa fa-check"></i> ' + (data.message || <?= json_encode($_license_activated_success ?? 'Lisensi berhasil diaktivasi!') ?>) + '<br><small style="font-weight:normal;">' + <?= json_encode($_active_until ?? 'Masa aktif s/d: ') ?> + (data.expires_at || (data.data && data.data.expires_at) || '-') + '</small>';
     }
     setTimeout(function() {
       location.reload();
@@ -490,7 +507,7 @@ window.addEventListener('appinstalled', function() {
   deferredPwaPrompt = null;
   var btn = document.getElementById('btnInstallPwa');
   if (btn) {
-    btn.innerHTML = '<i class="fa fa-check-circle"></i> Aplikasi Terpasang';
+    btn.innerHTML = '<i class="fa fa-check-circle"></i> ' + <?= json_encode($_app_installed ?? 'Aplikasi Terpasang') ?>;
     btn.disabled = true;
     btn.style.opacity = '0.7';
     btn.style.cursor = 'default';
@@ -510,7 +527,7 @@ function triggerPwaInstall() {
       if (choiceResult.outcome === 'accepted') {
         var btn = document.getElementById('btnInstallPwa');
         if (btn) {
-          btn.innerHTML = '<i class="fa fa-check-circle"></i> Aplikasi Terpasang';
+          btn.innerHTML = '<i class="fa fa-check-circle"></i> ' + <?= json_encode($_app_installed ?? 'Aplikasi Terpasang') ?>;
           btn.disabled = true;
         }
       }
@@ -519,9 +536,9 @@ function triggerPwaInstall() {
   } else {
     var isIOS = /iphone|ipad|ipod/.test(navigator.userAgent.toLowerCase());
     if (isIOS) {
-      alert("📱 Cara Install di iPhone/iPad (Safari):\n1. Tekan tombol 'Share' (ikon kotak panah ke atas di bilah bawah)\n2. Gulir ke bawah lalu pilih 'Tambah ke Layar Utama' (Add to Home Screen)\n3. Tekan 'Tambah' di pojok kanan atas.");
+      alert(<?= json_encode($_pwa_install_ios_guide ?? "Cara Install di iPhone/iPad (Safari):\n1. Tekan tombol 'Share' (ikon kotak panah ke atas di bilah bawah)\n2. Gulir ke bawah lalu pilih 'Tambah ke Layar Utama' (Add to Home Screen)\n3. Tekan 'Tambah' di pojok kanan atas.") ?>);
     } else {
-      alert("📱 Cara Install Aplikasi di Browser:\n1. Tekan menu titik tiga (⋮) di pojok kanan atas browser Chrome/browser Anda\n2. Pilih 'Install aplikasi' atau 'Tambahkan ke Layar Utama' (Add to Home Screen)\n3. Ikuti petunjuk untuk menyelesaikan pemasangan.");
+      alert(<?= json_encode($_pwa_install_browser_guide ?? "Cara Install Aplikasi di Browser:\n1. Tekan menu titik tiga (⋮) di pojok kanan atas browser Chrome/browser Anda\n2. Pilih 'Install aplikasi' atau 'Tambahkan ke Layar Utama' (Add to Home Screen)\n3. Ikuti petunjuk untuk menyelesaikan pemasangan.") ?>);
     }
   }
 }

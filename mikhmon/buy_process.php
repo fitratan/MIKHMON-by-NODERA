@@ -107,34 +107,55 @@ if (!function_exists('mikhmon_resolve_profile_validity')) {
 }
 
 if (!function_exists('mikhmon_infer_validity')) {
-    function mikhmon_infer_validity($name, $rawValidity, $isFrench = false) {
+    function mikhmon_infer_validity($name, $rawValidity = '', $langParam = 'id') {
+        $lang = is_bool($langParam) ? ($langParam ? 'fr' : 'id') : strtolower((string)$langParam);
         $val = trim((string)$rawValidity);
-        if (!empty($val) && $val !== 'Standar' && $val !== 'Standard' && $val !== 'Validité Standard' && $val !== 'Hotspot') {
+        if (!empty($val) && $val !== 'Standar' && $val !== 'Standard' && $val !== 'Validité Standard' && $val !== 'Hotspot' && $val !== 'Aktif' && $val !== '-') {
             return $val;
         }
         $n = strtolower($name);
         if (preg_match('/(\d+)\s*(min|menit|m)/i', $n, $m)) {
-            return $isFrench ? $m[1] . ' Minutes' : $m[1] . ' Menit';
+            $num = (int)$m[1];
+            if ($lang === 'fr') return $num . ($num > 1 ? ' Minutes' : ' Minute');
+            if ($lang === 'en') return $num . ($num > 1 ? ' Minutes' : ' Minute');
+            return $num . ' Menit';
         }
         if (preg_match('/(\d+)\s*(h|jam|heures?|hr|hour)/i', $n, $m)) {
-            return $isFrench ? $m[1] . ' Heures' : $m[1] . ' Jam';
+            $num = (int)$m[1];
+            if ($lang === 'fr') return $num . ($num > 1 ? ' Heures' : ' Heure');
+            if ($lang === 'en') return $num . ($num > 1 ? ' Hours' : ' Hour');
+            return $num . ' Jam';
         }
         if (preg_match('/(\d+)\s*(j|hari|jours?|d|day|days)/i', $n, $m)) {
-            return $isFrench ? $m[1] . ' Jours' : $m[1] . ' Hari';
+            $num = (int)$m[1];
+            if ($lang === 'fr') return $num . ($num > 1 ? ' Jours' : ' Jour');
+            if ($lang === 'en') return $num . ($num > 1 ? ' Days' : ' Day');
+            return $num . ' Hari';
         }
         if (preg_match('/(\d+)\s*(b|bln|bulan|mois|mth|month)/i', $n, $m)) {
-            return $isFrench ? $m[1] . ' Mois' : $m[1] . ' Bulan';
+            $num = (int)$m[1];
+            if ($lang === 'fr') return $num . ' Mois';
+            if ($lang === 'en') return $num . ($num > 1 ? ' Months' : ' Month');
+            return $num . ' Bulan';
         }
-        if (strpos($n, 'bulan') !== false || strpos($n, 'mois') !== false) {
-            return $isFrench ? '30 Jours' : '30 Hari';
+        if (strpos($n, 'bulan') !== false || strpos($n, 'month') !== false || strpos($n, 'mois') !== false) {
+            if ($lang === 'fr') return '30 Jours';
+            if ($lang === 'en') return '30 Days';
+            return '30 Hari';
         }
-        if (strpos($n, 'minggu') !== false || strpos($n, 'semaine') !== false) {
-            return $isFrench ? '7 Jours' : '7 Hari';
+        if (strpos($n, 'minggu') !== false || strpos($n, 'week') !== false || strpos($n, 'semaine') !== false) {
+            if ($lang === 'fr') return '7 Jours';
+            if ($lang === 'en') return '7 Days';
+            return '7 Hari';
         }
-        if (strpos($n, 'hari') !== false || strpos($n, 'jour') !== false) {
-            return $isFrench ? '24 Heures' : '24 Jam';
+        if (strpos($n, 'hari') !== false || strpos($n, 'day') !== false || strpos($n, 'jour') !== false) {
+            if ($lang === 'fr') return '24 Heures';
+            if ($lang === 'en') return '24 Hours';
+            return '24 Jam';
         }
-        return $isFrench ? 'Illimité' : 'Aktif';
+        if ($lang === 'fr') return 'Illimité';
+        if ($lang === 'en') return 'Active';
+        return 'Aktif';
     }
 }
 

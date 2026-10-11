@@ -26,7 +26,7 @@ include_once __DIR__ . '/../lang/' . $langid . '.php';
 
 include_once __DIR__ . '/license.php';
 
-$expiryText = function_exists('mikhmon_get_license_expiry_text') ? mikhmon_get_license_expiry_text() : 'Aktif';
+$expiryText = function_exists('mikhmon_get_license_expiry_text') ? mikhmon_get_license_expiry_text($langid) : 'Aktif';
 $isExpired = function_exists('mikhmon_is_expired') ? mikhmon_is_expired() : false;
 $subdomain = defined('MIKHMON_SUBDOMAIN') ? MIKHMON_SUBDOMAIN : basename(dirname(__DIR__));
 $brandName = defined('MIKHMON_BRAND') ? MIKHMON_BRAND : 'by panel.dgtlnetsolution.com';
