@@ -197,17 +197,17 @@ foreach ($logoCandidates as $cand) {
 
       <!-- License Key Field -->
       <div style="margin-bottom:10px;">
-        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;">Kode Kunci Lisensi (License Key):</label>
+        <label style="display:block; font-size:12px; font-weight:bold; margin-bottom:4px;"><?= $_license_key_label ?? "Kode Kunci Lisensi (License Key):"; ?></label>
         <input type="text" id="ndrLicenseKeyInput" name="license_key" value="<?= htmlspecialchars($licenseKey) ?>" placeholder="Contoh: NDR-STD-XXXX-XXXX-XXXX-XXXX" class="form-control" style="font-family:monospace; font-size:12.5px; font-weight:bold;">
       </div>
 
       <!-- Box Info Native Mikhmon -->
       <div class="box box-bordered" style="margin:8px 0 15px 0; padding:10px 12px; font-size:11.5px; line-height:1.5; background:rgba(0,0,0,0.05);">
         <div style="margin-bottom:6px;">
-          <i class="fa fa-info-circle text-primary"></i> <b>Panduan:</b> Masukkan License Key resmi dari <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">Portal Cloud NODERA</a> atau kosongkan untuk klaim <b>Free Trial 7 Hari</b>.
+          <i class="fa fa-info-circle text-primary"></i> <b><?= $_guide ?? "Panduan"; ?>:</b> <?= $_license_guide_text ?? 'Masukkan License Key resmi dari <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">Portal Cloud NODERA</a> atau kosongkan untuk klaim <b>Free Trial 7 Hari</b>.'; ?>
         </div>
         <div style="border-top:1px dashed rgba(120,120,120,0.25); padding-top:6px; margin-top:6px;">
-          <b><i class="fa fa-whatsapp text-green"></i> Layanan Bantuan &amp; CS WhatsApp:</b>
+          <b><i class="fa fa-whatsapp text-green"></i> <?= $_support_cs_whatsapp ?? "Layanan Bantuan &amp; CS WhatsApp:"; ?></b>
           <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:5px;">
             <a href="https://wa.me/6285155173547?text=Halo%20Admin%20NODERA%20Indonesia,%20saya%20butuh%20bantuan%20aktivasi%20lisensi%20Mikhmon%20HWID:%20<?= urlencode($hwid ?: 'STANDALONE') ?>" target="_blank" class="btn bg-green" style="font-size:11px; padding:3px 8px; text-decoration:none; display:inline-flex; align-items:center; gap:4px; margin:0;">
               🇮🇩 CS Indonesia (0851-5517-3547)
@@ -222,15 +222,15 @@ foreach ($logoCandidates as $cand) {
       <!-- Free Trial Button in Modal -->
       <div style="margin-bottom:12px;">
         <button type="button" id="ndrBtnClaimTrial" onclick="claimTrialLicenseLogin()" class="btn bg-green" style="width:100%; height:34px; font-size:12px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:6px; margin:0;">
-          <i class="fa fa-star"></i> Coba Gratis 7 Hari (Free Trial)
+          <i class="fa fa-star"></i> <?= $_free_trial_7d ?? "Coba Gratis 7 Hari (Free Trial)"; ?>
         </button>
       </div>
 
       <!-- Action Buttons -->
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
-        <button type="button" onclick="closeDesktopLicenseModal()" class="btn bg-secondary" style="margin:0;">Batal</button>
+        <button type="button" onclick="closeDesktopLicenseModal()" class="btn bg-secondary" style="margin:0;"><?= $_cancel ?? "Batal"; ?></button>
         <button type="button" id="ndrBtnSubmitLicense" onclick="submitDesktopLicenseLogin()" class="btn bg-primary" style="margin:0;">
-          <i class="fa fa-check"></i> Simpan &amp; Verifikasi
+          <i class="fa fa-check"></i> <?= $_save_and_verify ?? "Simpan &amp; Verifikasi"; ?>
         </button>
       </div>
     </div>
