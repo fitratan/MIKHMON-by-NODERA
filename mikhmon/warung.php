@@ -154,6 +154,15 @@ if (!empty($session) && isset($data[$session])) {
     }
 }
 
+$rawCurr = (!empty($session) && isset($data[$session][6])) ? $data[$session][6] : '';
+$currency = strpos($rawCurr, '&') !== false ? (explode('&', $rawCurr)[1] ?? '') : (!empty($rawCurr) ? $rawCurr : '');
+if (empty($currency)) {
+    if (!function_exists('mikhmon_get_active_currency')) {
+        include_once __DIR__ . '/include/whatsapp_helper.php';
+    }
+    $currency = function_exists('mikhmon_get_active_currency') ? mikhmon_get_active_currency($langid ?? 'id') : 'Rp';
+}
+
 // Check Fitur Warung add-on status
 if (function_exists('mikhmon_is_desktop_mode') && mikhmon_is_desktop_mode()) {
     $isAddonActive = function_exists('mikhmon_is_licensed') ? mikhmon_is_licensed() : false;
@@ -1539,6 +1548,8 @@ function sendReceiptWhatsapp() {
     }
   }
 
+  var lang = '<?= $langid ?? "id"; ?>';
+  var currency = '<?= htmlspecialchars($currency ?? "Rp"); ?>';
   var code = $('#rcCode').text();
   var prof = $('#rcProfile').text();
   var val = $('#rcValidity').text();
@@ -1547,8 +1558,27 @@ function sendReceiptWhatsapp() {
   var hsName = '<?= htmlspecialchars(addslashes($hotspotname)); ?>';
 
   var cleanPhone = phone.replace(/[^0-9]/g, '');
-  if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.slice(1);
-  if (cleanPhone.startsWith('8')) cleanPhone = '62' + cleanPhone;
+  if (cleanPhone.startsWith('00')) cleanPhone = cleanPhone.slice(2);
+
+  if (lang === 'fr' || currency.toUpperCase() === 'FCFA') {
+    if (cleanPhone.startsWith('225')) {
+      var rest = cleanPhone.slice(3);
+      if (rest.length === 9 && ['1', '5', '7'].includes(rest.charAt(0))) {
+        cleanPhone = '2250' + rest;
+      }
+    } else if (cleanPhone.startsWith('0')) {
+      cleanPhone = '225' + cleanPhone;
+    } else if (cleanPhone.length === 9 && ['1', '5', '7'].includes(cleanPhone.charAt(0))) {
+      cleanPhone = '2250' + cleanPhone;
+    } else if (cleanPhone.length === 8) {
+      cleanPhone = '2250' + cleanPhone;
+    } else if (cleanPhone.length < 11) {
+      cleanPhone = '225' + cleanPhone;
+    }
+  } else {
+    if (cleanPhone.startsWith('0')) cleanPhone = '62' + cleanPhone.slice(1);
+    if (cleanPhone.startsWith('8')) cleanPhone = '62' + cleanPhone;
+  }
 
   var receiptTemplates = {
     'id': '*PEMBELIAN VOUCHER HOTSPOT*\n-----------------------------------\n*Lokasi:* ' + hsName + '\n*Paket:* ' + prof + '\n' + (val && val !== '-' && val !== 'Aktif' ? ('*Masa Aktif:* ' + val + '\n') : '') + '*Harga:* ' + price + '\n\n*Kode Voucher:*\n*' + code + '*\n*(Username & Password sama)*\n\n*Warung:* ' + warungName + '\n-----------------------------------\n_Terima kasih atas pembelian Anda._',
@@ -1733,14 +1763,43 @@ function copyVoucherCode(code, btn) {
 function sendTxWhatsApp(tx) {
   if (!tx || !tx.buyer_phone) return;
   var lang = '<?= $langid ?? "id"; ?>';
+  var currency = '<?= htmlspecialchars($currency ?? "Rp"); ?>';
   var phone = tx.buyer_phone.replace(/[^0-9]/g, '');
-  if (phone.startsWith('0')) phone = '62' + phone.substring(1);
-  if (phone.startsWith('8')) phone = '62' + phone;
+  if (phone.startsWith('00')) phone = phone.slice(2);
+
+  if (lang === 'fr' || currency.toUpperCase() === 'FCFA') {
+    if (phone.startsWith('225')) {
+      var rest = phone.slice(3);
+      if (rest.length === 9 && ['1', '5', '7'].includes(rest.charAt(0))) {
+        phone = '2250' + rest;
+      }
+    } else if (phone.startsWith('0')) {
+      phone = '225' + phone;
+    } else if (phone.length === 9 && ['1', '5', '7'].includes(phone.charAt(0))) {
+      phone = '2250' + phone;
+    } else if (phone.length === 8) {
+      phone = '2250' + phone;
+    } else if (phone.length < 11) {
+      phone = '225' + phone;
+    }
+  } else {
+    if (phone.startsWith('0')) phone = '62' + phone.substring(1);
+    if (phone.startsWith('8')) phone = '62' + phone;
+  }
 
   var code = tx.username || '-';
   var prof = tx.profile || '-';
   var val = tx.validity || '';
-  var price = 'Rp ' + Number(tx.sell_price || 0).toLocaleString('id-ID');
+
+  var formattedPrice = '';
+  if (currency.toUpperCase() === 'FCFA' || lang === 'fr') {
+    formattedPrice = Number(tx.sell_price || 0).toLocaleString('fr-FR') + ' FCFA';
+  } else if (currency === '$' || currency.toUpperCase() === 'USD') {
+    formattedPrice = '$' + Number(tx.sell_price || 0).toLocaleString('en-US');
+  } else {
+    formattedPrice = (currency || 'Rp') + ' ' + Number(tx.sell_price || 0).toLocaleString('id-ID');
+  }
+  var price = formattedPrice;
   var warungName = '<?= htmlspecialchars(addslashes($currentWarung['name'] ?? '')); ?>';
   var hsName = '<?= htmlspecialchars(addslashes($hotspotname)); ?>';
 

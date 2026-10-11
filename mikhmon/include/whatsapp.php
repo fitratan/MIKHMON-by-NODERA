@@ -69,14 +69,34 @@ if (file_exists($wa_config_file)) {
     include_once $wa_config_file;
 }
 
-$default_template = "*PEMBAYARAN BERHASIL — {brand}*\n"
-    . "----------------------------------------\n"
-    . "Terima kasih telah membeli voucher WiFi.\n\n"
-    . "Paket: {package}\n"
-    . "Total Bayar: Rp {price}\n\n"
-    . "DETAIL LOGIN:\n"
-    . "{login_detail}\n\n"
-    . "Simpan pesan ini jika sewaktu-waktu perangkat Anda terputus.";
+if ($langid === 'fr') {
+    $default_template = "*PAIEMENT REUSSI — {brand}*\n"
+        . "----------------------------------------\n"
+        . "Merci d'avoir achete votre pass WiFi.\n\n"
+        . "Forfait : {package}\n"
+        . "Total paye : {price} FCFA\n\n"
+        . "DETAILS DE CONNEXION :\n"
+        . "{login_detail}\n\n"
+        . "Conservez ce message en cas de deconnexion de votre appareil.";
+} elseif ($langid === 'en') {
+    $default_template = "*PAYMENT SUCCESSFUL — {brand}*\n"
+        . "----------------------------------------\n"
+        . "Thank you for purchasing a WiFi voucher.\n\n"
+        . "Package: {package}\n"
+        . "Total Paid: {price} {currency}\n\n"
+        . "LOGIN DETAILS:\n"
+        . "{login_detail}\n\n"
+        . "Save this message in case your device disconnects.";
+} else {
+    $default_template = "*PEMBAYARAN BERHASIL — {brand}*\n"
+        . "----------------------------------------\n"
+        . "Terima kasih telah membeli voucher WiFi.\n\n"
+        . "Paket: {package}\n"
+        . "Total Bayar: Rp {price}\n\n"
+        . "DETAIL LOGIN:\n"
+        . "{login_detail}\n\n"
+        . "Simpan pesan ini jika sewaktu-waktu perangkat Anda terputus.";
+}
 
 // STRICT: muat data konfigurasi terisolasi per-sesi lokal
 $existingCfg = null;

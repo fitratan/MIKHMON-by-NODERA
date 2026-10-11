@@ -290,12 +290,12 @@ if (isset($update['callback_query'])) {
                                 . "• Masa Aktif: " . $vVal . "\n\n"
                                 . "Simpan pesan ini jika sewaktu-waktu perangkat Anda terputus.";
 
-                $updatedMsg = "✅ <b>PESANAN VOUCHER SUDAH DI-ACCEPT &amp; AKTIF — " . htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') . "</b>\n\n"
+                $updatedMsg = "<b>[ACC] PESANAN VOUCHER SUDAH DISETUJUI &amp; AKTIF — " . htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') . "</b>\n\n"
                             . "┌ <b>Order ID:</b> <code>" . htmlspecialchars($orderId, ENT_QUOTES, 'UTF-8') . "</code>\n"
                             . "├ <b>Router / Lokasi:</b> " . htmlspecialchars($locDisplay, ENT_QUOTES, 'UTF-8') . "\n"
                             . "├ <b>WhatsApp Pelanggan:</b> <code>" . htmlspecialchars($order['phone'] ?? '', ENT_QUOTES, 'UTF-8') . "</code>\n"
                             . "├ <b>Paket Voucher:</b> <b>" . htmlspecialchars($order['profile'] ?? '', ENT_QUOTES, 'UTF-8') . "</b> (" . $formattedPrice . ")\n"
-                            . "├ <b>Status:</b> 🟢 <b>LUNAS &amp; AKTIF</b>\n"
+                            . "├ <b>Status:</b> <b>LUNAS &amp; AKTIF</b>\n"
                             . "├ <b>KREDENSIAL VOUCHER:</b>\n"
                             . $tgCredDetail . "\n"
                             . "│ • <b>Masa Aktif:</b> " . htmlspecialchars($vVal, ENT_QUOTES, 'UTF-8') . "\n"
@@ -310,19 +310,19 @@ if (isset($update['callback_query'])) {
             }
 
             if ($order['status'] === 'rejected') {
-                mikhmon_answer_callback_query($activeToken, $cqId, "⚠️ Pesanan ini sudah ditolak sebelumnya.", true);
+                mikhmon_answer_callback_query($activeToken, $cqId, "[PERINGATAN] Pesanan ini sudah ditolak sebelumnya.", true);
 
                 $locDisplayRej = (!empty($order['location_name']) && strtolower($order['location_name']) !== 'dns') ? $order['location_name'] : $resolvedLoc;
                 $formattedPrice = $currPrefix . number_format($order['total_amount'] ?? $order['price'] ?? 0, 0, ',', '.');
                 $rejectedBy = !empty($order['rejected_by']) ? $order['rejected_by'] : $fromUser;
                 $rejectedAt = !empty($order['rejected_at']) ? $order['rejected_at'] : $timeNow;
 
-                $rejectedMsg = "❌ <b>PESANAN VOUCHER DITOLAK — " . htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') . "</b>\n\n"
+                $rejectedMsg = "<b>[DITOLAK] PESANAN VOUCHER DITOLAK — " . htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') . "</b>\n\n"
                              . "┌ <b>Order ID:</b> <code>" . htmlspecialchars($orderId, ENT_QUOTES, 'UTF-8') . "</code>\n"
                              . "├ <b>Router / Lokasi:</b> " . htmlspecialchars($locDisplayRej, ENT_QUOTES, 'UTF-8') . "\n"
                              . "├ <b>WhatsApp Pelanggan:</b> <code>" . htmlspecialchars($order['phone'] ?? '', ENT_QUOTES, 'UTF-8') . "</code>\n"
                              . "├ <b>Paket Voucher:</b> <b>" . htmlspecialchars($order['profile'] ?? '', ENT_QUOTES, 'UTF-8') . "</b> (" . $formattedPrice . ")\n"
-                             . "├ <b>Status:</b> 🔴 <b>DITOLAK (REJECTED)</b>\n"
+                             . "├ <b>Status:</b> <b>DITOLAK (REJECTED)</b>\n"
                              . "├ <b>Ditolak Oleh:</b> " . htmlspecialchars($rejectedBy, ENT_QUOTES, 'UTF-8') . "\n"
                              . "└ <b>Waktu:</b> " . htmlspecialchars($rejectedAt, ENT_QUOTES, 'UTF-8');
 
@@ -356,13 +356,6 @@ if (isset($update['callback_query'])) {
                 $freshOrder['payment_method'] = 'manual';
                 mikhmon_save_order($ordersFile, $freshOrder);
 
-            // Dispatch failed/rejected WhatsApp notification to buyer if enabled
-            include_once __DIR__ . '/include/whatsapp_helper.php';
-            if (function_exists('mikhmon_send_failed_whatsapp')) {
-                $reasonRej = ($lang === 'fr') ? "Commande rejetée par l'administrateur (" . $fromUser . ")" : "Pesanan ditolak oleh Admin (" . $fromUser . ")";
-                @mikhmon_send_failed_whatsapp($freshOrder['session'] ?? $session, $freshOrder, $reasonRej, 'id');
-            }
-
                 $formattedPrice = $currPrefix . number_format($freshOrder['total_amount'] ?? $freshOrder['price'], 0, ',', '.');
 
                 $vUser = trim((string)($voucherData['username'] ?? ''));
@@ -372,8 +365,8 @@ if (isset($update['callback_query'])) {
 
                 // Pop-up Toast
                 $toastMsg = $isSameUserPass 
-                    ? "✅ PESANAN DI-ACCEPT!\nKode Voucher: " . $vUser
-                    : "✅ PESANAN DI-ACCEPT!\nUsername: " . $vUser . "\nPassword: " . $vPass;
+                    ? "[ACC] PESANAN DISETUJUI!\nKode Voucher: " . $vUser
+                    : "[ACC] PESANAN DISETUJUI!\nUsername: " . $vUser . "\nPassword: " . $vPass;
                 mikhmon_answer_callback_query($activeToken, $cqId, $toastMsg, true);
 
                 $customerPhone = preg_replace('/[^0-9]/', '', (string)($freshOrder['phone'] ?? $order['phone']));
@@ -399,12 +392,12 @@ if (isset($update['callback_query'])) {
 
                 // Update Telegram message
                 $locDisplay = (!empty($freshOrder['location_name']) && strtolower($freshOrder['location_name']) !== 'dns') ? $freshOrder['location_name'] : $resolvedLoc;
-                $updatedMsg = "✅ <b>PESANAN VOUCHER TELAH DI-ACCEPT &amp; AKTIF — " . htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') . "</b>\n\n"
+                $updatedMsg = "<b>[ACC] PESANAN VOUCHER TELAH DISETUJUI &amp; AKTIF — " . htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') . "</b>\n\n"
                             . "┌ <b>Order ID:</b> <code>" . htmlspecialchars($orderId, ENT_QUOTES, 'UTF-8') . "</code>\n"
                             . "├ <b>Router / Lokasi:</b> " . htmlspecialchars($locDisplay, ENT_QUOTES, 'UTF-8') . "\n"
                             . "├ <b>WhatsApp Pelanggan:</b> <code>" . htmlspecialchars($freshOrder['phone'] ?? $order['phone'], ENT_QUOTES, 'UTF-8') . "</code>\n"
                             . "├ <b>Paket Voucher:</b> <b>" . htmlspecialchars($freshOrder['profile'] ?? $order['profile'], ENT_QUOTES, 'UTF-8') . "</b> (" . $formattedPrice . ")\n"
-                            . "├ <b>Status:</b> 🟢 <b>LUNAS &amp; AKTIF</b>\n"
+                            . "├ <b>Status:</b> <b>LUNAS &amp; AKTIF</b>\n"
                             . "├ <b>KREDENSIAL VOUCHER:</b>\n"
                             . $tgCredDetail . "\n"
                             . "│ • <b>Masa Aktif:</b> " . htmlspecialchars($vVal, ENT_QUOTES, 'UTF-8') . "\n"
@@ -425,7 +418,7 @@ if (isset($update['callback_query'])) {
                 echo json_encode(['ok' => true, 'status' => 'APPROVED', 'voucher' => $voucherData]);
                 exit;
             } else {
-                mikhmon_answer_callback_query($activeToken, $cqId, "❌ Gagal terhubung ke MikroTik (" . $iphost . "). Pastikan router online dan port API 8728 terbuka.", true);
+                mikhmon_answer_callback_query($activeToken, $cqId, "[GAGAL] Tidak dapat terhubung ke MikroTik (" . $iphost . "). Pastikan router online dan port API 8728 terbuka.", true);
                 echo json_encode(['ok' => false, 'description' => 'Fulfillment failed']);
                 exit;
             }
@@ -447,17 +440,27 @@ if (isset($update['callback_query'])) {
             $freshOrder['rejected_at'] = $timeNow;
             mikhmon_save_order($ordersFile, $freshOrder);
 
+            // Dispatch failed/rejected WhatsApp notification to buyer if enabled
+            include_once __DIR__ . '/include/whatsapp_helper.php';
+            if (function_exists('mikhmon_send_failed_whatsapp')) {
+                $orderLang = !empty($freshOrder['lang']) ? $freshOrder['lang'] : ($lang ?? 'id');
+                $reasonRej = ($orderLang === 'fr') 
+                    ? "Commande rejetee par l'administrateur (" . $fromUser . ")" 
+                    : (($orderLang === 'en') ? "Order rejected by Admin (" . $fromUser . ")" : "Pesanan ditolak oleh Admin (" . $fromUser . ")");
+                @mikhmon_send_failed_whatsapp($freshOrder['session'] ?? $session, $freshOrder, $reasonRej, $orderLang);
+            }
+
             $formattedPrice = $currPrefix . number_format($freshOrder['total_amount'] ?? $freshOrder['price'], 0, ',', '.');
 
-            mikhmon_answer_callback_query($activeToken, $cqId, "❌ Pesanan " . $orderId . " DITOLAK.", true);
+            mikhmon_answer_callback_query($activeToken, $cqId, "[DITOLAK] Pesanan " . $orderId . " DITOLAK.", true);
 
             $locDisplayRej = (!empty($freshOrder['location_name']) && strtolower($freshOrder['location_name']) !== 'dns') ? $freshOrder['location_name'] : $resolvedLoc;
-            $rejectedMsg = "❌ <b>PESANAN VOUCHER DITOLAK — " . htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') . "</b>\n\n"
+            $rejectedMsg = "<b>[DITOLAK] PESANAN VOUCHER DITOLAK — " . htmlspecialchars($brand, ENT_QUOTES, 'UTF-8') . "</b>\n\n"
                          . "┌ <b>Order ID:</b> <code>" . htmlspecialchars($orderId, ENT_QUOTES, 'UTF-8') . "</code>\n"
                          . "├ <b>Router / Lokasi:</b> " . htmlspecialchars($locDisplayRej, ENT_QUOTES, 'UTF-8') . "\n"
                          . "├ <b>WhatsApp Pelanggan:</b> <code>" . htmlspecialchars($freshOrder['phone'], ENT_QUOTES, 'UTF-8') . "</code>\n"
                          . "├ <b>Paket Voucher:</b> <b>" . htmlspecialchars($freshOrder['profile'], ENT_QUOTES, 'UTF-8') . "</b> (" . $formattedPrice . ")\n"
-                         . "├ <b>Status:</b> 🔴 <b>DITOLAK (REJECTED)</b>\n"
+                         . "├ <b>Status:</b> <b>DITOLAK (REJECTED)</b>\n"
                          . "├ <b>Ditolak Oleh:</b> " . htmlspecialchars($fromUser, ENT_QUOTES, 'UTF-8') . "\n"
                          . "└ <b>Waktu:</b> " . $timeNow;
 

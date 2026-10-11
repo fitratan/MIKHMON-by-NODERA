@@ -237,7 +237,16 @@ $hotspotname = !empty($sessionCfg[4]) ? (explode('%', $sessionCfg[4])[1] ?? '') 
 $dnsname = !empty($sessionCfg[5]) ? (explode('^', $sessionCfg[5])[1] ?? '') : '';
 
 $rawCurr = $sessionCfg[6] ?? '';
-$currency = strpos($rawCurr, '&') !== false ? (explode('&', $rawCurr)[1] ?? '') : (!empty($rawCurr) ? $rawCurr : 'Rp');
+$currency = strpos($rawCurr, '&') !== false ? (explode('&', $rawCurr)[1] ?? '') : (!empty($rawCurr) ? $rawCurr : '');
+$requestLang = trim((string)($_GET['lang'] ?? $_POST['lang'] ?? ($jsonBody['lang'] ?? '')));
+$activeLang = function_exists('mikhmon_get_active_language') ? mikhmon_get_active_language($requestLang) : 'id';
+if (empty($currency)) {
+    $activeCurrency = function_exists('mikhmon_get_active_currency') ? mikhmon_get_active_currency($activeLang) : 'Rp';
+    $currency = $activeCurrency;
+}
+if (!empty($currency) && in_array(strtoupper($currency), ['FCFA', 'XOF']) && empty($requestLang) && empty($_SESSION['lang']) && empty($_COOKIE['mikhmon_lang'])) {
+    $activeLang = 'fr';
+}
 
 $noderapay_data = [];
 if (file_exists($npConfigFile)) {
@@ -687,6 +696,8 @@ if ($action === 'create_manual_order') {
         'phone'          => $phone,
         'profile'        => $profile,
         'price'          => $price,
+        'currency'       => $currency,
+        'lang'           => $activeLang,
         'total_amount'   => $price,
         'validity'       => $validity,
         'payment_method' => 'manual',
@@ -700,11 +711,23 @@ if ($action === 'create_manual_order') {
     ];
 
     // Send Telegram Notification to Group / Topic / Admin Chat ID with ACC & Reject buttons
-    $tgResult = mikhmon_send_manual_voucher_order_telegram($session, $orderRecord, $currency, 'id');
+    $tgResult = mikhmon_send_manual_voucher_order_telegram($session, $orderRecord, $currency, $activeLang);
     if (!empty($tgResult['messages'])) {
         $orderRecord['telegram_messages'] = $tgResult['messages'];
     }
     mikhmon_save_order($ordersFile, $orderRecord);
+
+    $formattedPrice = (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
+        ? number_format($price, 0, ',', ' ') . ' FCFA'
+        : (($currency === '$' || strtoupper($currency) === 'USD')
+            ? '$' . number_format($price, 2, '.', ',')
+            : ($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.'));
+
+    $manualSubmitMsg = ($activeLang === 'fr') 
+        ? 'Commande manuelle soumise avec succes. Notification envoyee a l\'administrateur pour approbation.' 
+        : (($activeLang === 'en')
+            ? 'Manual order submitted successfully. Notification sent to admin for approval.'
+            : 'Pesanan manual berhasil diajukan. Notifikasi telah dikirim ke Telegram admin untuk persetujuan.');
 
     echo json_encode([
         'success'          => true,
@@ -713,13 +736,13 @@ if ($action === 'create_manual_order') {
         'profile'          => $profile,
         'price'            => $price,
         'total_amount'     => $price,
-        'formatted_amount' => 'Rp ' . number_format($price, 0, ',', '.'),
+        'formatted_amount' => $formattedPrice,
         'validity'         => $validity,
         'status'           => 'PENDING_MANUAL',
         'telegram_sent'    => $tgResult['ok'] ?? false,
         'telegram_msg'     => $tgResult['description'] ?? '',
         'location_name'    => !empty($locName) ? $locName : $hotspotname,
-        'message'          => 'Pesanan manual berhasil diajukan. Notifikasi telah dikirim ke Telegram admin untuk persetujuan.',
+        'message'          => $manualSubmitMsg,
     ]);
     exit;
 }
@@ -1062,6 +1085,8 @@ if ($action === 'create_qris' || $action === 'create_qris_order' || $action === 
         'phone'               => $phone,
         'profile'             => $profile,
         'price'               => $price,
+        'currency'            => $currency,
+        'lang'                => $activeLang,
         'unique_code'         => $json['unique_code'] ?? 0,
         'total_amount'        => $json['total_amount'] ?? $price,
         'dynamic_qris_string' => $json['qr_string'] ?? '',
@@ -1079,11 +1104,18 @@ if ($action === 'create_qris' || $action === 'create_qris_order' || $action === 
     ];
 
     // Send Telegram Notification to Admin/Group with Accept & Reject buttons
-    $tgResult = mikhmon_send_manual_voucher_order_telegram($session, $orderRecord, $currency, 'id');
+    $tgResult = mikhmon_send_manual_voucher_order_telegram($session, $orderRecord, $currency, $activeLang);
     if (!empty($tgResult['messages'])) {
         $orderRecord['telegram_messages'] = $tgResult['messages'];
     }
     mikhmon_save_order($ordersFile, $orderRecord);
+
+    $totalVal = $json['total_amount'] ?? $price;
+    $formattedTotal = (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
+        ? number_format($totalVal, 0, ',', ' ') . ' FCFA'
+        : (($currency === '$' || strtoupper($currency) === 'USD')
+            ? '$' . number_format($totalVal, 2, '.', ',')
+            : ($currency ?: 'Rp') . ' ' . number_format($totalVal, 0, ',', '.'));
 
     $qrisObj = [
         'svg'          => $json['qr_svg'] ?? ($json['qr_data_uri'] ?? ''),
@@ -1102,8 +1134,8 @@ if ($action === 'create_qris' || $action === 'create_qris_order' || $action === 
         'profile'          => $profile,
         'price'            => $price,
         'unique_code'      => $json['unique_code'] ?? 0,
-        'total_amount'     => $json['total_amount'] ?? $price,
-        'formatted_amount' => 'Rp ' . number_format($json['total_amount'] ?? $price, 0, ',', '.'),
+        'total_amount'     => $totalVal,
+        'formatted_amount' => $formattedTotal,
         'validity'         => $validity,
         'telegram_sent'    => $tgResult['ok'] ?? false,
         'qris'             => $qrisObj,
@@ -1308,23 +1340,31 @@ if ($action === 'check_status' || $action === 'check_qris_status' || $action ===
     }
 
     if (in_array($status, ['EXPIRED', 'CANCELLED', 'FAILED'])) {
+        $orderLang = !empty($order['lang']) ? $order['lang'] : $activeLang;
+        $orderCurr = !empty($order['currency']) ? $order['currency'] : $currency;
         if ($order['status'] !== 'expired' && $order['status'] !== 'paid') {
             $order['status'] = 'expired';
             $order['expired_at'] = date('Y-m-d H:i:s');
             mikhmon_save_order($ordersFile, $order);
             include_once __DIR__ . '/include/telegram_helper.php';
             if (function_exists('mikhmon_send_expired_voucher_telegram')) {
-                mikhmon_send_expired_voucher_telegram($session, $order, $currency, 'id');
+                mikhmon_send_expired_voucher_telegram($session, $order, $orderCurr, $orderLang);
             }
             include_once __DIR__ . '/include/whatsapp_helper.php';
             if (function_exists('mikhmon_send_failed_whatsapp')) {
-                @mikhmon_send_failed_whatsapp($session, $order, 'Waktu pembayaran telah kedaluwarsa.', 'id');
+                $failedReason = ($orderLang === 'fr') 
+                    ? 'Le delai de paiement a expire.' 
+                    : (($orderLang === 'en') ? 'Payment time has expired.' : 'Waktu pembayaran telah kedaluwarsa.');
+                @mikhmon_send_failed_whatsapp($session, $order, $failedReason, $orderLang);
             }
         }
+        $expiredMsg = ($orderLang === 'fr') 
+            ? 'Le delai de paiement est depasse (expire).' 
+            : (($orderLang === 'en') ? 'Payment time expired.' : 'Waktu pembayaran QRIS telah habis (kedaluwarsa).');
         echo json_encode([
             'success' => true,
             'status'  => 'EXPIRED',
-            'message' => 'Waktu pembayaran QRIS telah habis (kedaluwarsa).',
+            'message' => $expiredMsg,
         ]);
         exit;
     }
@@ -1350,20 +1390,25 @@ if ($action === 'cancel_order') {
     $order = $orders[$orderId] ?? null;
 
     if ($order && !in_array($order['status'] ?? '', ['paid', 'approved', 'rejected'])) {
+        $orderLang = !empty($order['lang']) ? $order['lang'] : ((!empty($currency) && strtoupper($currency) === 'FCFA') ? 'fr' : $activeLang);
+        $orderCurr = !empty($order['currency']) ? $order['currency'] : $currency;
         if ($order['status'] !== 'cancelled') {
             $order['status'] = 'cancelled';
             $order['cancelled_at'] = date('Y-m-d H:i:s');
             mikhmon_save_order($ordersFile, $order);
             include_once __DIR__ . '/include/telegram_helper.php';
             if (function_exists('mikhmon_send_cancelled_voucher_telegram')) {
-                $lang = (!empty($currency) && strtoupper($currency) === 'FCFA') ? 'fr' : 'id';
-                mikhmon_send_cancelled_voucher_telegram($session, $order, 'Pembeli', $currency, $lang);
+                $cancelledBy = ($orderLang === 'fr') ? 'Acheteur' : (($orderLang === 'en') ? 'Buyer' : 'Pembeli');
+                mikhmon_send_cancelled_voucher_telegram($session, $order, $cancelledBy, $orderCurr, $orderLang);
             }
         }
+        $cancelMsg = ($orderLang === 'fr') 
+            ? 'Commande annulee avec succes.' 
+            : (($orderLang === 'en') ? 'Order cancelled successfully.' : 'Pesanan berhasil dibatalkan.');
         echo json_encode([
             'success' => true,
             'status'  => 'CANCELLED',
-            'message' => 'Pesanan berhasil dibatalkan.',
+            'message' => $cancelMsg,
         ]);
         exit;
     }
@@ -1386,23 +1431,31 @@ if ($action === 'notify_order_expired') {
     $order = $orders[$orderId] ?? null;
 
     if ($order && !in_array($order['status'] ?? '', ['paid', 'approved', 'rejected'])) {
+        $orderLang = !empty($order['lang']) ? $order['lang'] : $activeLang;
+        $orderCurr = !empty($order['currency']) ? $order['currency'] : $currency;
         if ($order['status'] !== 'expired') {
             $order['status'] = 'expired';
             $order['expired_at'] = date('Y-m-d H:i:s');
             mikhmon_save_order($ordersFile, $order);
             include_once __DIR__ . '/include/telegram_helper.php';
             if (function_exists('mikhmon_send_expired_voucher_telegram')) {
-                $tgRes = mikhmon_send_expired_voucher_telegram($session, $order, $currency, 'id');
+                $tgRes = mikhmon_send_expired_voucher_telegram($session, $order, $orderCurr, $orderLang);
             }
             include_once __DIR__ . '/include/whatsapp_helper.php';
             if (function_exists('mikhmon_send_failed_whatsapp')) {
-                @mikhmon_send_failed_whatsapp($session, $order, 'Waktu pembayaran telah kedaluwarsa.', 'id');
+                $failedReason = ($orderLang === 'fr') 
+                    ? 'Le delai de paiement a expire.' 
+                    : (($orderLang === 'en') ? 'Payment time has expired.' : 'Waktu pembayaran telah kedaluwarsa.');
+                @mikhmon_send_failed_whatsapp($session, $order, $failedReason, $orderLang);
             }
         }
+        $expiredMarkMsg = ($orderLang === 'fr') 
+            ? 'La commande a ete marquee comme expiree.' 
+            : (($orderLang === 'en') ? 'Order has been marked as expired.' : 'Pesanan telah ditandai kedaluwarsa.');
         echo json_encode([
             'success' => true,
             'status'  => 'EXPIRED',
-            'message' => 'Pesanan telah ditandai kedaluwarsa.',
+            'message' => $expiredMarkMsg,
         ]);
         exit;
     }

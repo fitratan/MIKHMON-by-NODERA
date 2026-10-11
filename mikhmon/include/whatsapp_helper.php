@@ -431,6 +431,57 @@ if (!function_exists('mikhmon_send_whatsapp')) {
     }
 }
 
+if (!function_exists('mikhmon_get_active_language')) {
+    function mikhmon_get_active_language($explicitLang = '') {
+        if (!empty($explicitLang) && in_array(strtolower($explicitLang), ['id', 'fr', 'en'])) {
+            return strtolower($explicitLang);
+        }
+        if (!empty($_SESSION['lang']) && in_array(strtolower($_SESSION['lang']), ['id', 'fr', 'en'])) {
+            return strtolower($_SESSION['lang']);
+        }
+        if (!empty($_COOKIE['mikhmon_lang']) && in_array(strtolower($_COOKIE['mikhmon_lang']), ['id', 'fr', 'en'])) {
+            return strtolower($_COOKIE['mikhmon_lang']);
+        }
+        $langFile = __DIR__ . '/lang.php';
+        if (file_exists($langFile)) {
+            $langid = '';
+            include $langFile;
+            if (!empty($langid) && in_array(strtolower($langid), ['id', 'fr', 'en'])) {
+                return strtolower($langid);
+            }
+        }
+        $locFile = __DIR__ . '/location_config.php';
+        if (file_exists($locFile)) {
+            $location_data = [];
+            @include $locFile;
+            if (!empty($location_data['currency']) && in_array(strtoupper(trim($location_data['currency'])), ['FCFA', 'XOF'])) {
+                return 'fr';
+            }
+        }
+        return 'id';
+    }
+}
+
+if (!function_exists('mikhmon_get_active_currency')) {
+    function mikhmon_get_active_currency($lang = 'id') {
+        $locFile = __DIR__ . '/location_config.php';
+        if (file_exists($locFile)) {
+            $location_data = [];
+            @include $locFile;
+            if (!empty($location_data['currency'])) {
+                return trim($location_data['currency']);
+            }
+        }
+        if ($lang === 'fr') {
+            return 'FCFA';
+        }
+        if ($lang === 'en') {
+            return 'USD';
+        }
+        return 'Rp';
+    }
+}
+
 if (!function_exists('mikhmon_send_voucher_wa')) {
     function mikhmon_send_voucher_wa($session, $phone, $params = []) {
         $wa_config_file = __DIR__ . '/whatsapp_config.php';
@@ -454,18 +505,29 @@ if (!function_exists('mikhmon_send_voucher_wa')) {
             return ['ok' => false, 'description' => 'WhatsApp Gateway belum dikonfigurasi atau dinonaktifkan.'];
         }
 
+        $lang = mikhmon_get_active_language($params['lang'] ?? '');
+        $currency = !empty($params['currency']) ? $params['currency'] : mikhmon_get_active_currency($lang);
+
         $username = trim((string)($params['username'] ?? ''));
         $password = trim((string)($params['password'] ?? ''));
         $isSameUserPass = empty($password) || ($password === $username);
 
-        if ($isSameUserPass) {
-            $loginDetail = "- Kode Voucher: *{$username}*";
+        if ($lang === 'fr') {
+            $loginDetail = $isSameUserPass ? "- Code Coupon : *{$username}*" : "- Identifiant : *{$username}*\n- Mot de passe : *{$password}*";
+        } elseif ($lang === 'en') {
+            $loginDetail = $isSameUserPass ? "- Voucher Code: *{$username}*" : "- Username: *{$username}*\n- Password: *{$password}*";
         } else {
-            $loginDetail = "- Username: *{$username}*\n- Password: *{$password}*";
+            $loginDetail = $isSameUserPass ? "- Kode Voucher: *{$username}*" : "- Username: *{$username}*\n- Password: *{$password}*";
         }
 
         $validity = $params['validity'] ?? '-';
-        $validityLine = (!empty($validity) && $validity !== '-') ? "Masa Aktif: *{$validity}*\n" : "";
+        if ($lang === 'fr') {
+            $validityLine = (!empty($validity) && $validity !== '-') ? "Validite : *{$validity}*\n" : "";
+        } elseif ($lang === 'en') {
+            $validityLine = (!empty($validity) && $validity !== '-') ? "Validity: *{$validity}*\n" : "";
+        } else {
+            $validityLine = (!empty($validity) && $validity !== '-') ? "Masa Aktif: *{$validity}*\n" : "";
+        }
 
         $brandCfg = trim((string)($cfg['brand_name'] ?? ''));
         $brandParam = trim((string)($params['brand'] ?? ''));
@@ -475,27 +537,71 @@ if (!function_exists('mikhmon_send_voucher_wa')) {
             : ((!empty($brandParam) && strtolower($brandParam) !== 'dns') ? $brandParam : ((!empty($locParam) && strtolower($locParam) !== 'dns') ? $locParam : 'NODERA WIFI'));
         $package = $params['package'] ?? 'Hotspot Voucher';
         $rawPrice = $params['price'] ?? 0;
-        $price = number_format((float)$rawPrice, 0, ',', '.');
+        $price = ($lang === 'fr') ? number_format((float)$rawPrice, 0, ',', ' ') : number_format((float)$rawPrice, 0, ',', '.');
 
-        $defaultTemplate = "*PEMBAYARAN BERHASIL — {brand}*\n"
-            . "----------------------------------------\n"
-            . "Terima kasih telah membeli voucher WiFi.\n\n"
-            . "Paket: *{package}*\n"
-            . "{validity_line}"
-            . "Total Bayar: *Rp {price}*\n\n"
-            . "DETAIL LOGIN:\n"
-            . "{login_detail}\n\n"
-            . "Simpan pesan ini jika sewaktu-waktu perangkat Anda terputus.";
+        $stockTemplates = [
+            'fr' => "*PAIEMENT REUSSI — {brand}*\n"
+                . "----------------------------------------\n"
+                . "Merci d'avoir achete votre pass WiFi.\n\n"
+                . "Forfait : *{package}*\n"
+                . "{validity_line}"
+                . "Total paye : *{price} {currency}*\n\n"
+                . "DETAILS DE CONNEXION :\n"
+                . "{login_detail}\n\n"
+                . "Conservez ce message en cas de deconnexion de votre appareil.",
+            'en' => "*PAYMENT SUCCESSFUL — {brand}*\n"
+                . "----------------------------------------\n"
+                . "Thank you for purchasing a WiFi voucher.\n\n"
+                . "Package: *{package}*\n"
+                . "{validity_line}"
+                . "Total Paid: *{price} {currency}*\n\n"
+                . "LOGIN DETAILS:\n"
+                . "{login_detail}\n\n"
+                . "Save this message in case your device disconnects.",
+            'id' => "*PEMBAYARAN BERHASIL — {brand}*\n"
+                . "----------------------------------------\n"
+                . "Terima kasih telah membeli voucher WiFi.\n\n"
+                . "Paket: *{package}*\n"
+                . "{validity_line}"
+                . "Total Bayar: *{price} {currency}*\n\n"
+                . "DETAIL LOGIN:\n"
+                . "{login_detail}\n\n"
+                . "Simpan pesan ini jika sewaktu-waktu perangkat Anda terputus.",
+        ];
 
+        $defaultTemplate = $stockTemplates[$lang] ?? $stockTemplates['id'];
         $template = !empty($cfg['buyer_msg_template']) ? $cfg['buyer_msg_template'] : $defaultTemplate;
+
+        // If saved template is exactly another language's default stock template, switch to active language template
+        if (!empty($cfg['buyer_msg_template'])) {
+            $isOtherLangStock = false;
+            foreach ($stockTemplates as $sLang => $sTpl) {
+                if ($sLang !== $lang && trim($cfg['buyer_msg_template']) === trim($sTpl)) {
+                    $isOtherLangStock = true;
+                    break;
+                }
+            }
+            if ($isOtherLangStock) {
+                $template = $defaultTemplate;
+            }
+        }
+
         $template = str_ireplace('DETAIL VOUCHER:', 'DETAIL LOGIN:', $template);
 
+        if ($lang === 'fr') {
+            $template = str_ireplace('Total Bayar: Rp {price}', 'Total paye : {price} {currency}', $template);
+            $template = str_ireplace('Rp {price}', '{price} {currency}', $template);
+        } elseif ($lang === 'en') {
+            $template = str_ireplace('Total Bayar: Rp {price}', 'Total Paid: {price} {currency}', $template);
+            $template = str_ireplace('Rp {price}', '{price} {currency}', $template);
+        }
+
         if ($isSameUserPass) {
-            $template = preg_replace("/\r?\n[ \t]*[-*•]?[ \t]*(?:<[^>]+>|\*)*[ \t]*Password[ \t]*(?:<[^>]+>|\*|[ \t]|:)*\{password\}(?:<[^>]+>|\*|[ \t])*/i", "", $template);
-            $template = preg_replace("/[-*•]?[ \t]*(?:<[^>]+>|\*)*[ \t]*(Kode Voucher \/ User|Username \/ Password|Username)[ \t]*(?:<[^>]+>|\*|[ \t]|:)*\{username\}(?:<[^>]+>|\*|[ \t])*/i", "- Kode Voucher: *{username}*", $template);
+            $template = preg_replace("/\r?\n[ \t]*[-*•]?[ \t]*(?:<[^>]+>|\*)*[ \t]*(?:Password|Mot de passe)[ \t]*(?:<[^>]+>|\*|[ \t]|:)*\{password\}(?:<[^>]+>|\*|[ \t])*/i", "", $template);
+            $template = preg_replace("/[-*•]?[ \t]*(?:<[^>]+>|\*)*[ \t]*(Kode Voucher \/ User|Username \/ Password|Username|Code Coupon|Voucher Code)[ \t]*(?:<[^>]+>|\*|[ \t]|:)*\{username\}(?:<[^>]+>|\*|[ \t])*/i", ($lang === 'fr' ? "- Code Coupon : *{username}*" : ($lang === 'en' ? "- Voucher Code: *{username}*" : "- Kode Voucher: *{username}*")), $template);
         } else {
-            $template = preg_replace("/[-*•]?[ \t]*(?:<[^>]+>|\*)*[ \t]*(Kode Voucher \/ User|Username \/ Password)[ \t]*(?:<[^>]+>|\*|[ \t]|:)*\{username\}(?:<[^>]+>|\*|[ \t])*/i", "- Username: *{username}*", $template);
-            $template = preg_replace("/[-*•]?[ \t]*(?:<[^>]+>|\*)*[ \t]*Password[ \t]*(?:<[^>]+>|\*|[ \t]|:)*\{password\}(?:<[^>]+>|\*|[ \t])*/i", "- Password: *{password}*", $template);
+            $template = preg_replace("/[-*•]?[ \t]*(?:<[^>]+>|\*)*[ \t]*(Kode Voucher \/ User|Username \/ Password)[ \t]*(?:<[^>]+>|\*|[ \t]|:)*\{username\}(?:<[^>]+>|\*|[ \t])*/i", ($lang === 'fr' ? "- Identifiant : *{username}*" : "- Username: *{username}*"), $template);
+            $template = preg_replace("/[-*•]?[ \t]*(?:<[^>]+>|\*)*[ \t]*(Password|Mot de passe)[ \t]*(?:<[^>]+>|\*|[ \t]|:)*\{password\}(?:<[^>]+>|\*|[ \t])*/i", ($lang === 'fr' ? "- Mot de passe : *{password}*" : "- Password: *{password}*"), $template);
         }
 
         $template = preg_replace("/\r?\n[ \t]*(?:<[^>]+>|\*)*[ \t]*LINK LOGIN OTOMATIS:?[ \t]*(?:<[^>]+>|\*)*\r?\n[ \t]*(?:\{login_url\}|https?:\/\/[^\s\n]+)?/i", "", $template);
@@ -508,6 +614,7 @@ if (!function_exists('mikhmon_send_voucher_wa')) {
             '{brand}'             => $brand,
             '{package}'           => $package,
             '{price}'             => $price,
+            '{currency}'          => $currency,
             '{validity}'          => $validity,
             '{validity_line}'     => $validityLine,
             '{username}'          => $username,
@@ -569,17 +676,45 @@ if (!function_exists('mikhmon_send_voucher_wa')) {
                 if (!empty($orderId)) {
                     @touch($lockAdmin);
                 }
-                $voucherDetailAdmin = $isSameUserPass 
-                    ? "Kode Voucher: `{$username}`" 
-                    : "Username: `{$username}`\nPassword: `{$password}`";
 
-                $adminMsg = "*NOTIFIKASI PENJUALAN VOUCHER — {$brand}*\n"
-                    . "----------------------------------------\n"
-                    . "Pembeli: `{$phone}`\n"
-                    . "Paket: *" . ($params['package'] ?? '-') . "*\n"
-                    . "Nominal: *Rp {$price}*\n"
-                    . $voucherDetailAdmin . "\n"
-                    . "Waktu: " . date('d/m/Y H:i:s');
+                if ($lang === 'fr') {
+                    $adminVoucherDetail = $isSameUserPass 
+                        ? "Code Coupon : `{$username}`" 
+                        : "Identifiant : `{$username}`\nMot de passe : `{$password}`";
+
+                    $adminMsg = "*NOTIFICATION DE VENTE DE COUPON — {$brand}*\n"
+                        . "----------------------------------------\n"
+                        . "Acheteur : `{$phone}`\n"
+                        . "Forfait : *" . ($params['package'] ?? '-') . "*\n"
+                        . "Montant : *{$price} {$currency}*\n"
+                        . $adminVoucherDetail . "\n"
+                        . "Date : " . date('d/m/Y H:i:s');
+                } elseif ($lang === 'en') {
+                    $adminVoucherDetail = $isSameUserPass 
+                        ? "Voucher Code: `{$username}`" 
+                        : "Username: `{$username}`\nPassword: `{$password}`";
+
+                    $adminMsg = "*VOUCHER SALE NOTIFICATION — {$brand}*\n"
+                        . "----------------------------------------\n"
+                        . "Buyer: `{$phone}`\n"
+                        . "Package: *" . ($params['package'] ?? '-') . "*\n"
+                        . "Amount: *{$price} {$currency}*\n"
+                        . $adminVoucherDetail . "\n"
+                        . "Time: " . date('d/m/Y H:i:s');
+                } else {
+                    $voucherDetailAdmin = $isSameUserPass 
+                        ? "Kode Voucher: `{$username}`" 
+                        : "Username: `{$username}`\nPassword: `{$password}`";
+
+                    $adminMsg = "*NOTIFIKASI PENJUALAN VOUCHER — {$brand}*\n"
+                        . "----------------------------------------\n"
+                        . "Pembeli: `{$phone}`\n"
+                        . "Paket: *" . ($params['package'] ?? '-') . "*\n"
+                        . "Nominal: *Rp {$price}*\n"
+                        . $voucherDetailAdmin . "\n"
+                        . "Waktu: " . date('d/m/Y H:i:s');
+                }
+
                 @mikhmon_send_whatsapp($cfg['api_token'], $cfg['api_url'] ?: $defaultApiUrl, $adminPhone, $adminMsg, $prov, $senderId);
             }
         }
@@ -598,7 +733,7 @@ if (!function_exists('mikhmon_save_whatsapp_config')) {
 }
 
 if (!function_exists('mikhmon_send_failed_whatsapp')) {
-    function mikhmon_send_failed_whatsapp($session, $order, $reason = '', $lang = 'id') {
+    function mikhmon_send_failed_whatsapp($session, $order, $reason = '', $lang = null) {
         $waConfigFile = __DIR__ . '/whatsapp_config.php';
         if (!file_exists($waConfigFile)) {
             return ['ok' => false, 'description' => 'Config WA tidak ditemukan.'];
@@ -631,33 +766,46 @@ if (!function_exists('mikhmon_send_failed_whatsapp')) {
             @touch($lockFile);
         }
 
+        $activeLang = mikhmon_get_active_language($lang ?: ($order['lang'] ?? ''));
+        $curr = mikhmon_get_active_currency($activeLang);
+
         $brand = !empty($cfg['brand_name']) ? $cfg['brand_name'] : ($order['merchant_name'] ?? ($order['merchant'] ?? 'WiFi Hotspot'));
-        $package = $order['profile'] ?? ($order['package'] ?? 'Paket WiFi');
-        $curr = ($lang === 'fr') ? 'FCFA' : 'Rp';
+        $package = $order['profile'] ?? ($order['package'] ?? 'Hotspot Voucher');
         $priceVal = $order['total_amount'] ?? ($order['price'] ?? 0);
-        $price = number_format($priceVal, 0, ',', ($lang === 'fr' ? ' ' : '.'));
+        $price = ($activeLang === 'fr') ? number_format($priceVal, 0, ',', ' ') : number_format($priceVal, 0, ',', '.');
         $timeNow = date('d/m/Y H:i:s');
 
-        if ($lang === 'fr') {
-            $reasonText = !empty($reason) ? $reason : 'Paiement non complété ou annulé';
-            $message = "❌ *ÉCHEC DU PAIEMENT / COMMANDE ANNULÉE — {$brand}*\n\n"
+        if ($activeLang === 'fr') {
+            $reasonText = !empty($reason) ? $reason : 'Paiement non complete ou annule.';
+            $message = "*ECHEC DU PAIEMENT / COMMANDE ANNULEE — {$brand}*\n\n"
                      . "Bonjour,\n"
                      . "Votre commande de pass WiFi n'a pas pu aboutir :\n\n"
-                     . "├ *N° Commande :* `{$orderId}`\n"
-                     . "├ *Forfait :* *{$package}*\n"
-                     . "├ *Montant :* *{$price} {$curr}*\n"
-                     . "├ *Motif :* {$reasonText}\n"
-                     . "└ *Date :* {$timeNow}\n\n"
-                     . "Veuillez réessayer votre achat depuis le portail ou contacter le support si vous avez besoin d'aide.";
+                     . "├ N° Commande : `{$orderId}`\n"
+                     . "├ Forfait : *{$package}*\n"
+                     . "├ Montant : *{$price} {$curr}*\n"
+                     . "├ Motif : {$reasonText}\n"
+                     . "└ Date : {$timeNow}\n\n"
+                     . "Veuillez reessayer votre achat depuis le portail ou contacter le support si vous avez besoin d'aide.";
+        } elseif ($activeLang === 'en') {
+            $reasonText = !empty($reason) ? $reason : 'Payment expired or cancelled.';
+            $message = "*PAYMENT FAILED / ORDER CANCELLED — {$brand}*\n\n"
+                     . "Hello,\n"
+                     . "Your WiFi voucher order could not be processed:\n\n"
+                     . "├ Order ID: `{$orderId}`\n"
+                     . "├ Package: *{$package}*\n"
+                     . "├ Amount: *{$price} {$curr}*\n"
+                     . "├ Reason: {$reasonText}\n"
+                     . "└ Time: {$timeNow}\n\n"
+                     . "Please try placing your order again on the portal or contact our customer support.";
         } else {
             $reasonText = !empty($reason) ? $reason : 'Pembayaran kedaluwarsa atau ditolak oleh Admin.';
-            $message = "❌ *PEMBAYARAN GAGAL / PESANAN DIBATALKAN — {$brand}*\n\n"
+            $message = "*PEMBAYARAN GAGAL / PESANAN DIBATALKAN — {$brand}*\n\n"
                      . "Halo, transaksi pembelian voucher WiFi Anda tidak dapat diproses:\n\n"
-                     . "├ *Order ID:* `{$orderId}`\n"
-                     . "├ *Paket:* *{$package}*\n"
-                     . "├ *Nominal:* *Rp {$price}*\n"
-                     . "├ *Keterangan:* {$reasonText}\n"
-                     . "└ *Waktu:* {$timeNow}\n\n"
+                     . "├ Order ID: `{$orderId}`\n"
+                     . "├ Paket: *{$package}*\n"
+                     . "├ Nominal: *Rp {$price}*\n"
+                     . "├ Keterangan: {$reasonText}\n"
+                     . "└ Waktu: {$timeNow}\n\n"
                      . "Silakan lakukan pemesanan ulang melalui portal atau hubungi Customer Service kami jika ada kendala.";
         }
 
@@ -685,7 +833,7 @@ if (!function_exists('mikhmon_send_failed_whatsapp')) {
 }
 
 if (!function_exists('mikhmon_send_low_stock_whatsapp')) {
-    function mikhmon_send_low_stock_whatsapp($session, $profile, $remainingCount, $threshold = 5, $routerName = '') {
+    function mikhmon_send_low_stock_whatsapp($session, $profile, $remainingCount, $threshold = 5, $routerName = '', $lang = null) {
         $waConfigFile = __DIR__ . '/whatsapp_config.php';
         $wa_data = [];
         if (file_exists($waConfigFile)) {
@@ -711,18 +859,37 @@ if (!function_exists('mikhmon_send_low_stock_whatsapp')) {
             return ['ok' => false, 'description' => 'Nomor WhatsApp Admin belum diisi.'];
         }
 
+        $activeLang = mikhmon_get_active_language($lang);
+
         $brand = !empty($cfg['brand_name']) ? $cfg['brand_name'] : 'NODERA WIFI';
         $rName = !empty($routerName) ? $routerName : (!empty($session) ? $session : 'WiFi Hotspot');
         $timeStr = date('d/m/Y H:i:s');
 
-        $statusTitle = ($remainingCount <= 0) ? '🔴 *PERINGATAN: STOK VOUCHER HABIS*' : '⚠️ *PERINGATAN: STOK VOUCHER MENIPIS*';
-
-        $msg = "{$statusTitle} — {$brand}\n\n"
-             . "├ Router: {$rName}\n"
-             . "├ Profil: {$profile}\n"
-             . "├ Sisa Stok: {$remainingCount} voucher (Batas Min: {$threshold})\n"
-             . "└ Waktu: {$timeStr}\n\n"
-             . "Stok voucher untuk profil *{$profile}* hampir habis. Segera buat/generate voucher baru di Mikhmon.";
+        if ($activeLang === 'fr') {
+            $statusTitle = ($remainingCount <= 0) ? '[ALERTE] STOCK DE COUPONS EPUISE' : '[ALERTE] STOCK DE COUPONS CRITIQUE';
+            $msg = "{$statusTitle} — {$brand}\n\n"
+                 . "├ Routeur : {$rName}\n"
+                 . "├ Profil : {$profile}\n"
+                 . "├ Stock restant : {$remainingCount} coupons (Seuil min : {$threshold})\n"
+                 . "└ Date : {$timeStr}\n\n"
+                 . "Le stock de coupons pour le profil *{$profile}* est presque epuise. Veuillez generer de nouveaux coupons sur Mikhmon.";
+        } elseif ($activeLang === 'en') {
+            $statusTitle = ($remainingCount <= 0) ? '[ALERT] VOUCHER STOCK OUT' : '[ALERT] LOW VOUCHER STOCK';
+            $msg = "{$statusTitle} — {$brand}\n\n"
+                 . "├ Router: {$rName}\n"
+                 . "├ Profile: {$profile}\n"
+                 . "├ Remaining Stock: {$remainingCount} vouchers (Min Threshold: {$threshold})\n"
+                 . "└ Time: {$timeStr}\n\n"
+                 . "Voucher stock for profile *{$profile}* is running low. Please generate new vouchers in Mikhmon.";
+        } else {
+            $statusTitle = ($remainingCount <= 0) ? '[PERINGATAN] STOK VOUCHER HABIS' : '[PERINGATAN] STOK VOUCHER MENIPIS';
+            $msg = "{$statusTitle} — {$brand}\n\n"
+                 . "├ Router: {$rName}\n"
+                 . "├ Profil: {$profile}\n"
+                 . "├ Sisa Stok: {$remainingCount} voucher (Batas Min: {$threshold})\n"
+                 . "└ Waktu: {$timeStr}\n\n"
+                 . "Stok voucher untuk profil *{$profile}* hampir habis. Segera buat/generate voucher baru di Mikhmon.";
+        }
 
         $prov = $cfg['provider'] ?? 'nodera';
         $senderId = '';
@@ -746,3 +913,4 @@ if (!function_exists('mikhmon_send_low_stock_whatsapp')) {
         return mikhmon_send_whatsapp($cfg['api_token'], $cfg['api_url'] ?: $defaultApiUrl, $adminPhone, $msg, $prov, $senderId);
     }
 }
+

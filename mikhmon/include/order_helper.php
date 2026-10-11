@@ -261,9 +261,12 @@ if (!function_exists('mikhmon_safe_fulfill_order')) {
             flock($lockFp, LOCK_UN);
             fclose($lockFp);
             if ($needTg) {
+                include_once __DIR__ . '/whatsapp_helper.php';
+                $activeLang = !empty($order['lang']) ? $order['lang'] : (function_exists('mikhmon_get_active_language') ? mikhmon_get_active_language() : 'id');
+                $activeCurr = !empty($order['currency']) ? $order['currency'] : (function_exists('mikhmon_get_active_currency') ? mikhmon_get_active_currency($activeLang) : 'Rp');
                 include_once __DIR__ . '/telegram_helper.php';
                 if (function_exists('mikhmon_send_active_voucher_telegram')) {
-                    $tgRes = mikhmon_send_active_voucher_telegram($session, $order, $existingVoucher, 'Rp', null);
+                    $tgRes = mikhmon_send_active_voucher_telegram($session, $order, $existingVoucher, $activeCurr, $activeLang);
                     if ($tgRes['ok'] ?? false) {
                         $order['tg_sent'] = true;
                         $order['tg_sent_at'] = date('Y-m-d H:i:s');
@@ -317,12 +320,18 @@ if (!function_exists('mikhmon_safe_fulfill_order')) {
                 ? $merchantBrand
                 : ((!empty($locName) && strtolower($locName) !== 'dns') ? $locName : ((!empty($hotspotname) && strtolower($hotspotname) !== 'dns') ? $hotspotname : 'WiFi Hotspot'));
 
+            include_once __DIR__ . '/whatsapp_helper.php';
+            $activeLang = !empty($order['lang']) ? $order['lang'] : (function_exists('mikhmon_get_active_language') ? mikhmon_get_active_language() : 'id');
+            $activeCurr = !empty($order['currency']) ? $order['currency'] : (function_exists('mikhmon_get_active_currency') ? mikhmon_get_active_currency($activeLang) : 'Rp');
+
             $waParams = [
                 'order_id'      => $order['order_id'],
                 'brand'         => $resolvedBrand,
                 'location_name' => $locName,
                 'package'       => $order['profile'],
                 'price'         => $order['total_amount'] ?? $order['price'],
+                'currency'      => $activeCurr,
+                'lang'          => $activeLang,
                 'validity'      => $order['validity'] ?? '',
                 'username'      => $voucherData['username'],
                 'password'      => $voucherData['password'],
@@ -335,9 +344,11 @@ if (!function_exists('mikhmon_safe_fulfill_order')) {
         // 6. Send Telegram notification ONCE for fulfilled orders (active voucher ready to forward)
         $needSendTg = empty($order['tg_sent']);
         if ($needSendTg) {
+            $activeLang = !empty($order['lang']) ? $order['lang'] : (function_exists('mikhmon_get_active_language') ? mikhmon_get_active_language() : 'id');
+            $activeCurr = !empty($order['currency']) ? $order['currency'] : (function_exists('mikhmon_get_active_currency') ? mikhmon_get_active_currency($activeLang) : 'Rp');
             include_once __DIR__ . '/telegram_helper.php';
             if (function_exists('mikhmon_send_active_voucher_telegram')) {
-                $tgRes = mikhmon_send_active_voucher_telegram($session, $order, $voucherData, 'Rp', null);
+                $tgRes = mikhmon_send_active_voucher_telegram($session, $order, $voucherData, $activeCurr, $activeLang);
                 if (is_array($tgRes) && !empty($tgRes['ok'])) {
                     $order['tg_sent'] = true;
                     $order['tg_sent_at'] = date('Y-m-d H:i:s');
@@ -576,8 +587,9 @@ if (!function_exists('mikhmon_check_and_alert_low_stock')) {
         // 5. Dispatch WhatsApp Alert
         if ($waEnabled && $unusedCount <= $waThreshold) {
             include_once __DIR__ . '/whatsapp_helper.php';
+            $activeLang = function_exists('mikhmon_get_active_language') ? mikhmon_get_active_language() : 'id';
             if (function_exists('mikhmon_send_low_stock_whatsapp')) {
-                @mikhmon_send_low_stock_whatsapp($session, $profile, $unusedCount, $waThreshold, $routerName);
+                @mikhmon_send_low_stock_whatsapp($session, $profile, $unusedCount, $waThreshold, $routerName, $activeLang);
             }
         }
 
