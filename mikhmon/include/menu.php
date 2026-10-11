@@ -240,6 +240,9 @@ $themeSep = (strpos($cleanThemeUrl, '?') !== false) ? '&' : '?';
 <div id="navbar" class="navbar">
   <div class="navbar-left">
     <a id="brand" class="text-center" href="javascript:void(0)">MIKHMON</a>
+    <?php if (function_exists('mikhmon_is_desktop_mode') && mikhmon_is_desktop_mode() && function_exists('mikhmon_is_licensed') && mikhmon_is_licensed()): ?>
+      <span class="badge" style="background: #27ae60; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 6px; vertical-align: middle; display: inline-flex; align-items: center; gap: 4px;" title="<?= function_exists('mikhmon_expiry_text') ? mikhmon_expiry_text() : 'Licensed' ?>"><i class="fa fa-shield"></i> Licensed</span>
+    <?php endif; ?>
 
     <a id="openNav" class="navbar-hover" href="javascript:void(0)"><i class="fa fa-bars"></i></a>
     <a id="closeNav" class="navbar-hover" href="javascript:void(0)"><i class="fa fa-bars"></i></a>
@@ -400,6 +403,9 @@ include('./info.php');
 <div id="navbar" class="navbar">
   <div class="navbar-left">
     <a id="brand" class="text-center" href="./?session=<?= $session; ?>">MIKHMON</a>
+    <?php if (function_exists('mikhmon_is_desktop_mode') && mikhmon_is_desktop_mode() && function_exists('mikhmon_is_licensed') && mikhmon_is_licensed()): ?>
+      <span class="badge" style="background: #27ae60; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: bold; margin-left: 6px; vertical-align: middle; display: inline-flex; align-items: center; gap: 4px;" title="<?= function_exists('mikhmon_expiry_text') ? mikhmon_expiry_text() : 'Licensed' ?>"><i class="fa fa-shield"></i> Licensed</span>
+    <?php endif; ?>
 
     <a id="openNav" class="navbar-hover" href="javascript:void(0)"><i class="fa fa-bars"></i></a>
     <a id="closeNav" class="navbar-hover" href="javascript:void(0)"><i class="fa fa-bars"></i></a>

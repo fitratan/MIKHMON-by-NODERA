@@ -57,17 +57,17 @@ foreach ($logoCandidates as $cand) {
 
         <?php if ($isDesktop): ?>
           <?php if (!$isLicensed): ?>
-            <div style="margin: 0 auto 14px; max-width: 320px; text-align: left; background: rgba(52, 152, 219, 0.08); border: 1px solid rgba(52, 152, 219, 0.35); border-radius: 8px; padding: 10px 12px;">
+            <div style="margin: 0 auto 14px; max-width: 320px; text-align: left; background: rgba(0, 115, 198, 0.08); border: 1px solid rgba(0, 115, 198, 0.4); border-radius: 8px; padding: 10px 12px;">
               <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
-                <span style="font-size: 12px; font-weight: bold; color: #2980b9;">
+                <span style="font-size: 12px; font-weight: bold; color: #0073C6;">
                   <i class="fa fa-desktop"></i> Mikhmon Desktop
                 </span>
                 <span style="font-size: 10px; padding: 2px 6px; background: #e67e22; color: #fff; border-radius: 4px; font-weight: bold;">
                   <?= $_unactivated ?? "Belum Teraktivasi"; ?>
                 </span>
               </div>
-              <div style="font-size: 11px; opacity: 0.8; line-height: 1.4; margin-bottom: 8px;">
-                <?= $_enter_license_key_hint ?? "Masukkan License Key dari Cloud Panel NODERA untuk mengaktifkan fitur penuh."; ?>
+              <div style="font-size: 11px; opacity: 0.85; line-height: 1.4; margin-bottom: 8px;">
+                <?= $_enter_license_key_hint ?? "Masukkan License Key atau klaim Free Trial 7 Hari untuk membuka akses penuh."; ?>
               </div>
               <div style="display: flex; gap: 6px;">
                 <button type="button" onclick="openDesktopLicenseModal()" class="btn-login bg-primary pointer" style="flex: 1; height: 32px; font-size: 12px; font-weight: bold; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; margin: 0 !important;">
@@ -76,6 +76,21 @@ foreach ($logoCandidates as $cand) {
                 <button type="button" onclick="copyHwidLogin()" class="btn-login bg-secondary pointer" style="height: 32px; padding: 0 10px; font-size: 12px; font-weight: bold; border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; gap: 4px; margin: 0 !important;" title="<?= $_copy ?? "Salin"; ?> HWID">
                   <i class="fa fa-copy"></i> HWID
                 </button>
+              </div>
+            </div>
+          <?php else: ?>
+            <div style="margin: 0 auto 14px; max-width: 320px; text-align: left; background: rgba(39, 174, 96, 0.08); border: 1px solid rgba(39, 174, 96, 0.4); border-radius: 8px; padding: 8px 12px;">
+              <div style="display: flex; align-items: center; justify-content: space-between;">
+                <span style="font-size: 11.5px; font-weight: bold; color: #27ae60;">
+                  <i class="fa fa-shield"></i> Mikhmon Desktop by NODERA
+                </span>
+                <span style="font-size: 10px; padding: 2px 7px; background: #27ae60; color: #fff; border-radius: 4px; font-weight: bold;">
+                  <?= $remainingDays > 365 ? 'LIFETIME' : $remainingDays . ' Hari Tersisa' ?>
+                </span>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px; font-size: 10.5px; opacity: 0.85;">
+                <span style="font-family: monospace;"><?= htmlspecialchars(substr($licenseKey, 0, 11) . '...') ?></span>
+                <a href="javascript:void(0)" onclick="openDesktopLicenseModal()" style="color: inherit; text-decoration: underline; font-weight: bold;">Ganti Key</a>
               </div>
             </div>
           <?php endif; ?>
@@ -204,6 +219,13 @@ foreach ($logoCandidates as $cand) {
         </div>
       </div>
 
+      <!-- Free Trial Button in Modal -->
+      <div style="margin-bottom:12px;">
+        <button type="button" id="ndrBtnClaimTrial" onclick="claimTrialLicenseLogin()" class="btn bg-green" style="width:100%; height:34px; font-size:12px; font-weight:bold; display:flex; align-items:center; justify-content:center; gap:6px; margin:0;">
+          <i class="fa fa-star"></i> Coba Gratis 7 Hari (Free Trial)
+        </button>
+      </div>
+
       <!-- Action Buttons -->
       <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
         <button type="button" onclick="closeDesktopLicenseModal()" class="btn bg-secondary" style="margin:0;">Batal</button>
@@ -325,38 +347,102 @@ function tryDirectBrowserActivation(licenseKey, deviceHwid) {
     if (btn) {
       btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> ' + <?= json_encode($_validating_cloud_direct ?? 'Validasi Cloud Direct HTTPS...') ?>;
     }
-    fetch('https://panel.dgtlnetsolution.com/api/v1/desktop-license/activate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        license_key: licenseKey,
-        hwid: deviceHwid || 'DESKTOP-AUTO',
-        device_name: window.navigator.userAgent || 'Windows PC'
+    var payload = {
+      license_key: licenseKey,
+      hwid: deviceHwid || 'DESKTOP-AUTO',
+      device_name: window.navigator.userAgent || 'Windows PC'
+    };
+    var apis = [
+      'https://panel.dgtlnetsolution.com/api/desktop-license/activate',
+      'https://digitalnet.dgtlnetsolution.com/api/desktop-license/activate'
+    ];
+    var tryFetch = function(idx) {
+      if (idx >= apis.length) {
+        showError('Gagal menghubungi server aktivasi NODERA.');
+        return;
+      }
+      fetch(apis[idx], {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify(payload)
       })
-    })
+      .then(function(res) { return res.json(); })
+      .then(function(cloudRes) {
+        if (cloudRes && cloudRes.success && cloudRes.data) {
+          var saveFd = new FormData();
+          saveFd.append('action', 'ajax_save_activated_license');
+          saveFd.append('data', JSON.stringify(cloudRes.data));
+          fetch('./admin.php', { method: 'POST', body: saveFd })
+          .then(function() { showSuccessAndReload(cloudRes); })
+          .catch(function() { showSuccessAndReload(cloudRes); });
+        } else {
+          showError(cloudRes ? cloudRes.message : 'Aktivasi lisensi gagal.');
+        }
+      })
+      .catch(function() {
+        tryFetch(idx + 1);
+      });
+    };
+    tryFetch(0);
+}
+
+function claimTrialLicenseLogin() {
+    var alertBox = document.getElementById('ndrLicenseAlert');
+    var btn = document.getElementById('ndrBtnClaimTrial');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Mengaktifkan Free Trial...';
+    }
+    if (alertBox) alertBox.style.display = 'none';
+
+    var fd = new FormData();
+    fd.append('action', 'ajax_activate_trial_license');
+
+    fetch('./admin.php', { method: 'POST', body: fd })
     .then(function(res) { return res.json(); })
-    .then(function(cloudRes) {
-      if (cloudRes && cloudRes.success && cloudRes.data) {
-        // Simpan data aktivasi ke config lokal
-        var saveFd = new FormData();
-        saveFd.append('action', 'ajax_save_activated_license');
-        saveFd.append('data', JSON.stringify(cloudRes.data));
-        fetch('./admin.php', { method: 'POST', body: saveFd })
-        .then(function() {
-          showSuccessAndReload(cloudRes);
-        })
-        .catch(function() {
-          showSuccessAndReload(cloudRes);
-        });
+    .then(function(data) {
+      if (data && data.success) {
+        showSuccessAndReload(data);
       } else {
-        showError(cloudRes ? cloudRes.message : <?= json_encode($_license_activation_failed ?? 'Aktivasi lisensi gagal. Periksa kembali License Key Anda.') ?>);
+        // Direct browser fallback
+        var hwidEl = document.getElementById('ndrDeviceHwid');
+        var hwid = (hwidEl ? hwidEl.value.trim() : '');
+        fetch('https://panel.dgtlnetsolution.com/api/desktop-license/trial', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({ hwid: hwid || 'DESKTOP-AUTO' })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(cRes) {
+          if (cRes && cRes.success && cRes.data) {
+            var saveFd = new FormData();
+            saveFd.append('action', 'ajax_save_activated_license');
+            saveFd.append('data', JSON.stringify(cRes.data));
+            fetch('./admin.php', { method: 'POST', body: saveFd })
+            .then(function() { showSuccessAndReload(cRes); });
+          } else {
+            showError(cRes ? cRes.message : 'Gagal mengklaim Free Trial.');
+            if (btn) {
+              btn.disabled = false;
+              btn.innerHTML = '<i class="fa fa-star"></i> Coba Gratis 7 Hari (Free Trial)';
+            }
+          }
+        })
+        .catch(function(err) {
+          showError('Gagal mengklaim Free Trial: ' + err.message);
+          if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa fa-star"></i> Coba Gratis 7 Hari (Free Trial)';
+          }
+        });
       }
     })
-    .catch(function(err) {
-      showError((<?= json_encode($_failed_connect_cloud_license ?? 'Gagal terhubung ke Cloud License Server:') ?>) + ' ' + err.message);
+    .catch(function() {
+      showError('Gagal mengklaim Free Trial. Periksa koneksi internet.');
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-star"></i> Coba Gratis 7 Hari (Free Trial)';
+      }
     });
 }
 
