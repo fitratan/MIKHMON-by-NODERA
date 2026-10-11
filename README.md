@@ -5,6 +5,13 @@
 </p>
 
 <p align="center">
+  <b>Bahasa / Language / Langue :</b>
+  <a href="README.md"><b>🇮🇩 Bahasa Indonesia</b></a> |
+  <a href="README.fr.md"><b>🇫🇷 Français (Côte d'Ivoire / Afrique)</b></a> |
+  <a href="README.en.md"><b>🇬🇧 English</b></a>
+</p>
+
+<p align="center">
   <a href="https://panel.dgtlnetsolution.com/desktop-licenses"><img src="https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011%20%7C%20Linux%20VPS-0052CC.svg?style=for-the-badge&logo=windows" alt="Platform"></a>
   <a href="https://panel.dgtlnetsolution.com"><img src="https://img.shields.io/badge/Engine-PHP%208.2%20Micro--Server-777BB4.svg?style=for-the-badge&logo=php" alt="Engine"></a>
   <a href="https://panel.dgtlnetsolution.com/desktop-licenses"><img src="https://img.shields.io/badge/Status-Official%20Release-00B074.svg?style=for-the-badge" alt="Status"></a>
