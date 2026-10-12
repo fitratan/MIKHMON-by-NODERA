@@ -22,7 +22,7 @@
 
 ## Tentang MIKHMON by NODERA
 
-**MIKHMON by NODERA** adalah generasi baru aplikasi manajemen hotspot dan billing MikroTik yang dikembangkan dan dioptimalkan secara modern oleh **NODERA Digital Network**. 
+**MIKHMON by NODERA** adalah generasi baru aplikasi manajemen hotspot dan billing MikroTik yang dikembangkan dan dioptimalkan secara modern oleh **NODERA Team**. 
 
 Berbeda dengan Mikhmon biasa (legacy v3/v4) yang hanya berfungsi sebagai antarmuka API dasar untuk cetak voucher, **MIKHMON by NODERA** dibangun menjadi ekosistem penjualan voucher yang lengkap dengan modul kasir warung, pembayaran QRIS otomatis, integrasi WhatsApp Gateway, notifikasi Telegram interaktif, **Manajemen FUP (Fair Usage Policy) Engine**, **Monitoring Trafik Interface & Bandwidth Real-Time**, serta runtime portable terisolasi tanpa memerlukan XAMPP atau instalasi web server eksternal.
 
