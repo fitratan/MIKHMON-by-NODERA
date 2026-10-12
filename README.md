@@ -72,15 +72,15 @@ Berikut adalah tabel perbedaan mendasar antara **MIKHMON by NODERA** dengan vers
 - **Laporan Harian**: Rekap omset dan statistik penjualan harian hotspot secara otomatis.
 
 ### 5. FUP (Fair Usage Policy) Engine & Auto-Throttling
-- Pengaturan profil hotspot berbasis batas penggunaan wajar (*Fair Usage Policy*).
-- **Konfigurasi Threshold Kuota**: Atur batas kuota (misal: 10 GB) per profil hotspot.
-- **Kecepatan Setelah FUP**: Penyesuaian otomatis kecepatan internet (*throttling*, misal: 1M/1M) saat kuota FUP terlampaui.
-- **Siklus Reset Kuota**: Pilihan siklus reset pemakaian kuota secara fleksibel (Manual / Otomatis).
+- **Fungsi & Kegunaan**: Mencegah monopoli bandwidth oleh pengguna berat (*heavy downloader*). Sistem melacak akumulasi pemakaian kuota per profil hotspot secara akurat.
+- **Konfigurasi Threshold Kuota**: Menentukan batas pemakaian wajar (*quota threshold*, misal 10 GB) sebelum pembatasan berlaku.
+- **Otomatisasi Throttling**: Ketika kuota FUP terlampaui, sistem otomatis menurunkan kecepatan akses internet pelanggan (misal ke 1M/1M) tanpa memutus sesi aktif, menjaga keadilan distribusi bandwidth bagi seluruh pengguna.
+- **Siklus Reset Fleksibel**: Pengaturan jadwal reset pemakaian kuota secara berkala (Manual atau Otomatis) sesuai kebutuhan operasional RT/RW Net.
 
 ### 6. Advanced Interface Bandwidth & Traffic Telemetry
-- Monitoring trafik jaringan secara mendalam dan real-time: Rincian **Download (Rx)** dan **Upload (Tx)** hingga skala Terabyte (TB).
-- Pemantauan status aktif interface router (Contoh: `1_SFP_METRO`, `5_OM_BUDI`, `6_UPLINK_2`, dll.).
-- Statistik paket data, persentase utilitas, dan grafik performa interface secara live.
+- **Fungsi & Kegunaan**: Memantau kesehatan link jaringan dan beban trafik router secara menyeluruh dari satu layar terpusat.
+- **Rincian Rx / Tx Terperinci**: Memantau akumulasi trafik Download (Rx) dan Upload (Tx) dalam skala besar (hingga skala Terabyte / TB).
+- **Monitoring Status Interface**: Memeriksa status operasional setiap interface fisik maupun virtual (`1_SFP_METRO`, `5_OM_BUDI`, `6_UPLINK_2`, dll.) secara real-time untuk mendeteksi gangguan atau lonjakan trafik anomali secara dini.
 
 ### 7. Thermal Printing Terstandarisasi
 - Desain template voucher yang presisi untuk printer thermal ukuran **58mm** dan **80mm**.
