@@ -1,4 +1,4 @@
-# MIKHMON by NODERA (Desktop & Cloud Standalone Edition)
+# MIKHMON by NODERA
 
 <p align="center">
   <img src="assets/logo.png" alt="MIKHMON by NODERA" width="180"/>
