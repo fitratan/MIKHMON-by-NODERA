@@ -258,9 +258,13 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
 
   if (!function_exists('mikhmon_render_throttle_banner')) {
     function mikhmon_render_throttle_banner($remSeconds) {
-      global $_too_many_failed_logins, $_account_locked_temporary, $_please_try_again_in;
+      global $_too_many_failed_logins, $_account_locked_temporary, $_please_try_again_in, $_seconds, $_minutes, $_wait_time_completed, $_please_try_login_again;
       $remSeconds = max(1, (int)$remSeconds);
-      $initialText = ($remSeconds >= 60) ? ceil($remSeconds / 60) . ' menit' : $remSeconds . ' detik';
+      $txtSec = !empty($_seconds) ? $_seconds : 'detik';
+      $txtMin = !empty($_minutes) ? $_minutes : 'menit';
+      $txtDone = !empty($_wait_time_completed) ? $_wait_time_completed : 'Waktu tunggu selesai.';
+      $txtRetry = !empty($_please_try_login_again) ? $_please_try_login_again : 'Silakan coba login kembali.';
+      $initialText = ($remSeconds >= 60) ? ceil($remSeconds / 60) . ' ' . $txtMin : $remSeconds . ' ' . $txtSec;
       $title = !empty($_too_many_failed_logins) ? $_too_many_failed_logins : 'Terlalu banyak percobaan login gagal!';
       $desc = !empty($_account_locked_temporary) ? $_account_locked_temporary : 'Akun terkunci sementara demi keamanan.';
       $tryAgain = !empty($_please_try_again_in) ? $_please_try_again_in : 'Silakan coba kembali dalam';
@@ -273,6 +277,10 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
       $html .= '<script>';
       $html .= '(function(){';
       $html .= '  var rem = ' . $remSeconds . ';';
+      $html .= '  var txtSec = ' . json_encode($txtSec) . ';';
+      $html .= '  var txtMin = ' . json_encode($txtMin) . ';';
+      $html .= '  var txtDone = ' . json_encode($txtDone) . ';';
+      $html .= '  var txtRetry = ' . json_encode($txtRetry) . ';';
       $html .= '  var banner = document.getElementById("mikhmonThrottleBanner");';
       $html .= '  var timerEl = document.getElementById("mikhmonThrottleTimer");';
       $html .= '  function disableBtn() {';
@@ -285,12 +293,12 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
       $html .= '    disableBtn();';
       $html .= '  }';
       $html .= '  function formatCountdown(sec) {';
-      $html .= '    if (sec <= 0) return "0 detik";';
+      $html .= '    if (sec <= 0) return "0 " + txtSec;';
       $html .= '    var m = Math.floor(sec / 60);';
       $html .= '    var s = sec % 60;';
-      $html .= '    if (m > 0 && s > 0) return m + " menit " + s + " detik";';
-      $html .= '    if (m > 0) return m + " menit";';
-      $html .= '    return s + " detik";';
+      $html .= '    if (m > 0 && s > 0) return m + " " + txtMin + " " + s + " " + txtSec;';
+      $html .= '    if (m > 0) return m + " " + txtMin;';
+      $html .= '    return s + " " + txtSec;';
       $html .= '  }';
       $html .= '  if (timerEl) { timerEl.textContent = formatCountdown(rem); }';
       $html .= '  var countdownInterval = setInterval(function(){';
@@ -301,7 +309,7 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
       $html .= '      if (banner) {';
       $html .= '        banner.className = "bg-success text-center";';
       $html .= '        banner.style.background = "#28a745";';
-      $html .= '        banner.innerHTML = "<i class=\'fa fa-check-circle\'></i> <strong>Waktu tunggu selesai.</strong><br>Silakan coba login kembali.";';
+      $html .= '        banner.innerHTML = "<i class=\'fa fa-check-circle\'></i> <strong>" + txtDone + "</strong><br>" + txtRetry;';
       $html .= '      }';
       $html .= '      var submitBtn = document.querySelector("#mikhmonLoginForm input[type=\'submit\'], input[name=\'login\']");';
       $html .= '      if (submitBtn) { submitBtn.disabled = false; submitBtn.style.opacity = "1"; submitBtn.style.cursor = "pointer"; }';
