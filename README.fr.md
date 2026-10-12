@@ -1,4 +1,4 @@
-# MIKHMON par NODERA (Édition Autonome Desktop & Cloud)
+# MIKHMON par NODERA
 
 <p align="center">
   <img src="assets/logo.png" alt="MIKHMON par NODERA" width="180"/>
@@ -22,7 +22,7 @@
 
 ## À Propos de MIKHMON par NODERA
 
-**MIKHMON par NODERA** est la nouvelle génération d'application de gestion de hotspots et de facturation MikroTik, développée et optimisée de manière moderne par **NODERA Digital Network**.
+**MIKHMON par NODERA** est la nouvelle génération d'application de gestion de hotspots et de facturation MikroTik, développée et optimisée de manière moderne par **NODERA Team**.
 
 Contrairement aux versions classiques de Mikhmon (v3/v4 legacy) qui ne servaient que d'interface API basique pour imprimer des tickets, **MIKHMON par NODERA** constitue un écosystème commercial complet : module de point de vente (POS) pour revendeurs et boutiques, paiements mobiles automatisés, passerelle WhatsApp multi-fournisseurs, notifications interactives Telegram, **Moteur FUP (Fair Usage Policy)**, **Surveillance du Trafic et des Interfaces en Temps Réel**, et environnement autonome portable sans nécessité d'installer XAMPP ou un serveur web tiers.
 
