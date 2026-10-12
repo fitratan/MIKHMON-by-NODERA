@@ -300,7 +300,7 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
   }
 
 // bandwidth management
-  elseif ($bandwidth == "top-voucher") {
+  elseif ($bandwidth == "top-voucher" || $bandwidth == "management" || $bandwidth == "top" || (isset($_GET['bandwidth']) && $bandwidth !== "fup-settings" && $bandwidth !== "action") || $hotspot == "bandwidth") {
     include_once('./bandwidth/top_voucher.php');
   }
   elseif ($bandwidth == "fup-settings") {
@@ -759,7 +759,7 @@ $(document).ready(function(){
 });
 </script>";
 
-} elseif (in_array($hotspot, $pagehotspot) || in_array($ppp, $pageppp) || in_array($report, $pagereport) || $sys == "scheduler" || $bandwidth == "top-voucher" || $bandwidth == "fup-settings") {
+} elseif (in_array($hotspot, $pagehotspot) || in_array($ppp, $pageppp) || in_array($report, $pagereport) || $sys == "scheduler" || $bandwidth == "top-voucher" || $bandwidth == "fup-settings" || $bandwidth == "management" || $bandwidth == "top" || $hotspot == "bandwidth") {
 echo '
 <script>
 $(document).ready(function(){
