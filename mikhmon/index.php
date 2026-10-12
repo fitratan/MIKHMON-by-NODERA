@@ -203,6 +203,7 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
   $report = $_GET['report'];
   $removereport = $_GET['remove-report'];
   $minterface = $_GET['interface'];
+  $bandwidth = $_GET['bandwidth'] ?? '';
 
 
   $pagehotspot = array('users','hosts','ipbinding','cookies','log','dhcp-leases');
@@ -296,6 +297,17 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
 // about
   elseif ($hotspot == "about") {
     include_once('./include/about.php');
+  }
+
+// bandwidth management
+  elseif ($bandwidth == "top-voucher") {
+    include_once('./bandwidth/top_voucher.php');
+  }
+  elseif ($bandwidth == "fup-settings") {
+    include_once('./bandwidth/fup_settings.php');
+  }
+  elseif ($bandwidth == "action") {
+    include_once('./bandwidth/action.php');
   }
 
 // bad request
@@ -747,7 +759,7 @@ $(document).ready(function(){
 });
 </script>";
 
-} elseif (in_array($hotspot, $pagehotspot) || in_array($ppp, $pageppp) || in_array($report, $pagereport) || $sys == "scheduler") {
+} elseif (in_array($hotspot, $pagehotspot) || in_array($ppp, $pageppp) || in_array($report, $pagereport) || $sys == "scheduler" || $bandwidth == "top-voucher" || $bandwidth == "fup-settings") {
 echo '
 <script>
 $(document).ready(function(){
