@@ -24,7 +24,7 @@
 
 **MIKHMON by NODERA** adalah generasi baru aplikasi manajemen hotspot dan billing MikroTik yang dikembangkan dan dioptimalkan secara modern oleh **NODERA Digital Network**. 
 
-Berbeda dengan Mikhmon biasa (legacy v3/v4) yang hanya berfungsi sebagai antarmuka API dasar untuk cetak voucher, **MIKHMON by NODERA** dibangun menjadi ekosistem penjualan voucher yang lengkap dengan modul kasir warung, pembayaran QRIS otomatis, integrasi WhatsApp Gateway, notifikasi Telegram interaktif, serta runtime portable terisolasi tanpa memerlukan XAMPP atau instalasi web server eksternal.
+Berbeda dengan Mikhmon biasa (legacy v3/v4) yang hanya berfungsi sebagai antarmuka API dasar untuk cetak voucher, **MIKHMON by NODERA** dibangun menjadi ekosistem penjualan voucher yang lengkap dengan modul kasir warung, pembayaran QRIS otomatis, integrasi WhatsApp Gateway, notifikasi Telegram interaktif, **Manajemen FUP (Fair Usage Policy) Engine**, **Monitoring Trafik Interface & Bandwidth Real-Time**, serta runtime portable terisolasi tanpa memerlukan XAMPP atau instalasi web server eksternal.
 
 ---
 
@@ -39,7 +39,8 @@ Berikut adalah tabel perbedaan mendasar antara **MIKHMON by NODERA** dengan vers
 | **Payment Gateway QRIS** | Tidak ada / Perlu script pihak ketiga | **NODERA Pay Dynamic QRIS** otomatis generate voucher instan saat lunas |
 | **WhatsApp Gateway** | Tidak ada | **Multi-Provider WA Gateway** otomatis kirim voucher langsung ke nomor WA pembeli |
 | **Notifikasi Telegram** | Terbatas pada notif login teks biasa | **Telegram Bot Interaktif**: Notif login, rekap omset, tombol **Accept/Reject**, & **Alert Voucher Expired** |
-| **Alert Voucher Expired** | Tidak ada | **Real-time Alert Voucher Kedaluwarsa** ke Telegram admin/teknisi |
+| **FUP Engine & Throttling** | Tidak ada / Manual | **FUP Engine**: Atur threshold kuota, kecepatan setelah FUP, & siklus reset mandiri |
+| **Monitoring Interface & Trafik**| Standar router dasar | **Advanced Interface Bandwidth Telemetry** (Rx/Tx terperinci, total TB, & status running) |
 | **Dukungan RouterOS** | Terbatas / Sering error pada RouterOS v7 | **Full Support RouterOS v6 & v7** dengan optimasi koneksi API cepat |
 | **Cetak Struk Thermal** | Format kertas browser standar | **Direct Bluetooth & USB Thermal Print (58mm/80mm)** dengan format struk rapi |
 | **Sistem Lisensi & Proteksi** | Gratisan / Tidak terkelola | **Cloud-Managed HWID License**: Reset HWID mandiri via Cloud Panel saat ganti PC |
@@ -70,17 +71,28 @@ Berikut adalah tabel perbedaan mendasar antara **MIKHMON by NODERA** dengan vers
 - **Tombol Aksi Cepat**: Tombol *Accept* / *Reject* pesanan langsung dari jendela chat Telegram.
 - **Laporan Harian**: Rekap omset dan statistik penjualan harian hotspot secara otomatis.
 
-### 5. Thermal Printing Terstandarisasi
+### 5. FUP (Fair Usage Policy) Engine & Auto-Throttling
+- Pengaturan profil hotspot berbasis batas penggunaan wajar (*Fair Usage Policy*).
+- **Konfigurasi Threshold Kuota**: Atur batas kuota (misal: 10 GB) per profil hotspot.
+- **Kecepatan Setelah FUP**: Penyesuaian otomatis kecepatan internet (*throttling*, misal: 1M/1M) saat kuota FUP terlampaui.
+- **Siklus Reset Kuota**: Pilihan siklus reset pemakaian kuota secara fleksibel (Manual / Otomatis).
+
+### 6. Advanced Interface Bandwidth & Traffic Telemetry
+- Monitoring trafik jaringan secara mendalam dan real-time: Rincian **Download (Rx)** dan **Upload (Tx)** hingga skala Terabyte (TB).
+- Pemantauan status aktif interface router (Contoh: `1_SFP_METRO`, `5_OM_BUDI`, `6_UPLINK_2`, dll.).
+- Statistik paket data, persentase utilitas, dan grafik performa interface secara live.
+
+### 7. Thermal Printing Terstandarisasi
 - Desain template voucher yang presisi untuk printer thermal ukuran **58mm** dan **80mm**.
 - Mendukung cetak massal (batch print) dengan QR Code auto-login (*Scan to Connect*).
 - Kustomisasi logo, watermark, dan catatan kaki (*footer*) voucher.
 
-### 6. Multi-Router Architecture (ROS v6 & ROS v7)
+### 8. Multi-Router Architecture (ROS v6 & ROS v7)
 - Kelola banyak router MikroTik cabang dari satu aplikasi desktop terpusat.
 - Mendukung port API standar maupun port kustom dengan keamanan koneksi tinggi.
 - Monitor traffic real-time, grafik interface, dan status DHCP Leases langsung dari dashboard.
 
-### 7. Keamanan Lisensi & Manajemen HWID Mandiri
+### 9. Keamanan Lisensi & Manajemen HWID Mandiri
 - Dilindungi sistem verifikasi Hardware ID (HWID) berbasis cloud dengan tanda tangan digital kriptografi.
 - **Fitur Reset HWID Mandiri**: Jika Anda mengganti laptop atau komputer kasir, Anda dapat mereset ikatan HWID langsung dari Member Panel tanpa harus menghubungi admin.
 
@@ -90,13 +102,19 @@ Berikut adalah tabel perbedaan mendasar antara **MIKHMON by NODERA** dengan vers
 
 Tampilan antarmuka desktop **MIKHMON by NODERA** yang responsif, bersih, dan modern:
 
-### 1. Dashboard Utama MikroTik & Telemetri (RouterOS v7)
+### 1. Advanced Interface Bandwidth & Traffic Monitoring
 <p align="center">
-  <img src="assets/screenshots/desktop/01-routeros7-dashboard.jpg" alt="Dashboard MikroTik RouterOS v7" width="100%"/>
+  <img src="assets/screenshots/desktop/08-interface-bandwidth-telemetry.jpg" alt="Advanced Interface Bandwidth & Traffic Monitoring" width="100%"/>
 </p>
-*Monitoring real-time RouterOS 7.22.2 arm64 (RB5009UG+S+): status CPU, RAM, Uptime, DHCP Leases, grafik traffic, dan log aktivitas trial user.*
+*Monitoring interface jaringan tingkat lanjut: Total Trafik (369.12 TB), Download Rx (154.96 TB), Upload Tx (214.16 TB), 142/145 Interface Aktif (`1_SFP_METRO`, `5_OM_BUDI`, dll.).*
 
-### 2. Ekosistem Warung POS & Reseller Kulakan
+### 2. Pengaturan FUP Engine (Fair Usage Policy)
+<p align="center">
+  <img src="assets/screenshots/desktop/09-fup-settings-panel.jpg" alt="Pengaturan FUP Engine Panel" width="100%"/>
+</p>
+*Panel FUP Engine: Pemilihan Profil Hotspot, Status FUP Profil, Threshold Batas Kuota (10 GB), Kecepatan Setelah FUP (1M/1M), & Siklus Reset Kuota (Manual/Otomatis).*
+
+### 3. Ekosistem Warung POS & Reseller Kulakan
 | Manajemen Mitra Warung (Admin) | Dashboard Kasir Warung (Reseller) |
 | :---: | :---: |
 | <img src="assets/screenshots/desktop/02-admin-daftar-warung.jpg" width="490" alt="Manajemen Mitra Warung"/> | <img src="assets/screenshots/desktop/03-warung-pos-dashboard.jpg" width="490" alt="Dashboard Kasir Warung"/> |
@@ -107,7 +125,7 @@ Tampilan antarmuka desktop **MIKHMON by NODERA** yang responsif, bersih, dan mod
 | <img src="assets/screenshots/desktop/04-warung-pos-checkout.jpg" width="490" alt="Checkout Paket Voucher Warung"/> | <img src="assets/screenshots/desktop/05-warung-pos-receipt.jpg" width="490" alt="Struk Pembelian Voucher"/> |
 | *Rincian harga modal, harga jual, margin laba, & input WA pembeli* | *Struk instan dengan QR Code autologin, tombol cetak, & kirim WA* |
 
-### 3. Integrasi Gateway Otomatisasi (WhatsApp & Telegram)
+### 4. Integrasi Gateway Otomatisasi (WhatsApp & Telegram)
 | WhatsApp Gateway Multi-Provider | Bot & Notifikasi Telegram Interaktif |
 | :---: | :---: |
 | <img src="assets/screenshots/desktop/06-whatsapp-gateway.jpg" width="490" alt="WhatsApp Gateway Settings"/> | <img src="assets/screenshots/desktop/07-telegram-bot-notifications.jpg" width="490" alt="Bot Telegram Settings"/> |
@@ -212,7 +230,7 @@ Lisensi resmi **Mikhmon Desktop Standalone** dapat dibeli dan dikelola secara ma
 ### Keuntungan Memiliki Lisensi Resmi:
 - Masa aktif lisensi fleksibel (Bulanan / Tahunan / Selamanya).
 - Dashboard kontrol lisensi untuk memantau status perangkat dan masa berlaku.
-- Akses penuh ke seluruh fitur Warung POS, WhatsApp Gateway, Telegram Bot, dan Payment Gateway.
+- Akses penuh ke seluruh fitur Warung POS, WhatsApp Gateway, Telegram Bot, FUP Engine, Advanced Interface Telemetry, dan Payment Gateway.
 - Dukungan teknis dan update pembaruan sistem dari tim NODERA.
 
 ---
