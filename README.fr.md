@@ -24,13 +24,15 @@
 
 **MIKHMON par NODERA** est la nouvelle génération d'application de gestion de hotspots et de facturation MikroTik, développée et optimisée de manière moderne par **NODERA Digital Network**.
 
-Contrairement aux versions classiques de Mikhmon (v3/v4 legacy) qui ne servaient que d'interface API basique pour imprimer des tickets, **MIKHMON par NODERA** constitue un écosystème commercial complet : module de point de vente (POS) pour revendeurs et boutiques, paiements mobiles automatisés, passerelle WhatsApp multi-fournisseurs, notifications interactives Telegram, et environnement autonome portable sans nécessité d'installer XAMPP ou un serveur web tiers.
+Contrairement aux versions classiques de Mikhmon (v3/v4 legacy) qui ne servaient que d'interface API basique pour imprimer des tickets, **MIKHMON par NODERA** constitue un écosystème commercial complet : module de point de vente (POS) pour revendeurs et boutiques, paiements mobiles automatisés, passerelle WhatsApp multi-fournisseurs, notifications interactives Telegram, **Moteur FUP (Fair Usage Policy)**, **Surveillance du Trafic et des Interfaces en Temps Réel**, et environnement autonome portable sans nécessité d'installer XAMPP ou un serveur web tiers.
 
 Cette version est entièrement compatible avec les réseaux déployés en **Côte d'Ivoire et en Afrique de l'Ouest**, avec prise en charge du français et des devises locales (FCFA).
 
 ---
 
 ## Comparatif : MIKHMON par NODERA vs Mikhmon Classique (v3/v4 Legacy)
+
+Voici un tableau comparatif entre **MIKHMON par NODERA** et les versions traditionnelles de Mikhmon :
 
 | Fonctionnalité / Paramètre | Mikhmon Classique (Legacy v3 / v4) | MIKHMON par NODERA (Desktop & VPS Autonome) |
 | :--- | :--- | :--- |
@@ -39,7 +41,8 @@ Cette version est entièrement compatible avec les réseaux déployés en **Côt
 | **Paiement Automatique** | Aucun / Scripts tiers instables | **Paiements Automatisés & Portails Mobiles** avec génération instantanée de tickets payés |
 | **Passerelle WhatsApp** | Aucune | **Passerelle WhatsApp Multi-Fournisseurs** pour envoi automatique des identifiants au client |
 | **Notifications Telegram** | Alertes textuelles très limitées | **Bot Telegram Interactif** : alertes de vente, bilan du chiffre d'affaires, boutons d'action et alertes d'expiration |
-| **Alerte Tickets Expirés** | Aucune | **Alerte en temps réel des tickets expirés** envoyée directement sur Telegram aux techniciens |
+| **Moteur FUP & Limitation** | Aucun / Manuel | **Moteur FUP** : configuration du seuil de quota, vitesse après FUP et cycle de réinitialisation |
+| **Surveillance du Trafic** | Standard routeur basique | **Télémétrie Avancée des Interfaces** (Rx/Tx détaillé, trafic total en To, statut actif) |
 | **Compatibilité RouterOS** | Limitée / Nombreuses erreurs sur RouterOS v7 | **Compatibilité totale RouterOS v6 & v7** avec optimisation des requêtes API |
 | **Impression Thermique** | Format navigateur basique | **Impression Thermique Directe USB & Bluetooth (58mm/80mm)** avec mise en page professionnelle |
 | **Licence & Protection** | Non sécurisée / Non gérée | **Licence Cloud Liée au HWID** : réinitialisation autonome du HWID via le portail en cas de changement de PC |
@@ -49,34 +52,43 @@ Cette version est entièrement compatible avec les réseaux déployés en **Côt
 
 ## Fonctionnalités Principales
 
-### 1. Module Caisse POS & Réseau de Revendeurs
+### 1. Module Caisse POS & Réseau de Revendeurs (Boutiques Partenaires)
 - Confiez la vente de vos tickets Wi-Fi à des kiosques, boutiques de quartier ou revendeurs partenaires.
 - Interface de caisse ultra-simplifiée et rapide, accessible depuis smartphone, tablette ou ordinateur.
-- Gestion des soldes prépayés des revendeurs avec calcul automatique des marges bénéficiaires.
-- Impression instantanée des reçus sur imprimante thermique de caisse.
+- Gestion des soldes prépayés des revendeurs avec calcul automatique des marges bénéficiaires et impression instantanée des reçus.
 
-### 2. Passerelle WhatsApp Multi-Fournisseurs
+### 2. Moteur FUP (Fair Usage Policy) & Limitation Automatique
+- **Rôle & Utilité** : Empêche le monopole de la bande passante par les gros consommateurs (*heavy downloaders*). Le système suit précisément l'accumulation de données par profil hotspot.
+- **Seuil de Quota (*Quota Threshold*)** : Définissez la limite de consommation équitable (ex. : 10 Go) avant application des restrictions.
+- **Limitation Automatique (*Throttling*)** : Lorsque le quota FUP est atteint, le système réduit automatiquement la vitesse de connexion (ex. : 1 Mo/1 Mo) sans couper la session active, garantissant l'équité pour tous les utilisateurs.
+- **Cycle de Réinitialisation** : Programmation flexible du reset des quotas (Manuel ou Automatique).
+
+### 3. Télémétrie Avancée du Trafic & des Interfaces
+- **Rôle & Utilité** : Surveillez la santé des liens réseau et la charge du routeur depuis un tableau de bord centralisé.
+- **Détails Rx / Tx** : Suivi du volume cumulé de téléchargement (Rx) et de téléversement (Tx) en grande échelle (jusqu'à l'échelle des Téraoctets / To).
+- **Statut des Interfaces** : Vérification en temps réel de l'état opérationnel de chaque interface physique ou virtuelle (`1_SFP_METRO`, `5_OM_BUDI`, `6_UPLINK_2`, etc.) pour détecter rapidement toute anomalie.
+
+### 4. Passerelle WhatsApp Multi-Fournisseurs
 - Envoi automatique du code ticket, du nom d'utilisateur, du mot de passe et de la durée de validité directement sur le WhatsApp du client dès la validation.
 - Diffusion d'alertes d'expiration et d'informations sur l'état du réseau aux clients.
 
-### 3. Bot Telegram Interactif & Alertes d'Expiration
+### 5. Bot Telegram Interactif & Alertes d'Expiration
 - **Rapports de vente en direct** : notification instantanée à chaque ticket vendu.
 - **Alertes d'expiration** : notification automatique dès qu'un ticket arrive à terme sur le MikroTik.
 - **Bilan journalier** : synthèse automatique du chiffre d'affaires et statistiques quotidiennes.
 
-### 4. Impression Thermique Standardisée
+### 6. Impression Thermique Standardisée & Modèles de Coupons
 - Modèles de tickets parfaitement calibrés pour imprimantes thermiques **58 mm** et **80 mm**.
 - Prise en charge de l'impression par lots (*batch print*) avec QR Code de connexion automatique (*Scan to Connect*).
-- Personnalisation complète : logo, filigrane et pied de page.
+- Personnalisation complète des styles graphiques et palettes de couleurs des coupons.
 
-### 5. Architecture Multi-Routeurs (ROS v6 & ROS v7)
+### 7. Architecture Multi-Routeurs (ROS v6 & ROS v7)
 - Pilotez plusieurs routeurs MikroTik distants depuis une seule application centrale.
 - Prise en charge des ports API standards et personnalisés avec chiffrement sécurisé.
-- Surveillance du trafic en temps réel, graphiques d'interfaces et baux DHCP depuis le tableau de bord.
 
-### 6. Sécurité de Licence & Gestion Autonome du HWID
+### 8. Sécurité de Licence & Gestion Autonome du HWID
 - Protection cryptographique basée sur l'identifiant matériel de la machine (HWID).
-- **Réinitialisation autonome du HWID** : en cas de changement d'ordinateur de caisse, réinitialisez la liaison directement depuis votre espace client sans intervention requise.
+- **Réinitialisation autonome du HWID** : en cas de changement d'ordinateur de caisse, réinitialisez la liaison directement depuis votre espace client.
 
 ---
 
