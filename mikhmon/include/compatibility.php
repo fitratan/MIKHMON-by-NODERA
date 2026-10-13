@@ -25,3 +25,27 @@ if (!function_exists('str_contains')) {
         return strpos((string)$haystack, (string)$needle) !== false;
     }
 }
+
+if (!function_exists('mikhmon_curl_set_ssl')) {
+    function mikhmon_curl_set_ssl($ch) {
+        if (!is_resource($ch) && !($ch instanceof \CurlHandle)) {
+            return;
+        }
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+
+        $caCandidates = [
+            __DIR__ . '/../cacert.pem',
+            __DIR__ . '/cacert.pem',
+            dirname(__DIR__, 2) . '/bin/php-win/cacert.pem',
+            dirname(__DIR__) . '/bin/php-win/cacert.pem',
+            '/etc/ssl/certs/ca-certificates.crt',
+        ];
+        foreach ($caCandidates as $ca) {
+            if (file_exists($ca) && is_readable($ca)) {
+                curl_setopt($ch, CURLOPT_CAINFO, realpath($ca));
+                break;
+            }
+        }
+    }
+}

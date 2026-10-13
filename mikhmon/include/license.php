@@ -352,8 +352,12 @@ if (!function_exists('mikhmon_verify_desktop_license')) {
                 'User-Agent: Mikhmon-Desktop-Client/1.0',
             ]);
             curl_setopt($ch, CURLOPT_TIMEOUT, 8);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            if (function_exists('mikhmon_curl_set_ssl')) {
+                mikhmon_curl_set_ssl($ch);
+            } else {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            }
             $raw = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             curl_close($ch);
@@ -454,8 +458,12 @@ if (!function_exists('mikhmon_activate_desktop_license')) {
                 'User-Agent: Mikhmon-Desktop-Client/1.0',
             ]);
             curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            if (function_exists('mikhmon_curl_set_ssl')) {
+                mikhmon_curl_set_ssl($ch);
+            } else {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            }
             $raw = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $err = curl_error($ch);
@@ -532,8 +540,12 @@ if (!function_exists('mikhmon_activate_trial_license')) {
                 'User-Agent: Mikhmon-Desktop-Client/1.0',
             ]);
             curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            if (function_exists('mikhmon_curl_set_ssl')) {
+                mikhmon_curl_set_ssl($ch);
+            } else {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            }
             $raw = curl_exec($ch);
             $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
             $err = curl_error($ch);

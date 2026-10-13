@@ -948,7 +948,12 @@ if ($action === 'create_qris' || $action === 'create_qris_order' || $action === 
                 'User-Agent: Nodera-Billing/1.0',
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            if (function_exists('mikhmon_curl_set_ssl')) {
+                mikhmon_curl_set_ssl($ch);
+            } else {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            }
             curl_setopt($ch, CURLOPT_TIMEOUT, 15);
             $wRes = curl_exec($ch);
             $wHttp = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -1027,7 +1032,12 @@ if ($action === 'create_qris' || $action === 'create_qris_order' || $action === 
             'X-Merchant-Code: ' . $merchantCode,
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        if (function_exists('mikhmon_curl_set_ssl')) {
+            mikhmon_curl_set_ssl($ch);
+        } else {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        }
         curl_setopt($ch, CURLOPT_TIMEOUT, 15);
         $res = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
@@ -1281,7 +1291,12 @@ if ($action === 'check_status' || $action === 'check_qris_status' || $action ===
             'User-Agent: Nodera-Billing/1.0',
         ]);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        if (function_exists('mikhmon_curl_set_ssl')) {
+            mikhmon_curl_set_ssl($ch);
+        } else {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        }
         curl_setopt($ch, CURLOPT_TIMEOUT, 6);
         $wRes = curl_exec($ch);
         curl_close($ch);
@@ -1309,7 +1324,12 @@ if ($action === 'check_status' || $action === 'check_qris_status' || $action ===
                 'X-Merchant-Code: ' . ($npCfg['merchant_code'] ?? ($npCfg['code_merchant'] ?? '')),
             ]);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            if (function_exists('mikhmon_curl_set_ssl')) {
+                mikhmon_curl_set_ssl($ch);
+            } else {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            }
             curl_setopt($ch, CURLOPT_TIMEOUT, 8);
             $res = curl_exec($ch);
             curl_close($ch);

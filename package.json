@@ -32,12 +32,11 @@
     "directories": {
       "output": "dist"
     },
+    "asar": true,
     "files": [
       "main.js",
       "preload.js",
       "activation.html",
-      "mikhmon/**/*",
-      "bin/**/*",
       "build/**/*"
     ],
     "extraResources": [

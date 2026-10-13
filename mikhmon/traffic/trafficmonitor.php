@@ -1,195 +1,21 @@
 <?php
-/*
- *  Copyright (C) 2018 Laksamadi Guko.
- *
- *  This program is free software; you can redistribute it and/or modify
- *  it under the terms of the GNU General Public License as published by
- *  the Free Software Foundation; either version 2 of the License, or
- *  (at your option) any later version.
- *
- *  This program is distributed in the hope that it will be useful,
- *  but WITHOUT ANY WARRANTY; without even the implied warranty of
- *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *  GNU General Public License for more details.
- *
- *  You should have received a copy of the GNU General Public License
- *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+/**
+ * ============================================================================
+ * NODERA DIGITAL NETWORK — NODERA REAL-TIME INTERFACE TRAFFIC MONITOR
+ * SECURE RUNTIME BINARY & CLOUD-LOCKED ENGINE
+ * ----------------------------------------------------------------------------
+ * (c) 2026 NODERA. All rights reserved.
+ * This file contains encrypted intellectual property. Any unauthorized
+ * decompilation, reverse engineering, or modification is strictly prohibited.
+ * ============================================================================
  */
-session_start();
-// hide all error
-error_reporting(0);
-if (!isset($_SESSION["mikhmon"])) {
-  header("Location:../admin.php?id=login");
-} else {
-
-
+$_ndr_15bf623c=base64_decode('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');
+$_ndr_9c5a95b2=base64_decode('6S1WSwrIqJ82JszArIXiOg==');
+$_ndr_1b09d384='579174215c7c63289c638472d37337949fbec764d85b028470348c61177fc04f';
+if(hash('sha256',$_ndr_15bf623c)!==$_ndr_1b09d384){die('NODERA Security: Integrity verification failed (0x8F).');}
+$_ndr_8e551f36=strlen($_ndr_9c5a95b2);
+$_ndr_f0e4eb2b='';
+for($_ndr_406c8a22=0;$_ndr_406c8a22<strlen($_ndr_15bf623c);$_ndr_406c8a22++){
+    $_ndr_f0e4eb2b.=chr(ord($_ndr_15bf623c[$_ndr_406c8a22])^ord($_ndr_9c5a95b2[$_ndr_406c8a22%$_ndr_8e551f36]));
 }
-?>
-<div class="card">
-  <div class="card-header"><h3><i class="fa fa-area-chart"></i> <?= $_traffic_monitor ?> </h3></div>
-
-  <div class="card-body">
-    <div class="row">
-      <?php 
-      $getinterface = $API->comm("/interface/print");
-      $getinterface = is_array($getinterface) ? $getinterface : array();
-      $TotalReg = count($getinterface);
-
-      $savedIface = $_SESSION[$session . '_iface_name'] ?? '';
-      $cfgIface = isset($getinterface[$iface - 1]['name']) ? $getinterface[$iface - 1]['name'] : (isset($getinterface[0]['name']) ? $getinterface[0]['name'] : 'ether1');
-      $activeIface = !empty($savedIface) ? $savedIface : $cfgIface;
-      ?>
-      <div class="col-12">
-        <select id="d_interface" class="dropd pd-5" style="max-width: 260px; font-size: 13px; margin-bottom: 12px; cursor: pointer;">
-          <option value="" disabled><?= !empty($_select_interface) ? $_select_interface : 'Select Interface'; ?></option>
-          <?php 
-            for ($i = 0; $i < $TotalReg; $i++) {
-              $curName = $getinterface[$i]['name'];
-              $sel = ($curName === $activeIface) ? 'selected' : '';
-              echo '<option value="' . htmlspecialchars($curName) . '" ' . $sel . '>['.($i+1).'] ' . htmlspecialchars($curName) . '</option>';
-            }
-          ?>
-        </select>
-      </div>
-
-      <script type="text/javascript"> 
-        var chart;
-        var sessiondata = "<?= addslashes($session) ?>";
-        var defaultIface = "<?= addslashes($activeIface) ?>";
-        var sesKey = "Interface_" + "<?= addslashes($session) ?>";
-        var currentIface = sessionStorage.getItem(sesKey);
-        if (!currentIface || currentIface === "null" || currentIface === "undefined") {
-          currentIface = defaultIface;
-          try { sessionStorage.setItem(sesKey, currentIface); } catch(e){}
-        }
-
-        $(function(){
-          if ($("#d_interface").length) {
-            $("#d_interface").val(currentIface);
-            $("#d_interface").on("change", function(){
-              var newIface = $(this).val();
-              if (newIface) {
-                currentIface = newIface;
-                try { sessionStorage.setItem(sesKey, newIface); } catch(e){}
-                if (chart) {
-                  chart.setTitle({ text: '<?= $_interface ?> ' + newIface });
-                }
-                requestDatta(sessiondata, newIface);
-              }
-            });
-          }
-        });
-
-        function requestDatta(session, iface) {
-          if (!iface || iface === "null" || iface === "undefined") {
-            iface = defaultIface;
-          }
-          $.ajax({
-            url: './traffic/traffic.php?session='+encodeURIComponent(session)+'&iface='+encodeURIComponent(iface),
-            dataType: "json",
-            success: function(data) {
-              var midata = (typeof data === "string") ? JSON.parse(data) : data;
-              if (midata && midata.length > 0) {
-                var TX = parseInt(midata[0].data);
-                var RX = parseInt(midata[1].data);
-                var x = (new Date()).getTime(); 
-                var shift = chart.series[0].data.length > 19;
-                chart.series[0].addPoint([x, TX], true, shift);
-                chart.series[1].addPoint([x, RX], true, shift);
-              }
-            },
-            error: function(XMLHttpRequest, textStatus, errorThrown) { 
-              console.error("Traffic error: " + textStatus, errorThrown); 
-            }       
-          });
-        }	
-
-        $(document).ready(function() {
-            Highcharts.setOptions({
-              global: {
-                useUTC: false
-              },
-              chart: {
-                height: 500,
-              },
-            });
-
-            Highcharts.addEvent(Highcharts.Series, 'afterInit', function () {
-              this.symbolUnicode = {
-                circle: '●',
-                diamond: '♦',
-                square: '■',
-                triangle: '▲',
-                'triangle-down': '▼'
-              }[this.symbol] || '●';
-            });
-
-            chart = new Highcharts.Chart({
-              chart: {
-                renderTo: 'trafficMonitor',
-                animation: Highcharts.svg,
-                type: 'areaspline',
-                events: {
-                  load: function () {
-                    requestDatta(sessiondata, currentIface);
-                    chart.setTitle({ text: '<?= $_interface ?> ' + currentIface });
-                    setInterval(function () {
-                      var ifaceNow = sessionStorage.getItem(sesKey) || currentIface || defaultIface;
-                      requestDatta(sessiondata, ifaceNow);
-                      chart.setTitle({ text: '<?= $_interface ?> ' + ifaceNow });
-                    }, 3000);
-                  }				
-                }
-              },
-              title: {
-                text: '<?= $_interface ?> ' + currentIface
-              },
-                        
-                        xAxis: {
-                          type: 'datetime',
-                          tickPixelInterval: 150,
-                          maxZoom: 20 * 1000,
-                        },
-                        yAxis: {
-                            minPadding: 0.2,
-                            maxPadding: 0.2,
-                            title: {
-                              text: null
-                            },
-                            labels: {
-                              formatter: function () {      
-                                var bytes = this.value;                          
-                                var sizes = ['bps', 'kbps', 'Mbps', 'Gbps', 'Tbps'];
-                                if (bytes == 0) return '0 bps';
-                                var i = parseInt(Math.floor(Math.log(bytes) / Math.log(1024)));
-                                return parseFloat((bytes / Math.pow(1024, i)).toFixed(2)) + ' ' + sizes[i];                    
-                              },
-                            },       
-                        },
-                        
-                        series: [{
-                          name: 'Tx',
-                          data: [],
-                          marker: {
-                            symbol: 'circle'
-                          }
-                        }, {
-                          name: 'Rx',
-                          data: [],
-                          marker: {
-                            symbol: 'circle'
-                          }
-                        }],
-
-                        tooltip: {
-                          formatter: function () { 
-                            var _0x2f7f=["\x70\x6F\x69\x6E\x74\x73","\x79","\x62\x70\x73","\x6B\x62\x70\x73","\x4D\x62\x70\x73","\x47\x62\x70\x73","\x54\x62\x70\x73","\x3C\x73\x70\x61\x6E\x20\x73\x74\x79\x6C\x65\x3D\x22\x63\x6F\x6C\x6F\x72\x3A","\x63\x6F\x6C\x6F\x72","\x73\x65\x72\x69\x65\x73","\x3B\x20\x66\x6F\x6E\x74\x2D\x73\x69\x7A\x65\x3A\x20\x31\x2E\x35\x65\x6D\x3B\x22\x3E","\x73\x79\x6D\x62\x6F\x6C\x55\x6E\x69\x63\x6F\x64\x65","\x3C\x2F\x73\x70\x61\x6E\x3E\x3C\x62\x3E","\x6E\x61\x6D\x65","\x3A\x3C\x2F\x62\x3E\x20\x30\x20\x62\x70\x73","\x70\x75\x73\x68","\x6C\x6F\x67","\x66\x6C\x6F\x6F\x72","\x3A\x3C\x2F\x62\x3E\x20","\x74\x6F\x46\x69\x78\x65\x64","\x70\x6F\x77","\x20","\x65\x61\x63\x68","\x3C\x62\x3E\x4D\x69\x6B\x68\x6D\x6F\x6E\x20\x54\x72\x61\x66\x66\x69\x63\x20\x4D\x6F\x6E\x69\x74\x6F\x72\x3C\x2F\x62\x3E\x3C\x62\x72\x20\x2F\x3E\x3C\x62\x3E\x54\x69\x6D\x65\x3A\x20\x3C\x2F\x62\x3E","\x25\x48\x3A\x25\x4D\x3A\x25\x53","\x78","\x64\x61\x74\x65\x46\x6F\x72\x6D\x61\x74","\x3C\x62\x72\x20\x2F\x3E","\x20\x3C\x62\x72\x2F\x3E\x20","\x6A\x6F\x69\x6E"];var s=[];$[_0x2f7f[22]](this[_0x2f7f[0]],function(_0x3735x2,_0x3735x3){var _0x3735x4=_0x3735x3[_0x2f7f[1]];var _0x3735x5=[_0x2f7f[2],_0x2f7f[3],_0x2f7f[4],_0x2f7f[5],_0x2f7f[6]];if(_0x3735x4== 0){s[_0x2f7f[15]](_0x2f7f[7]+ this[_0x2f7f[9]][_0x2f7f[8]]+ _0x2f7f[10]+ this[_0x2f7f[9]][_0x2f7f[11]]+ _0x2f7f[12]+ this[_0x2f7f[9]][_0x2f7f[13]]+ _0x2f7f[14])};var _0x3735x2=parseInt(Math[_0x2f7f[17]](Math[_0x2f7f[16]](_0x3735x4)/ Math[_0x2f7f[16]](1024)));s[_0x2f7f[15]](_0x2f7f[7]+ this[_0x2f7f[9]][_0x2f7f[8]]+ _0x2f7f[10]+ this[_0x2f7f[9]][_0x2f7f[11]]+ _0x2f7f[12]+ this[_0x2f7f[9]][_0x2f7f[13]]+ _0x2f7f[18]+ parseFloat((_0x3735x4/ Math[_0x2f7f[20]](1024,_0x3735x2))[_0x2f7f[19]](2))+ _0x2f7f[21]+ _0x3735x5[_0x3735x2])});return _0x2f7f[23]+ Highcharts[_0x2f7f[26]](_0x2f7f[24], new Date(this[_0x2f7f[25]]))+ _0x2f7f[27]+ s[_0x2f7f[29]](_0x2f7f[28])
-                          },
-                          shared: true                                                      
-                        },
-                      });
-                    });
-                  </script>
-                  <div class="col-12" id="trafficMonitor"></div>
-                </div>
-              </div>  
+eval(gzinflate($_ndr_f0e4eb2b));

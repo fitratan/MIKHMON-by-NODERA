@@ -336,8 +336,12 @@ if (!empty($currentWarung) && $_SERVER['REQUEST_METHOD'] === 'POST') {
         ]));
         curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        if (function_exists('mikhmon_curl_set_ssl')) {
+            mikhmon_curl_set_ssl($ch);
+        } else {
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        }
         $resp = curl_exec($ch);
         $json = @json_decode($resp, true);
         curl_close($ch);

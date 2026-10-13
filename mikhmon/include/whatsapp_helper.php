@@ -104,8 +104,12 @@ if (!function_exists('mikhmon_send_whatsapp')) {
                 curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
             }
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+            if (function_exists('mikhmon_curl_set_ssl')) {
+                mikhmon_curl_set_ssl($ch);
+            } else {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            }
             curl_setopt($ch, CURLOPT_TIMEOUT, 20);
             curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 10);
             curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
