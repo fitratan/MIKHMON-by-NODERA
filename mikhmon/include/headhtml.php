@@ -81,6 +81,32 @@ if ($isWarung) {
 
 		<!-- PWA Service Worker & Install Prompt Listener -->
 		<script>
+		window.mikhmonSwitchTheme = function(theme) {
+			if (!theme) return;
+			var match = String(theme).match(/set-theme=([^&]+)/);
+			var actual = match ? match[1] : theme;
+			try {
+				if (typeof notify === 'function') notify('<?= $_loading_theme ?? "Loading theme..."; ?>');
+			} catch(e) {}
+			var url = new URL(window.location.href);
+			url.searchParams.set('set-theme', actual);
+			url.searchParams.set('_t', Date.now());
+			window.location.replace(url.toString());
+		};
+
+		window.mikhmonSwitchLang = function(lang) {
+			if (!lang) return;
+			var match = String(lang).match(/setlang=([^&]+)/);
+			var actual = match ? match[1] : lang;
+			try {
+				if (typeof notify === 'function') notify('<?= $_loading ?? "Loading..."; ?>');
+			} catch(e) {}
+			var url = new URL(window.location.href);
+			url.searchParams.set('setlang', actual);
+			url.searchParams.set('_t', Date.now());
+			window.location.replace(url.toString());
+		};
+
 		window.deferredPwaPrompt = null;
 		window.addEventListener('beforeinstallprompt', function(e) {
 			e.preventDefault();

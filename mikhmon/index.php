@@ -105,13 +105,22 @@ if (!empty($_GET['setlang']) && !empty($isocodelang[$_GET['setlang']])) {
   @setcookie('mikhmon_lang', $langid, time() + 31536000, '/');
   @file_put_contents(__DIR__ . '/include/lang.php', '<?php $langid="' . addslashes($langid) . '";?>');
 
-  $cleanLangUrl = preg_replace('/([?&])(setlang|_t|_nc)=[^&]*(&|$)/', '$1', $url);
-  $cleanLangUrl = rtrim($cleanLangUrl, '?&');
-  if (empty($cleanLangUrl) || $cleanLangUrl === '?' || $cleanLangUrl === '&') {
-    $cleanLangUrl = './?session=' . ($session ?? 'default');
+  $parsed = parse_url($url);
+  $path = $parsed['path'] ?? './';
+  $query = [];
+  if (!empty($parsed['query'])) {
+      parse_str($parsed['query'], $query);
   }
+  unset($query['setlang'], $query['_t'], $query['_nc']);
+  if (empty($query['session']) && !empty($session)) {
+      $query['session'] = $session;
+  }
+  $qs = http_build_query($query);
+  $cleanLangUrl = ($path ?: './') . ($qs ? '?' . $qs : '');
   $sep = (strpos($cleanLangUrl, '?') !== false) ? '&' : '?';
   $redirectUrl = $cleanLangUrl . $sep . '_t=' . time();
+
+  session_write_close();
   if (!headers_sent()) {
     @header("Cache-Control: no-store, no-cache, must-revalidate, max-age=0, post-check=0, pre-check=0");
     @header("Pragma: no-cache");
@@ -149,9 +158,11 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
 // theme  
   include('./include/theme.php');
   include('./settings/settheme.php');
-  if ($_SESSION['theme'] == "") {
-    $theme = $theme;
-    $themecolor = $themecolor;
+  if (empty($_SESSION['theme'])) {
+    $theme = $_COOKIE['mikhmon_theme'] ?? $theme ?? 'dark';
+    $themecolor = $_COOKIE['mikhmon_themecolor'] ?? $themecolor ?? '#3a4149';
+    $_SESSION['theme'] = $theme;
+    $_SESSION['themecolor'] = $themecolor;
   } else {
     $theme = $_SESSION['theme'];
     $themecolor = $_SESSION['themecolor'];
