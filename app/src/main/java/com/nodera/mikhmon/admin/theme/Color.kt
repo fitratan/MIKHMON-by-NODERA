@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 // Authentic MIKHMON Dark Theme Color Palette
 val MikhmonBg = Color(0xFF16191E)          // Main background
 val MikhmonCardBg = Color(0xFF20252B)      // Card and header background
+val MikhmonSurface = Color(0xFF20252B)     // Surface alias
 val MikhmonCardHeaderBg = Color(0xFF262C34) // Card title header
 val MikhmonBorder = Color(0xFF2D343D)      // Box and card border
 

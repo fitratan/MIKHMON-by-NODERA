@@ -85,7 +85,7 @@ class LicenseManager(private val context: Context) {
         val part1 = sha.substring(0, 4).uppercase(Locale.US)
         val part2 = sha.substring(4, 8).uppercase(Locale.US)
         val part3 = sha.substring(8, 12).uppercase(Locale.US)
-        val hwid = "NDR-AND-$part1-$part2-$part3"
+        val hwid = "NDR-HWID-$part1-$part2-$part3"
 
         prefs.edit().putString(KEY_HWID, hwid).apply()
         return hwid

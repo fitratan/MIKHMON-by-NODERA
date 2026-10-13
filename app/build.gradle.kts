@@ -10,7 +10,7 @@ android {
     defaultConfig {
         applicationId = "com.nodera.mikhmon.admin"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 28
         versionCode = 320
         versionName = "3.2.0"
     }
@@ -28,7 +28,7 @@ android {
     buildFeatures {
       compose = true
       aidl = false
-      buildConfig = false
+      buildConfig = true
       shaders = false
     }
 

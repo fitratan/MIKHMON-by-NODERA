@@ -1,16 +1,29 @@
 # MIKHMON Android Admin by NODERA
 
-Aplikasi Android Native (Jetpack Compose) untuk manajemen Hotspot MikroTik langsung dari smartphone, dilengkapi proteksi lisensi perangkat (**Hardware-Locked**) dan cetak voucher langsung ke **Thermal Printer Bluetooth (ESC/POS)**.
+Aplikasi Android Standalone yang menjalankan **Engine Server PHP lokal** dan memuat antarmuka web **MIKHMON Desktop/Web resmi by NODERA** secara langsung di dalam aplikasi (WebView), dilengkapi proteksi lisensi perangkat (**Hardware-Locked**) dan cetak voucher langsung ke **Thermal Printer Bluetooth (ESC/POS)** maupun Android Print Manager.
+
+---
+
+## 🚀 Arsitektur Server Standalone (All-in-One APK)
+1. **Embedded PHP Engine (ARM64)**:
+   - Server PHP static standalone otomatis diekstrak dan dijalankan di latar belakang (`127.0.0.1:8080`) saat aplikasi dibuka.
+   - Tidak memerlukan laptop, Termux, KSWEB, atau koneksi internet eksternal untuk menjalankan core server.
+2. **Authentic Mikhmon Desktop Web Engine**:
+   - Menjalankan seluruh berkas asli Mikhmon (`admin.php`, `index.php`, `buy.php`, `warung.php`, modul voucher, report, bandwidth limiter, dll).
+   - Seluruh pengaturan router, template voucher, dan sesi tersimpan secara persisten di penyimpanan internal aplikasi.
+3. **Full-Featured Android WebView**:
+   - File picker untuk upload logo hotspot dan template voucher.
+   - Integrasi cetak struk via Android Print Manager (`window.print()`) dan Intent printer (RawBT / QuickPrinter).
+   - Bridge JavaScript (`window.nodera`) untuk sinkronisasi lisensi dan HWID.
 
 ---
 
 ## 🔒 Proteksi Lisensi (Anti-Piracy & Anti-Bocor)
-Agar aplikasi tidak bisa disebar/dibajak sembarangan di WhatsApp/Telegram:
-1. **Device Fingerprinting (HWID)**: Setiap HP menghasilkan format ID unik: `NDR-AND-XXXX-XXXX-XXXX` yang terikat pada hardware internal perangkat (`ANDROID_ID`, `Build.BOARD`, `Build.MODEL`).
+Agar aplikasi tidak bisa disebar/dibajak sembarangan:
+1. **Device Fingerprinting (HWID)**: Format unik `NDR-HWID-XXXX-XXXX-XXXX` yang terikat pada hardware perangkat (`ANDROID_ID`, `Build.BOARD`, `Build.MODEL`).
 2. **Online Cloud Verification**: Terhubung otomatis ke API `https://panel.dgtlnetsolution.com/api/desktop-license`.
 3. **Offline HMAC-SHA256 Signature**: Aktivasi offline menggunakan secret salt `NODERA_OFFLINE_SECRET_2026` sehingga validasi tetap jalan 100% tanpa internet di lokasi router.
-4. **Anti-Clock Tampering**: Mendeteksi upaya pemunduran jam sistem secara otomatis.
-5. **Trial 3 Hari**: Opsi uji coba gratis 3 hari terenkripsi per perangkat sebelum wajib membeli lisensi resmi.
+4. **Trial 3 Hari**: Opsi uji coba gratis 3 hari per perangkat sebelum wajib membeli lisensi resmi.
 
 ---
 
