@@ -1,0 +1,48 @@
+{
+  "RT_GROUP_ICON": {
+    "APP": {
+      "0000": [
+        "icon.png"
+      ]
+    }
+  },
+  "RT_MANIFEST": {
+    "#1": {
+      "0409": {
+        "identity": {
+          "name": "com.nodera.mikhmon.server",
+          "version": "3.2.0.0"
+        },
+        "description": "Mikhmon Server by NODERA",
+        "minimum-os": "win7",
+        "execution-level": "as invoker",
+        "ui-access": false,
+        "auto-elevate": false,
+        "dpi-awareness": "system",
+        "use-common-controls-v6": true
+      }
+    }
+  },
+  "RT_VERSION": {
+    "#1": {
+      "0000": {
+        "fixed": {
+          "file_version": "3.2.0.0",
+          "product_version": "3.2.0.0"
+        },
+        "info": {
+          "0409": {
+            "CompanyName": "NODERA",
+            "FileDescription": "Mikhmon Server Standalone by NODERA",
+            "FileVersion": "3.2.0.0",
+            "InternalName": "MikhmonServer",
+            "LegalCopyright": "Copyright © 2026 NODERA. All rights reserved.",
+            "OriginalFilename": "MikhmonServer.exe",
+            "ProductName": "Mikhmon Server by NODERA",
+            "ProductVersion": "3.2.0.0"
+          }
+        }
+      }
+    }
+  }
+}
