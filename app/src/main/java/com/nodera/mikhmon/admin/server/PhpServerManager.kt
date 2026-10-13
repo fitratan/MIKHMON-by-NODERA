@@ -72,11 +72,9 @@ class PhpServerManager(private val context: Context) {
                 phpBinary.delete()
             }
 
-            context.assets.open("bin/php-arm64.gz").use { assetIn ->
-                GZIPInputStream(assetIn).use { gzipIn ->
-                    FileOutputStream(phpBinary).use { out ->
-                        gzipIn.copyTo(out)
-                    }
+            context.assets.open("bin/php-arm64.bin").use { assetIn ->
+                FileOutputStream(phpBinary).use { out ->
+                    assetIn.copyTo(out)
                 }
             }
             ensureExecutable(phpBinary)
