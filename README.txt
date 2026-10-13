@@ -7,8 +7,8 @@ OS Target : Windows 10 / 11 (64-Bit)
 
 CARA PENGGUNAAN:
 1. Ekstrak file ZIP ini ke folder pilihan Anda (misal: C:\Mikhmon-Desktop).
-2. Buka folder hasil ekstrak, lalu klik ganda file "Start-Mikhmon.bat".
-3. Browser Anda akan otomatis terbuka ke alamat http://127.0.0.1:8080.
+2. Buka folder hasil ekstrak, lalu klik ganda file executable "MikhmonServer.exe".
+3. Jendela kontrol dan System Tray akan aktif, serta browser otomatis terbuka ke http://127.0.0.1:8080.
 4. Masukkan Lisensi Desktop NODERA yang Anda peroleh dari Cloud Member Panel
    (https://panel.dgtlnetsolution.com/desktop-licenses).
 5. Selamat mengelola hotspot MikroTik Anda secara offline tanpa batas!

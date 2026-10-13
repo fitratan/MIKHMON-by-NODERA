@@ -101,8 +101,9 @@ Voici un tableau comparatif entre **MIKHMON par NODERA** et les versions traditi
 2. **Extraire l'Archive** :
    - Extrayez le contenu dans un dossier de votre choix (ex : `C:\Mikhmon-Desktop`).
 3. **Lancer l'Application** :
-   - Ouvrez le dossier extrait et double-cliquez sur **`Start-Mikhmon.bat`**.
-   - Le micro-serveur démarre automatiquement et ouvre votre navigateur à l'adresse `http://127.0.0.1:8080`.
+   - Ouvrez le dossier extrait et double-cliquez sur le fichier exécutable **`MikhmonServer.exe`** (Lanceur de serveur natif avec barre des tâches/System Tray, sans fenêtre d'invite de commande noire).
+   - La fenêtre de contrôle et l'icône de la zone de notification démarrent et ouvrent votre navigateur à l'adresse `http://127.0.0.1:8080`.
+   - Cliquez avec le bouton droit sur l'icône Mikhmon dans la zone de notification (près de l'horloge Windows) pour gérer le serveur, redémarrer, vérifier la licence ou quitter proprement.
 4. **Première Connexion** :
    - Connectez-vous avec les identifiants par défaut : Nom d'utilisateur `nodera`, Mot de passe `nodera`.
 5. **Essai Gratuit de 7 Jours (Automatique)** :
