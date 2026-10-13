@@ -31,7 +31,7 @@ func RunDesktopApp(baseDir string) {
 	}
 
 	// 2. Initialize Server Manager
-	sm := NewServerManager(baseDir, 8080)
+	sm := NewServerManager(baseDir, 8080, hwid)
 	defer sm.Stop()
 
 	// 3. Setup Persistent WebView2 Data Path in %APPDATA%\NoderaMikhmon

@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var (
@@ -44,10 +45,11 @@ func main() {
 	baseDir := filepath.Dir(exePath)
 
 	// 3. Mode Selection
-	if *serverOnly {
+	exeName := filepath.Base(exePath)
+	if *serverOnly || strings.EqualFold(exeName, "MikhmonServer.exe") {
 		hwid := GetHardwareID(baseDir)
 		lic, _ := ReadSavedLicense(baseDir)
-		sm := NewServerManager(baseDir, 8080)
+		sm := NewServerManager(baseDir, 8080, hwid)
 		CreateAppWindow(baseDir, sm, lic, hwid)
 		return
 	}

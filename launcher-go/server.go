@@ -21,10 +21,12 @@ var (
 type ServerManager struct {
 	PhpBinary string
 	DocRoot   string
+	BaseDir   string
 	Port      int
 	Process   *exec.Cmd
 	IsRunning bool
 	LocalIP   string
+	Hwid      string
 }
 
 // OpenBrowser opens the URL in the user's default Windows browser
@@ -103,13 +105,16 @@ func GetLocalLANIP() string {
 	return "127.0.0.1"
 }
 
-// EnsureTlsCaConfigured ensures php.ini has curl.cainfo configured
-func EnsureTlsCaConfigured(phpBin, baseDir string) {
+// ConfigurePhpIni ensures php.ini has absolute paths for extension_dir and TLS CA certificates
+func ConfigurePhpIni(phpBin, baseDir string) {
 	phpDir := filepath.Dir(phpBin)
 	iniPath := filepath.Join(phpDir, "php.ini")
+	extDir := filepath.Join(phpDir, "ext")
 
 	caCandidates := []string{
 		filepath.Join(phpDir, "cacert.pem"),
+		filepath.Join(baseDir, "cacert.pem"),
+		filepath.Join(baseDir, "mikhmon", "cacert.pem"),
 		filepath.Join(baseDir, "resources", "certs", "cacert.pem"),
 		filepath.Join(baseDir, "..", "resources", "certs", "cacert.pem"),
 	}
@@ -122,23 +127,43 @@ func EnsureTlsCaConfigured(phpBin, baseDir string) {
 		}
 	}
 
-	if caPath == "" {
+	data, err := os.ReadFile(iniPath)
+	if err != nil {
 		return
 	}
+	content := string(data)
 
-	if data, err := os.ReadFile(iniPath); err == nil {
-		content := string(data)
-		if !strings.Contains(content, "curl.cainfo") {
-			addition := fmt.Sprintf("\r\ncurl.cainfo = \"%s\"\r\nopenssl.cafile = \"%s\"\r\n", caPath, caPath)
-			_ = os.WriteFile(iniPath, []byte(content+addition), 0644)
+	extDirClean := filepath.Clean(extDir)
+	caPathClean := filepath.Clean(caPath)
+
+	lines := strings.Split(content, "\n")
+	var newLines []string
+	extDirFound := false
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if strings.HasPrefix(trimmed, "extension_dir") {
+			newLines = append(newLines, fmt.Sprintf("extension_dir = \"%s\"", extDirClean))
+			extDirFound = true
+		} else if strings.HasPrefix(trimmed, "curl.cainfo") && caPathClean != "" {
+			newLines = append(newLines, fmt.Sprintf("curl.cainfo = \"%s\"", caPathClean))
+		} else if strings.HasPrefix(trimmed, "openssl.cafile") && caPathClean != "" {
+			newLines = append(newLines, fmt.Sprintf("openssl.cafile = \"%s\"", caPathClean))
+		} else {
+			newLines = append(newLines, line)
 		}
 	}
+	if !extDirFound {
+		newLines = append(newLines, fmt.Sprintf("extension_dir = \"%s\"", extDirClean))
+	}
+
+	_ = os.WriteFile(iniPath, []byte(strings.Join(newLines, "\n")), 0644)
 }
 
 // FindAvailablePort tests if defaultPort is free or finds the next open port
 func FindAvailablePort(defaultPort int) int {
-	for p := defaultPort; p < defaultPort+20; p++ {
-		ln, err := net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", p))
+	for p := defaultPort; p < defaultPort+30; p++ {
+		ln, err := net.Listen("tcp", fmt.Sprintf("0.0.0.0:%d", p))
 		if err == nil {
 			ln.Close()
 			return p
@@ -148,20 +173,22 @@ func FindAvailablePort(defaultPort int) int {
 }
 
 // NewServerManager initializes manager
-func NewServerManager(baseDir string, defaultPort int) *ServerManager {
+func NewServerManager(baseDir string, defaultPort int, hwid string) *ServerManager {
 	phpBin := FindPhpBinary(baseDir)
 	docRoot := FindDocRoot(baseDir)
-	EnsureTlsCaConfigured(phpBin, baseDir)
+	ConfigurePhpIni(phpBin, baseDir)
 
 	return &ServerManager{
 		PhpBinary: phpBin,
 		DocRoot:   docRoot,
+		BaseDir:   baseDir,
 		Port:      FindAvailablePort(defaultPort),
 		LocalIP:   GetLocalLANIP(),
+		Hwid:      hwid,
 	}
 }
 
-// Start launches php.exe without any console window
+// Start launches php.exe without any console window and verifies socket is ready
 func (sm *ServerManager) Start() error {
 	if sm.IsRunning && sm.Process != nil {
 		return nil
@@ -174,22 +201,75 @@ func (sm *ServerManager) Start() error {
 	// Double check port availability
 	sm.Port = FindAvailablePort(sm.Port)
 
-	cmd := exec.Command(sm.PhpBinary, "-S", fmt.Sprintf("0.0.0.0:%d", sm.Port), "-t", sm.DocRoot)
+	phpDir := filepath.Dir(sm.PhpBinary)
+	iniPath := filepath.Join(phpDir, "php.ini")
+	extDir := filepath.Join(phpDir, "ext")
+
+	// Ensure php.ini is up to date
+	ConfigurePhpIni(sm.PhpBinary, sm.BaseDir)
+
+	args := []string{}
+	if _, err := os.Stat(iniPath); err == nil {
+		args = append(args, "-c", iniPath)
+	}
+	args = append(args,
+		"-d", fmt.Sprintf("extension_dir=%s", extDir),
+		"-S", fmt.Sprintf("0.0.0.0:%d", sm.Port),
+		"-t", sm.DocRoot,
+	)
+
+	cmd := exec.Command(sm.PhpBinary, args...)
+	cmd.Dir = sm.DocRoot
+
+	// Redirect stdout & stderr to php_server.log in baseDir
+	logPath := filepath.Join(sm.BaseDir, "php_server.log")
+	if logFile, err := os.OpenFile(logPath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666); err == nil {
+		cmd.Stdout = logFile
+		cmd.Stderr = logFile
+	}
+
+	// Set execution environment
+	cmd.Env = append(os.Environ(),
+		fmt.Sprintf("PHPRC=%s", phpDir),
+		fmt.Sprintf("PATH=%s;%s", phpDir, os.Getenv("PATH")),
+		fmt.Sprintf("NODERA_DESKTOP_HWID=%s", sm.Hwid),
+	)
+
 	// CREATE_NO_WINDOW = 0x08000000, CREATE_NEW_PROCESS_GROUP = 0x00000200
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		CreationFlags: 0x08000000 | 0x00000200,
 	}
 
 	if err := cmd.Start(); err != nil {
-		return err
+		return fmt.Errorf("gagal memulai engine PHP: %w", err)
 	}
 
 	sm.Process = cmd
 	sm.IsRunning = true
 
-	// Wait 300ms to confirm server socket is listening
-	time.Sleep(300 * time.Millisecond)
-	return nil
+	// Verify server socket is actually listening before returning
+	var lastDialErr error
+	for i := 0; i < 20; i++ {
+		time.Sleep(100 * time.Millisecond)
+		conn, err := net.DialTimeout("tcp", fmt.Sprintf("127.0.0.1:%d", sm.Port), 200*time.Millisecond)
+		if err == nil {
+			conn.Close()
+			return nil
+		}
+		lastDialErr = err
+
+		// Check if process crashed early
+		if cmd.Process != nil {
+			// On Windows, checking state
+			if cmd.ProcessState != nil && cmd.ProcessState.Exited() {
+				sm.IsRunning = false
+				return fmt.Errorf("PHP server berhenti seketika (exit code %d). Cek log di php_server.log", cmd.ProcessState.ExitCode())
+			}
+		}
+	}
+
+	// If loop finished and still not connected
+	return fmt.Errorf("server PHP belum merespon di port %d: %v", sm.Port, lastDialErr)
 }
 
 // Stop cleanly terminates the PHP process
