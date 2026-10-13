@@ -17,5 +17,7 @@ bin/php-win/lib/
 Thumbs.db
 mikhmon/include/login_throttle.json
 mikhmon/config/.hwid
+mikhmon/config/.clock_guard
+mikhmon/config/.trial_attempted
 mikhmon/backup_userdata/
 mikhmon-src/
