@@ -89,9 +89,10 @@ This software is internationally deployed across Southeast Asia and West Africa 
 2. **Extract Files**:
    - Extract the entire ZIP archive to your preferred directory (recommended: `C:\Mikhmon-Desktop`).
 3. **Launch the App**:
-   - Double-click the native executable **`MikhmonServer.exe`** (Windows GUI & System Tray server launcher, zero black command prompt windows).
-   - The server control window and system tray icon activate automatically and launch your browser at `http://127.0.0.1:8080`.
-   - Right-click the Mikhmon tray icon (near the Windows clock) to manage the server, restart, check license status, or cleanly exit.
+   - Double-click the native executable **`Mikhmon.exe`** (All-in-One Standalone Desktop App).
+   - The standalone MIKHMON application window opens immediately (no separate browser tabs or external server launchers required).
+   - Use the quick navigation bar at the top-right to toggle between **Hotspot Admin Mode** (Ctrl+1) and **Kiosk / Reseller Portal** (Ctrl+2).
+   - *(Optional)* `MikhmonServer.exe` is also provided if you prefer running purely in background system tray server mode.
 4. **First-Time Login**:
    - Default credentials: Username `nodera`, Password `nodera`.
 5. **Automatic 7-Day Free Trial**:

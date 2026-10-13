@@ -162,9 +162,10 @@ Berikut adalah beberapa tampilan antarmuka fitur utama **MIKHMON by NODERA** yan
 2. **Ekstrak File**:
    - Ekstrak seluruh isi file ZIP ke folder pilihan Anda di laptop/PC (rekomendasi: `C:\Mikhmon-Desktop` atau `D:\Mikhmon-Desktop`).
 3. **Jalankan Aplikasi**:
-   - Buka folder hasil ekstrak, lalu klik ganda file executable **`MikhmonServer.exe`** (Native Windows GUI Server seperti Laksa, bebas jendela CMD hitam).
-   - Jendela kontrol server dan System Tray icon akan otomatis aktif, lalu membuka browser ke alamat `http://127.0.0.1:8080`.
-   - Untuk mengontrol server, klik icon Mikhmon di System Tray (dekat jam Windows) untuk opsi Buka Web, Restart, Status Lisensi, atau Keluar.
+   - Buka folder hasil ekstrak, lalu klik ganda file executable **`Mikhmon.exe`** (All-in-One Standalone Desktop App).
+   - Jendela aplikasi mandiri MIKHMON langsung terbuka di layar (tanpa perlu membuka browser Chrome manual dan tanpa jendela server terpisah).
+   - Gunakan tombol cepat di navigasi kanan atas untuk berpindah antara **Mode Hotspot Admin** (Ctrl+1) dan **Portal Kasir Warung** (Ctrl+2).
+   - *(Opsional)* File `MikhmonServer.exe` tetap disediakan jika ingin menjalankan mode server background saja.
 4. **Login Pertama Kali**:
    - Masuk dengan kredensial default: Username `nodera`, Password `nodera`.
 5. **Masa Percobaan 7 Hari Gratis (Auto Trial)**:

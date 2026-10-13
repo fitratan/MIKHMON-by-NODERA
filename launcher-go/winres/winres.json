@@ -1,5 +1,10 @@
 {
   "RT_GROUP_ICON": {
+    "1": {
+      "0000": [
+        "icon.png"
+      ]
+    },
     "APP": {
       "0000": [
         "icon.png"
@@ -10,10 +15,10 @@
     "#1": {
       "0409": {
         "identity": {
-          "name": "com.nodera.mikhmon.server",
+          "name": "com.nodera.mikhmon.desktop",
           "version": "3.2.0.0"
         },
-        "description": "Mikhmon Server by NODERA",
+        "description": "MIKHMON Desktop Standalone by NODERA",
         "minimum-os": "win7",
         "execution-level": "as invoker",
         "ui-access": false,
@@ -33,12 +38,12 @@
         "info": {
           "0409": {
             "CompanyName": "NODERA",
-            "FileDescription": "Mikhmon Server Standalone by NODERA",
+            "FileDescription": "MIKHMON Desktop Standalone by NODERA",
             "FileVersion": "3.2.0.0",
-            "InternalName": "MikhmonServer",
+            "InternalName": "Mikhmon",
             "LegalCopyright": "Copyright © 2026 NODERA. All rights reserved.",
-            "OriginalFilename": "MikhmonServer.exe",
-            "ProductName": "Mikhmon Server by NODERA",
+            "OriginalFilename": "Mikhmon.exe",
+            "ProductName": "MIKHMON Desktop Standalone by NODERA",
             "ProductVersion": "3.2.0.0"
           }
         }

@@ -17,11 +17,13 @@ echo "==> Generating Windows icon & manifest resources..."
 cd "$SCRIPT_DIR"
 "$WINRES_BIN" make
 
-echo "==> Compiling MikhmonServer.exe (PE32+ GUI x86-64)..."
-GOOS=windows GOARCH=amd64 "$GOBIN" build \
+echo "==> Compiling Mikhmon.exe (PE32+ GUI x86-64)..."
+CGO_ENABLED=0 GOOS=windows GOARCH=amd64 "$GOBIN" build \
     -ldflags="-H=windowsgui -s -w" \
-    -o "$PARENT_DIR/MikhmonServer.exe" \
+    -o "$PARENT_DIR/Mikhmon.exe" \
     .
 
-echo "==> Build successful: $PARENT_DIR/MikhmonServer.exe"
-ls -lh "$PARENT_DIR/MikhmonServer.exe"
+cp -f "$PARENT_DIR/Mikhmon.exe" "$PARENT_DIR/MikhmonServer.exe"
+
+echo "==> Build successful:"
+ls -lh "$PARENT_DIR/Mikhmon.exe" "$PARENT_DIR/MikhmonServer.exe"
