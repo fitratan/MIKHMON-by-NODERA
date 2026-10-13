@@ -175,8 +175,40 @@ class PhpServerManager(private val context: Context) {
                 throw IllegalStateException("Desktop Mikhmon files not found in ${mikhmonDir.absolutePath}")
             }
 
+            val cacheDir = context.cacheDir.absolutePath
+            val sessionDir = File(context.filesDir, "sessions")
+            if (!sessionDir.exists()) sessionDir.mkdirs()
+
+            val phpIni = File(context.filesDir, "php.ini")
+            val caFile = File(mikhmonDir, "cacert.pem")
+            val caPathStr = if (caFile.exists()) caFile.absolutePath else ""
+
+            phpIni.writeText(
+                """
+                [PHP]
+                memory_limit = 512M
+                max_execution_time = 300
+                sys_temp_dir = "$cacheDir"
+                upload_tmp_dir = "$cacheDir"
+                session.save_path = "${sessionDir.absolutePath}"
+                curl.cainfo = "$caPathStr"
+                openssl.cafile = "$caPathStr"
+
+                [opcache]
+                opcache.enable = 0
+                opcache.enable_cli = 0
+                opcache.lockfile_path = "$cacheDir"
+                """.trimIndent()
+            )
+
             val pb = ProcessBuilder(
                 phpBinary.absolutePath,
+                "-c", phpIni.absolutePath,
+                "-d", "opcache.enable=0",
+                "-d", "opcache.enable_cli=0",
+                "-d", "sys_temp_dir=$cacheDir",
+                "-d", "upload_tmp_dir=$cacheDir",
+                "-d", "session.save_path=${sessionDir.absolutePath}",
                 "-S", "127.0.0.1:$port",
                 "-t", mikhmonDir.absolutePath
             )
@@ -185,7 +217,10 @@ class PhpServerManager(private val context: Context) {
 
             val env = pb.environment()
             env["NODERA_DESKTOP_HWID"] = hwid
-            env["TMPDIR"] = context.cacheDir.absolutePath
+            env["TMPDIR"] = cacheDir
+            env["TEMP"] = cacheDir
+            env["TMP"] = cacheDir
+            env["HOME"] = context.filesDir.absolutePath
 
             // Log output to file
             pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile))
