@@ -12,6 +12,13 @@ if (file_exists(__DIR__ . '/include/compatibility.php')) {
     include_once __DIR__ . '/compatibility.php';
 }
 
+// Include rate limiter
+if (file_exists(__DIR__ . '/include/rate_limiter.php')) {
+    include_once __DIR__ . '/include/rate_limiter.php';
+} elseif (file_exists(__DIR__ . '/rate_limiter.php')) {
+    include_once __DIR__ . '/rate_limiter.php';
+}
+
 // License Check (STRICT: Reject API order generation if Mikhmon expired / suspended)
 if (file_exists(__DIR__ . '/include/license.php')) {
     include_once __DIR__ . '/include/license.php';
@@ -164,7 +171,17 @@ if (!function_exists('mikhmon_infer_validity')) {
  * by NODERA (nodera.id)
  */
 header('Content-Type: application/json; charset=utf-8');
-// hide all error
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: SAMEORIGIN');
+header('X-XSS-Protection: 1; mode=block');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Cache-Control: no-store, no-cache, must-revalidate, max-age=0');
+header('Pragma: no-cache');
+if ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https')) {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
+
+// Hide all errors from leaking in API response
 error_reporting(0);
 ini_set('display_errors', 0);
 
@@ -174,7 +191,95 @@ $jsonBody = is_array($jsonBody) ? $jsonBody : [];
 
 $action = trim($_GET['action'] ?? $_POST['action'] ?? ($jsonBody['action'] ?? ''));
 $session = trim($_GET['session'] ?? $_POST['session'] ?? ($jsonBody['session'] ?? ''));
-// session decoded automatically by php
+
+// Strict sanitization
+$action = preg_replace('/[^a-zA-Z0-9_-]/', '', (string)$action);
+$session = preg_replace('/[^a-zA-Z0-9_\-\.]/', '', (string)$session);
+$orderId = trim((string)($_GET['order_id'] ?? $_POST['order_id'] ?? ($jsonBody['order_id'] ?? '')));
+if (!empty($orderId) && !preg_match('/^[A-Za-z0-9_\-]{6,45}$/', $orderId)) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'message' => 'Format Order ID tidak valid.']);
+    exit;
+}
+
+// HTTP Method Enforcement & CSRF Protection on State-Changing Actions
+$requestMethod = strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET');
+$stateChangingActions = [
+    'create_qris', 
+    'create_qris_order', 
+    'create_order', 
+    'create_manual_order', 
+    'cancel_order', 
+    'notify_order_expired'
+];
+
+if (in_array($action, $stateChangingActions, true)) {
+    // 1. Method enforcement: POST is mandatory
+    if ($requestMethod !== 'POST') {
+        http_response_code(405);
+        header('Allow: POST');
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Metode HTTP tidak diizinkan. Gunakan metode POST.'
+        ]);
+        exit;
+    }
+
+    // 2. CSRF token validation
+    $submittedCsrf = $_SERVER['HTTP_X_CSRF_TOKEN'] ?? ($jsonBody['csrf_token'] ?? ($_POST['csrf_token'] ?? ''));
+    $sessionCsrf = $_SESSION['_buy_csrf'] ?? '';
+
+    if (empty($sessionCsrf) || empty($submittedCsrf) || !hash_equals($sessionCsrf, (string)$submittedCsrf)) {
+        http_response_code(403);
+        echo json_encode([
+            'success' => false, 
+            'message' => 'Sesi kedaluwarsa atau token keamanan (CSRF) tidak valid. Silakan muat ulang halaman.'
+        ]);
+        exit;
+    }
+
+    // 3. Rate limiting for order creation (Max 5 orders per 60s per IP)
+    if (in_array($action, ['create_qris', 'create_qris_order', 'create_order', 'create_manual_order'], true)) {
+        if (function_exists('mikhmon_enforce_rate_limit')) {
+            mikhmon_enforce_rate_limit('create_order', 5, 60);
+        }
+
+        // 4. Anti-bot honeypot trap
+        $hpField = trim((string)($jsonBody['_hp_website_url'] ?? ($_POST['_hp_website_url'] ?? '')));
+        if (!empty($hpField)) {
+            http_response_code(400);
+            echo json_encode(['success' => false, 'message' => 'Permintaan tidak valid (Bot detected).']);
+            exit;
+        }
+
+        // 5. Submission timing guard (reject if submitted under 1.2 seconds)
+        $hpTime = (int)($jsonBody['_hp_form_time'] ?? ($_POST['_hp_form_time'] ?? 0));
+        if ($hpTime > 0 && (time() - $hpTime) < 1.2) {
+            http_response_code(429);
+            echo json_encode(['success' => false, 'message' => 'Permintaan terlalu cepat. Mohon coba kembali.']);
+            exit;
+        }
+    }
+}
+
+// Read-only Actions Rate Limiting
+if (in_array($action, ['check_status', 'check_qris_status', 'check_order', 'check_order_status', 'status'], true)) {
+    if (function_exists('mikhmon_enforce_rate_limit')) {
+        mikhmon_enforce_rate_limit('check_status', 40, 60);
+    }
+} elseif (in_array($action, ['check_phone_vouchers', 'voucher_history', 'check_vouchers'], true)) {
+    if (function_exists('mikhmon_enforce_rate_limit')) {
+        mikhmon_enforce_rate_limit('check_vouchers', 15, 60);
+    }
+} elseif (in_array($action, ['check_voucher_quota', 'check_quota'], true)) {
+    if (function_exists('mikhmon_enforce_rate_limit')) {
+        mikhmon_enforce_rate_limit('check_quota', 15, 60);
+    }
+} elseif ($action === 'get_recent_orders') {
+    if (function_exists('mikhmon_enforce_rate_limit')) {
+        mikhmon_enforce_rate_limit('get_recent_orders', 30, 60);
+    }
+}
 
 
 // Load configs
@@ -316,6 +421,13 @@ if (!function_exists('mikhmon_normalize_noderapay_url')) {
             return $scheme . "://" . $host . "/api/v1/noderapay";
         }
         $url = rtrim($url, '/');
+        // Auto-upgrade remote HTTP to HTTPS for transport security
+        if (preg_match('#^http://#i', $url)) {
+            $parsedHost = parse_url($url, PHP_URL_HOST);
+            if ($parsedHost && $parsedHost !== 'localhost' && $parsedHost !== '127.0.0.1' && substr($parsedHost, -5) !== '.test' && substr($parsedHost, -6) !== '.local') {
+                $url = 'https://' . substr($url, 7);
+            }
+        }
         $url = preg_replace('#/(webhook.*|report-notification.*|create-qris.*|check.*|api_webhook.*)$#i', '', $url);
         $url = rtrim($url, '/');
         if (!str_contains($url, '/noderapay') && !str_contains($url, '/api/')) {
@@ -575,15 +687,18 @@ if ($action === 'create_manual_order') {
     $postData = json_decode($rawInput, true) ?: $_POST;
 
     $phone = mikhmon_format_phone($postData['phone'] ?? '');
-    $profile = trim($postData['profile'] ?? '');
-    $notes = trim($postData['notes'] ?? '');
+    $profile = trim(strip_tags((string)($postData['profile'] ?? '')));
+    $notes = trim(strip_tags((string)($postData['notes'] ?? '')));
 
-    if (empty($phone) || strlen($phone) < 9) {
-        echo json_encode(['success' => false, 'message' => 'Nomor WhatsApp tidak valid.']);
+    $cleanPhone = preg_replace('/[^0-9]/', '', (string)$phone);
+    if (empty($cleanPhone) || strlen($cleanPhone) < 8 || strlen($cleanPhone) > 16) {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'message' => 'Nomor WhatsApp tidak valid (8-16 digit).']);
         exit;
     }
 
     if (empty($profile)) {
+        http_response_code(400);
         echo json_encode(['success' => false, 'message' => 'Pilih paket voucher terlebih dahulu.']);
         exit;
     }
@@ -741,6 +856,11 @@ if ($action === 'create_manual_order') {
         $orderRecord['telegram_messages'] = $tgResult['messages'];
     }
     mikhmon_save_order($ordersFile, $orderRecord);
+
+    if (!isset($_SESSION['last_created_orders'])) {
+        $_SESSION['last_created_orders'] = [];
+    }
+    $_SESSION['last_created_orders'][$orderId] = time();
 
     $formattedPrice = (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
         ? number_format($price, 0, ',', ' ') . ' FCFA'
@@ -1145,6 +1265,11 @@ if ($action === 'create_qris' || $action === 'create_qris_order' || $action === 
     }
     mikhmon_save_order($ordersFile, $orderRecord);
 
+    if (!isset($_SESSION['last_created_orders'])) {
+        $_SESSION['last_created_orders'] = [];
+    }
+    $_SESSION['last_created_orders'][$orderId] = time();
+
     $totalVal = $json['total_amount'] ?? $price;
     $formattedTotal = (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
         ? number_format($totalVal, 0, ',', ' ') . ' FCFA'
@@ -1515,20 +1640,6 @@ if ($action === 'notify_order_expired') {
 // Action: GET_RECENT_ORDERS (Global Live Transactions Feed for Floating Ticker)
 if ($action === 'get_recent_orders') {
     $orders = mikhmon_get_orders($ordersFile);
-    if (empty($orders)) {
-        $parentDir = dirname(__DIR__);
-        $siblingOrders = glob($parentDir . '/*/include/orders_data.json');
-        if (!empty($siblingOrders)) {
-            foreach ($siblingOrders as $sFile) {
-                if (file_exists($sFile)) {
-                    $sOrders = mikhmon_get_orders($sFile);
-                    if (!empty($sOrders)) {
-                        $orders = array_merge($orders, $sOrders);
-                    }
-                }
-            }
-        }
-    }
     $recent = [];
     $now = time();
 
@@ -1664,6 +1775,7 @@ if ($action === 'get_recent_orders') {
 // Action: CHECK_PHONE_VOUCHERS / CHECK_ORDER_STATUS (Customer Voucher History / Recovery by Order ID)
 if ($action === 'check_phone_vouchers' || $action === 'voucher_history' || $action === 'check_vouchers' || $action === 'check_order') {
     $orderId = trim($_GET['order_id'] ?? $_POST['order_id'] ?? ($jsonBody['order_id'] ?? ''));
+    $phoneVerify = trim((string)($_GET['phone_verify'] ?? $_POST['phone_verify'] ?? ($jsonBody['phone_verify'] ?? ($_GET['phone'] ?? $_POST['phone'] ?? ($jsonBody['phone'] ?? '')))));
 
     if (empty($orderId)) {
         echo json_encode([
@@ -1694,21 +1806,54 @@ if ($action === 'check_phone_vouchers' || $action === 'voucher_history' || $acti
             $vUser = $ord['voucher']['username'] ?? '';
             $vPass = $ord['voucher']['password'] ?? $vUser;
 
-            $found[] = [
-                'order_id'     => $ord['order_id'] ?? '-',
-                'status'       => $st,
-                'status_label' => $statusLabel,
-                'profile'      => $ord['profile'] ?? 'Voucher WiFi',
-                'price'        => (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
-                    ? number_format($price, 0, ',', ' ') . ' FCFA'
-                    : (($currency === '$' || strtoupper($currency) === 'USD')
-                        ? '$' . number_format($price, 2, '.', ',')
-                        : ($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')),
-                'username'     => $vUser,
-                'password'     => $vPass,
-                'validity'     => $ord['validity'] ?? ($ord['voucher']['validity'] ?? '-'),
-                'created_at'   => $ord['created_at'] ?? date('Y-m-d H:i:s'),
-            ];
+            // 2FA / Session Privacy Verification
+            $isSessionMatch = !empty($_SESSION['last_created_orders'][$orderId]);
+            $ordPhoneDigits = preg_replace('/[^0-9]/', '', (string)($ord['phone'] ?? ''));
+            $verifyDigits = preg_replace('/[^0-9]/', '', (string)$phoneVerify);
+            $isPhoneMatch = (!empty($ordPhoneDigits) && !empty($verifyDigits) && (substr($ordPhoneDigits, -4) === substr($verifyDigits, -4) || $ordPhoneDigits === $verifyDigits));
+            $isVerified = ($isSessionMatch || $isPhoneMatch || empty($ordPhoneDigits));
+
+            if (!$isVerified && $hasVoucher) {
+                $maskedUser = (strlen($vUser) > 4) ? substr($vUser, 0, 2) . '****' . substr($vUser, -2) : '****';
+                $maskedPass = '••••••••';
+                $found[] = [
+                    'order_id'              => $ord['order_id'] ?? '-',
+                    'status'                => $st,
+                    'status_label'          => $statusLabel,
+                    'profile'               => $ord['profile'] ?? 'Voucher WiFi',
+                    'price'                 => (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
+                        ? number_format($price, 0, ',', ' ') . ' FCFA'
+                        : (($currency === '$' || strtoupper($currency) === 'USD')
+                            ? '$' . number_format($price, 2, '.', ',')
+                            : ($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')),
+                    'username'              => $maskedUser,
+                    'password'              => $maskedPass,
+                    'validity'              => $ord['validity'] ?? ($ord['voucher']['validity'] ?? '-'),
+                    'created_at'            => $ord['created_at'] ?? date('Y-m-d H:i:s'),
+                    'is_verified'           => false,
+                    'requires_verification' => true,
+                    'verification_hint'     => !empty($ordPhoneDigits) ? '***' . substr($ordPhoneDigits, -4) : '',
+                    'message'               => 'Demi privasi, masukkan 4 digit terakhir nomor HP untuk menampilkan username & password voucher lengkap.'
+                ];
+            } else {
+                $found[] = [
+                    'order_id'              => $ord['order_id'] ?? '-',
+                    'status'                => $st,
+                    'status_label'          => $statusLabel,
+                    'profile'               => $ord['profile'] ?? 'Voucher WiFi',
+                    'price'                 => (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
+                        ? number_format($price, 0, ',', ' ') . ' FCFA'
+                        : (($currency === '$' || strtoupper($currency) === 'USD')
+                            ? '$' . number_format($price, 2, '.', ',')
+                            : ($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')),
+                    'username'              => $vUser,
+                    'password'              => $vPass,
+                    'validity'              => $ord['validity'] ?? ($ord['voucher']['validity'] ?? '-'),
+                    'created_at'            => $ord['created_at'] ?? date('Y-m-d H:i:s'),
+                    'is_verified'           => true,
+                    'requires_verification' => false
+                ];
+            }
             break;
         }
     }

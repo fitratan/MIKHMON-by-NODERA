@@ -77,7 +77,7 @@ if (!function_exists('mikhmon_get_orders')) {
             }
         }
         if ($changed) {
-            @file_put_contents($file, json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            @file_put_contents($file, json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
         }
         return $orders;
     }
@@ -96,7 +96,7 @@ if (!function_exists('mikhmon_save_order')) {
         if (count($orders) > 500) {
             $orders = array_slice($orders, -500, null, true);
         }
-        @file_put_contents($file, json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        @file_put_contents($file, json_encode($orders, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
     }
 }
 
@@ -574,7 +574,7 @@ if (!function_exists('mikhmon_check_and_alert_low_stock')) {
             'time'  => $now,
             'stock' => $unusedCount,
         ];
-        @file_put_contents($alertLogFile, json_encode($alertLogs, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        @file_put_contents($alertLogFile, json_encode($alertLogs, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES), LOCK_EX);
 
         // 4. Dispatch Telegram Alert
         if ($tgEnabled && $unusedCount <= $tgThreshold) {
