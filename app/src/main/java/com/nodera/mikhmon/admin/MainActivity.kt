@@ -15,16 +15,13 @@ import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import com.nodera.mikhmon.admin.licensing.LicenseManager
 import com.nodera.mikhmon.admin.licensing.LicenseState
-import com.nodera.mikhmon.admin.server.PhpServerManager
 import com.nodera.mikhmon.admin.theme.MikhmonBg
 import com.nodera.mikhmon.admin.theme.MikhmonTheme
 import com.nodera.mikhmon.admin.ui.LicenseGateScreen
-import com.nodera.mikhmon.admin.ui.MikhmonWebViewScreen
 
 class MainActivity : ComponentActivity() {
 
     private lateinit var licenseManager: LicenseManager
-    private lateinit var phpServerManager: PhpServerManager
 
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestMultiplePermissions()
@@ -37,7 +34,6 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         licenseManager = LicenseManager(this)
-        phpServerManager = PhpServerManager(this)
 
         requestBluetoothPermissions()
 
@@ -58,10 +54,10 @@ class MainActivity : ComponentActivity() {
                     }
 
                     if (isAuthorized && !forceShowLicenseGate) {
-                        // The REAL MIKHMON PHP web application running inside full-screen Android WebView!
-                        MikhmonWebViewScreen(
-                            licenseInfo = licenseInfo,
-                            onOpenLicenseSettings = { forceShowLicenseGate = true }
+                        val config = remember { com.nodera.mikhmon.admin.data.RouterConfigManager(this@MainActivity).loadConfig() }
+                        com.nodera.mikhmon.admin.ui.MainContainer(
+                            initialConfig = config,
+                            licenseInfo = licenseInfo
                         )
                     } else {
                         // Hardware-Locked License Gatekeeper Screen
@@ -81,8 +77,6 @@ class MainActivity : ComponentActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Stop internal PHP server when app exits
-        phpServerManager.stopServer()
     }
 
     private fun requestBluetoothPermissions() {
