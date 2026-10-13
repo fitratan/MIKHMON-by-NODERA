@@ -107,6 +107,13 @@ $targets = [
 
     // 3. Warung Reseller Helper
     'include/warung_helper.php'        => 'Nodera Warung Reseller & Settlement Helper',
+
+    // 4. WhatsApp & Telegram Gateway Engines
+    'include/whatsapp_helper.php'      => 'Nodera WhatsApp Dispatcher & Gateway Helper',
+    'include/whatsapp.php'             => 'Nodera WhatsApp Controller & Interface',
+    'include/telegram_helper.php'      => 'Nodera Telegram Bot Helper & Manual ACC Dispatcher',
+    'include/telegram.php'             => 'Nodera Telegram Bot Controller & Interface',
+    'telegram_webhook.php'             => 'Nodera Telegram Webhook & Interactive Bot Router',
 ];
 
 $successCount = 0;
