@@ -139,20 +139,20 @@ if ($isWarung) {
 				if (typeof notify === 'function') notify('<?= $_loading ?? "Loading..."; ?>');
 			} catch(e) {}
 
-			fetch('./settings/setlang.php?setlang=' + encodeURIComponent(actual) + '&ajax=1', {
-				credentials: 'same-origin',
-				cache: 'no-store'
-			}).then(function() {
-				var url = new URL(window.location.href);
-				url.searchParams.delete('setlang');
-				url.searchParams.set('_t', Date.now());
-				window.location.replace(url.toString());
-			}).catch(function() {
-				var url = new URL(window.location.href);
-				url.searchParams.set('setlang', actual);
-				url.searchParams.set('_t', Date.now());
-				window.location.replace(url.toString());
-			});
+			var navUrl = new URL(window.location.href);
+			navUrl.searchParams.set('setlang', actual);
+			navUrl.searchParams.set('_t', Date.now());
+
+			try {
+				fetch('./settings/setlang.php?setlang=' + encodeURIComponent(actual) + '&ajax=1', {
+					credentials: 'same-origin',
+					cache: 'no-store'
+				}).finally(function() {
+					window.location.replace(navUrl.toString());
+				});
+			} catch(e) {
+				window.location.replace(navUrl.toString());
+			}
 		};
 
 		window.deferredPwaPrompt = null;
@@ -263,8 +263,16 @@ if ($isWarung) {
 			padding-left: 28px !important;
 		}
 
+		/* Topnav page title: hide on desktop, only display on mobile */
+		#cpage, .navbar #cpage, .navbar-left #cpage {
+			display: none !important;
+		}
+
 		/* Mobile Drawer Scroll Fix */
 		@media screen and (max-width: 768px) {
+			#cpage, .navbar #cpage, .navbar-left #cpage {
+				display: flex !important;
+			}
 			body.sidebar-open #sidenav,
 			body.sidebar-open .sidenav,
 			#sidenav[style*="width: 2"],

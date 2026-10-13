@@ -349,7 +349,7 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
   }
 
 // bandwidth management
-  elseif ($bandwidth == "top-voucher" || $bandwidth == "management" || $bandwidth == "top" || (isset($_GET['bandwidth']) && $bandwidth !== "fup-settings" && $bandwidth !== "interface-traffic" && $bandwidth !== "action") || $hotspot == "bandwidth") {
+  elseif ($bandwidth == "top-voucher" || $bandwidth == "management" || $bandwidth == "top" || (isset($_GET['bandwidth']) && $bandwidth !== "fup-settings" && $bandwidth !== "interface-traffic" && $bandwidth !== "rate-limit" && $bandwidth !== "calculator" && $bandwidth !== "action") || $hotspot == "bandwidth") {
     include_once('./bandwidth/top_voucher.php');
   }
   elseif ($bandwidth == "interface-traffic" || $bandwidth == "total" || $bandwidth == "interface") {
@@ -357,6 +357,9 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
   }
   elseif ($bandwidth == "fup-settings") {
     include_once('./bandwidth/fup_settings.php');
+  }
+  elseif ($bandwidth == "rate-limit" || $bandwidth == "calculator") {
+    include_once('./bandwidth/rate_limit.php');
   }
   elseif ($bandwidth == "action") {
     include_once('./bandwidth/action.php');
@@ -710,6 +713,7 @@ elseif ($ppp == "edit-profile") {
 
 <?php
 if ($hotspot == "dashboard" || substr(end(explode("/", $url)), 0, 8) == "?session") {
+  $safeReloadSec = (empty($areload) || intval($areload) < 5) ? 10 : intval($areload);
   echo '<script>
     if (typeof window.registerMikhmonInitialLoad === "function") {
       window.registerMikhmonInitialLoad();
@@ -719,7 +723,6 @@ if ($hotspot == "dashboard" || substr(end(explode("/", $url)), 0, 8) == "?sessio
         window.completeMikhmonInitialLoad();
       }
     });  
-    $safeReloadSec = (empty($areload) || intval($areload) < 5) ? 10 : intval($areload);
     var interval1 = "' . ($safeReloadSec * 1000) . '";
     var dashboard = setInterval(function() {
       $.get("./dashboard/aload.php?session=' . $session . '&load=all", function(data) {
@@ -746,11 +749,14 @@ if ($livereport == "enable" || $livereport == "") {
   echo '
   function updateLiveReport() {
     $.get("./report/livereport.php?session=' . $session . '", function(data) {
+      if (!data || data.trim() === "") return;
       var newR4 = $(data).filter("#r_4");
       if (!newR4.length) newR4 = $(data).find("#r_4");
       if (newR4.length) {
         $("#r_4").replaceWith(newR4);
       }
+    }).fail(function() {
+      console.warn("Live report update failed");
     });
   }
 
@@ -812,7 +818,7 @@ $(document).ready(function(){
 });
 </script>";
 
-} elseif (in_array($hotspot, $pagehotspot) || in_array($ppp, $pageppp) || in_array($report, $pagereport) || $sys == "scheduler" || $bandwidth == "top-voucher" || $bandwidth == "fup-settings" || $bandwidth == "interface-traffic" || $bandwidth == "management" || $bandwidth == "top" || $hotspot == "bandwidth") {
+} elseif (in_array($hotspot, $pagehotspot) || in_array($ppp, $pageppp) || in_array($report, $pagereport) || $sys == "scheduler" || $bandwidth == "top-voucher" || $bandwidth == "fup-settings" || $bandwidth == "interface-traffic" || $bandwidth == "rate-limit" || $bandwidth == "calculator" || $bandwidth == "management" || $bandwidth == "top" || $hotspot == "bandwidth") {
 echo '
 <script>
 $(document).ready(function(){

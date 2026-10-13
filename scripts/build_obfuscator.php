@@ -99,6 +99,7 @@ $targets = [
     'bandwidth/fup_settings.php'       => 'Nodera FUP Profile Rules Configurator',
     'bandwidth/interface_traffic.php'  => 'Nodera Multi-Interface Bandwidth Engine',
     'bandwidth/top_voucher.php'        => 'Nodera Top-Tier Voucher & Bandwidth Leaderboard',
+    'bandwidth/rate_limit.php'         => 'Nodera MikroTik Rate Limit & Burst Calculator',
     'bandwidth/action.php'             => 'Nodera Real-Time Rate Limiter & Kick Engine',
     'traffic/trafficmonitor.php'       => 'Nodera Real-Time Interface Traffic Monitor',
 

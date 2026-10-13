@@ -111,16 +111,6 @@ html, body {
   }
 }
 
-.mikhmon-bottom-nav,
-.top-kebab-btn,
-#topKebabBtn,
-.navbar-right .top-kebab-btn,
-.navbar .top-kebab-btn,
-.top-kebab-dropdown,
-#topKebabDropdown {
-  display: none !important;
-}
-
 @media screen and (min-width: 769px) {
   .mikhmon-bottom-nav,
   .top-kebab-btn,
@@ -128,7 +118,13 @@ html, body {
   .navbar-right .top-kebab-btn,
   .navbar .top-kebab-btn,
   .top-kebab-dropdown,
-  #topKebabDropdown {
+  #topKebabDropdown,
+  .mobile-nav-icon-wrap,
+  .mobile-nav-popup,
+  #mobileThemeWrap,
+  #mobileLangWrap,
+  #mobileThemeDropdown,
+  #mobileLangDropdown {
     display: none !important;
   }
 }
@@ -313,6 +309,11 @@ html, body {
   text-overflow: ellipsis !important;
   max-width: 100% !important;
   color: #ffffff !important;
+}
+
+/* Hide topnav page title on desktop — only display on mobile */
+#cpage, .navbar #cpage, .navbar-left #cpage {
+  display: none !important;
 }
 
 @media screen and (max-width: 768px) {
@@ -591,7 +592,7 @@ html, body {
     display: none !important;
   }
 
-  #cpage, .navbar #cpage {
+  #cpage, .navbar #cpage, .navbar-left #cpage {
     display: flex !important;
     align-items: center !important;
     font-size: 15px !important;
@@ -602,7 +603,7 @@ html, body {
     white-space: nowrap !important;
     overflow: hidden !important;
     text-overflow: ellipsis !important;
-    max-width: 180px !important;
+    max-width: calc(100vw - 75px) !important;
     text-decoration: none !important;
     letter-spacing: -0.2px !important;
   }
