@@ -102,19 +102,13 @@ Berikut adalah tabel perbedaan mendasar antara **MIKHMON by NODERA** dengan vers
 
 Tampilan antarmuka desktop **MIKHMON by NODERA** yang responsif, bersih, dan modern:
 
-### 1. Advanced Interface Bandwidth & Traffic Monitoring
-<p align="center">
-  <img src="assets/screenshots/desktop/08-interface-bandwidth-telemetry.jpg" alt="Advanced Interface Bandwidth & Traffic Monitoring" width="100%"/>
-</p>
-*Monitoring interface jaringan tingkat lanjut: Total Trafik (369.12 TB), Download Rx (154.96 TB), Upload Tx (214.16 TB), 142/145 Interface Aktif (`1_SFP_METRO`, `5_OM_BUDI`, dll.).*
+### 1. Telemetri Interface & FUP (Fair Usage Policy) Engine
+| Advanced Interface Bandwidth Telemetry | Pengaturan FUP Engine (Fair Usage Policy) |
+| :---: | :---: |
+| <img src="assets/screenshots/desktop/08-interface-bandwidth-telemetry.jpg" width="490" alt="Advanced Interface Bandwidth & Traffic Monitoring"/> | <img src="assets/screenshots/desktop/09-fup-settings-panel.jpg" width="490" alt="Pengaturan FUP Engine Panel"/> |
+| *Monitoring interface jaringan tingkat lanjut: Total Trafik (369.12 TB), Download Rx (154.96 TB), Upload Tx (214.16 TB), & 142/145 Interface Aktif* | *Panel FUP: Pemilihan Profil Hotspot, Status FUP Profil, Threshold Batas Kuota (10 GB), Kecepatan Setelah FUP (1M/1M), & Siklus Reset Kuota* |
 
-### 2. Pengaturan FUP Engine (Fair Usage Policy)
-<p align="center">
-  <img src="assets/screenshots/desktop/09-fup-settings-panel.jpg" alt="Pengaturan FUP Engine Panel" width="100%"/>
-</p>
-*Panel FUP Engine: Pemilihan Profil Hotspot, Status FUP Profil, Threshold Batas Kuota (10 GB), Kecepatan Setelah FUP (1M/1M), & Siklus Reset Kuota (Manual/Otomatis).*
-
-### 3. Ekosistem Warung POS & Reseller Kulakan
+### 2. Ekosistem Warung POS & Reseller Kulakan
 | Manajemen Mitra Warung (Admin) | Dashboard Kasir Warung (Reseller) |
 | :---: | :---: |
 | <img src="assets/screenshots/desktop/02-admin-daftar-warung.jpg" width="490" alt="Manajemen Mitra Warung"/> | <img src="assets/screenshots/desktop/03-warung-pos-dashboard.jpg" width="490" alt="Dashboard Kasir Warung"/> |
@@ -125,7 +119,7 @@ Tampilan antarmuka desktop **MIKHMON by NODERA** yang responsif, bersih, dan mod
 | <img src="assets/screenshots/desktop/04-warung-pos-checkout.jpg" width="490" alt="Checkout Paket Voucher Warung"/> | <img src="assets/screenshots/desktop/05-warung-pos-receipt.jpg" width="490" alt="Struk Pembelian Voucher"/> |
 | *Rincian harga modal, harga jual, margin laba, & input WA pembeli* | *Struk instan dengan QR Code autologin, tombol cetak, & kirim WA* |
 
-### 4. Integrasi Gateway Otomatisasi (WhatsApp & Telegram)
+### 3. Integrasi Gateway Otomatisasi (WhatsApp & Telegram)
 | WhatsApp Gateway Multi-Provider | Bot & Notifikasi Telegram Interaktif |
 | :---: | :---: |
 | <img src="assets/screenshots/desktop/06-whatsapp-gateway.jpg" width="490" alt="WhatsApp Gateway Settings"/> | <img src="assets/screenshots/desktop/07-telegram-bot-notifications.jpg" width="490" alt="Bot Telegram Settings"/> |
