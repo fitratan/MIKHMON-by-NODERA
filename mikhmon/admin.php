@@ -66,8 +66,13 @@ if (!empty($_GET['setlang']) && !empty($isocodelang[$_GET['setlang']])) {
   echo "<script>window.location.replace('" . addslashes($redirectUrl) . "');</script>";
   exit;
 } else {
-  $langid = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? '';
-  if (empty($langid) || empty($isocodelang[$langid])) {
+  if (!empty($_COOKIE['mikhmon_lang']) && !empty($isocodelang[$_COOKIE['mikhmon_lang']])) {
+    $langid = $_COOKIE['mikhmon_lang'];
+    $_SESSION['lang'] = $langid;
+    $_SESSION['m_lang'] = $langid;
+  } elseif (!empty($_SESSION['lang']) && !empty($isocodelang[$_SESSION['lang']])) {
+    $langid = $_SESSION['lang'];
+  } else {
     if (file_exists(__DIR__ . '/include/lang.php')) {
       include(__DIR__ . '/include/lang.php');
     }
@@ -183,15 +188,20 @@ include('./include/quickbt.php');
 include('./include/theme.php');
 include('./settings/settheme.php');
 include('./settings/setlang.php');
-if (empty($_SESSION['theme'])) {
-    $theme = $_COOKIE['mikhmon_theme'] ?? $theme ?? 'dark';
-    $themecolor = $_COOKIE['mikhmon_themecolor'] ?? $themecolor ?? '#3a4149';
+$mthemeValid = array("dark", "light", "blue", "green", "pink");
+$themecolorsValid = array("#3a4149", "#008BC9", "#008BC9", "#4dbd74", "#e83e8c");
+if (!empty($_COOKIE['mikhmon_theme']) && in_array($_COOKIE['mikhmon_theme'], $mthemeValid)) {
+    $theme = $_COOKIE['mikhmon_theme'];
     $_SESSION['theme'] = $theme;
-    $_SESSION['themecolor'] = $themecolor;
-} else {
+} elseif (!empty($_SESSION['theme']) && in_array($_SESSION['theme'], $mthemeValid)) {
     $theme = $_SESSION['theme'];
-    $themecolor = $_SESSION['themecolor'];
+} else {
+    $theme = !empty($theme) ? $theme : 'dark';
+    $_SESSION['theme'] = $theme;
 }
+$themenum = array_search($theme, $mthemeValid);
+$themecolor = ($themenum !== false) ? $themecolorsValid[$themenum] : "#3a4149";
+$_SESSION['themecolor'] = $themecolor;
 
 
 // load config

@@ -40,6 +40,13 @@ if (!empty($gettheme)) {
         $themecolor = $getthemecolor;
     }
 
+    if (isset($_GET['ajax']) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')) {
+        session_write_close();
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['status' => 'ok', 'theme' => $gettheme]);
+        exit;
+    }
+
     $reqUri = $url ?? $_SERVER['REQUEST_URI'] ?? ('./?session=' . ($session ?? 'default'));
     $parsed = parse_url($reqUri);
     $path = $parsed['path'] ?? './';

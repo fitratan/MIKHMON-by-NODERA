@@ -397,16 +397,6 @@ $(document).ready(function(){
     notify("<?= $_connecting ?>");
     connect(this.id);
   });
-  $(".stheme").on("change", function(e){
-    e.stopPropagation();
-    notify("<?= $_loading_theme ?>");
-    stheme(this.value);
-  });
-  $(".slang").on("change", function(e){
-    e.stopPropagation();
-    notify("<?= $_loading ?>");
-    slang(this.value);
-  });
 });
 </script>
 <div id="notify"><div class="message"></div></div>
@@ -638,16 +628,6 @@ $(document).ready(function(){
     }
     notify("<?= $_connecting ?>");
     connect(this.value);
-  });
-  $(".stheme, .stheme-mobile").off("change.mikhmonTheme").on("change.mikhmonTheme", function(e){
-    if (this.value && typeof mikhmonSwitchTheme === "function") {
-      mikhmonSwitchTheme(this.value);
-    }
-  });
-  $(".slang, .slang-mobile").off("change.mikhmonLang").on("change.mikhmonLang", function(e){
-    if (this.value && typeof mikhmonSwitchLang === "function") {
-      mikhmonSwitchLang(this.value);
-    }
   });
 });
 </script>

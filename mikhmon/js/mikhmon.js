@@ -113,11 +113,3 @@ $(document).on("change", "select.connect, select.connect-mobile", function(){
         window.showMikhmonOverlay("Loading...", "");
     }
 });
-$(document).off("change.mikhmonSetting", "select.stheme, select.stheme-mobile, select.slang, select.slang-mobile")
-  .on("change.mikhmonSetting", "select.stheme, select.stheme-mobile, select.slang, select.slang-mobile", function(e){
-    e.stopPropagation();
-    if (this.value) {
-        var isTheme = $(this).hasClass("stheme") || $(this).hasClass("stheme-mobile");
-        switchMikhmonSetting(this.value, isTheme ? "theme" : "lang");
-    }
-});

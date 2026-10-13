@@ -105,13 +105,20 @@ if (!empty($_GET['setlang']) && !empty($isocodelang[$_GET['setlang']])) {
   @setcookie('mikhmon_lang', $langid, time() + 31536000, '/');
   @file_put_contents(__DIR__ . '/include/lang.php', '<?php $langid="' . addslashes($langid) . '";?>');
 
+  if (isset($_GET['ajax']) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')) {
+    session_write_close();
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode(['status' => 'ok', 'lang' => $langid]);
+    exit;
+  }
+
   $parsed = parse_url($url);
   $path = $parsed['path'] ?? './';
   $query = [];
   if (!empty($parsed['query'])) {
       parse_str($parsed['query'], $query);
   }
-  unset($query['setlang'], $query['_t'], $query['_nc']);
+  unset($query['setlang'], $query['_t'], $query['_nc'], $query['ajax']);
   if (empty($query['session']) && !empty($session)) {
       $query['session'] = $session;
   }
@@ -131,8 +138,13 @@ if (!empty($_GET['setlang']) && !empty($isocodelang[$_GET['setlang']])) {
   echo "<script>window.location.replace('" . addslashes($redirectUrl) . "');</script>";
   exit;
 } else {
-  $langid = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? '';
-  if (empty($langid) || empty($isocodelang[$langid])) {
+  if (!empty($_COOKIE['mikhmon_lang']) && !empty($isocodelang[$_COOKIE['mikhmon_lang']])) {
+    $langid = $_COOKIE['mikhmon_lang'];
+    $_SESSION['lang'] = $langid;
+    $_SESSION['m_lang'] = $langid;
+  } elseif (!empty($_SESSION['lang']) && !empty($isocodelang[$_SESSION['lang']])) {
+    $langid = $_SESSION['lang'];
+  } else {
     if (file_exists(__DIR__ . '/include/lang.php')) {
       include(__DIR__ . '/include/lang.php');
     }
@@ -158,15 +170,20 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
 // theme  
   include('./include/theme.php');
   include('./settings/settheme.php');
-  if (empty($_SESSION['theme'])) {
-    $theme = $_COOKIE['mikhmon_theme'] ?? $theme ?? 'dark';
-    $themecolor = $_COOKIE['mikhmon_themecolor'] ?? $themecolor ?? '#3a4149';
+  $mthemeValid = array("dark", "light", "blue", "green", "pink");
+  $themecolorsValid = array("#3a4149", "#008BC9", "#008BC9", "#4dbd74", "#e83e8c");
+  if (!empty($_COOKIE['mikhmon_theme']) && in_array($_COOKIE['mikhmon_theme'], $mthemeValid)) {
+    $theme = $_COOKIE['mikhmon_theme'];
     $_SESSION['theme'] = $theme;
-    $_SESSION['themecolor'] = $themecolor;
-  } else {
+  } elseif (!empty($_SESSION['theme']) && in_array($_SESSION['theme'], $mthemeValid)) {
     $theme = $_SESSION['theme'];
-    $themecolor = $_SESSION['themecolor'];
+  } else {
+    $theme = !empty($theme) ? $theme : 'dark';
+    $_SESSION['theme'] = $theme;
   }
+  $themenum = array_search($theme, $mthemeValid);
+  $themecolor = ($themenum !== false) ? $themecolorsValid[$themenum] : "#3a4149";
+  $_SESSION['themecolor'] = $themecolor;
 
 // routeros api
   $nonRouterPages = ['telegram', 'whatsapp', 'billing', 'shop', 'noderapay', 'qris', 'template-selector', 'store-template', 'uplogo'];
@@ -702,7 +719,8 @@ if ($hotspot == "dashboard" || substr(end(explode("/", $url)), 0, 8) == "?sessio
         window.completeMikhmonInitialLoad();
       }
     });  
-    var interval1 = "' . ($areload * 1000) . '";
+    $safeReloadSec = (empty($areload) || intval($areload) < 5) ? 10 : intval($areload);
+    var interval1 = "' . ($safeReloadSec * 1000) . '";
     var dashboard = setInterval(function() {
       $.get("./dashboard/aload.php?session=' . $session . '&load=all", function(data) {
         if (!data || data.trim() === "") return;
@@ -759,7 +777,7 @@ if ($livereport == "enable" || $livereport == "") {
 } elseif ($hotspot == "active" && $serveractive != "") {
   echo '<script>
   $(document).ready(function(){
-    var interval = "' . ($areload * 1000) . '";
+    var interval = "' . (((empty($areload) || intval($areload) < 5) ? 10 : intval($areload)) * 1000) . '";
     setInterval(function() {
     $("#reloadHotspotActive").load("./hotspot/hotspotactive.php?server=' . $serveractive . '&session=' . $session . '"); }, interval);})
 </script>
@@ -767,7 +785,7 @@ if ($livereport == "enable" || $livereport == "") {
 } elseif ($hotspot == "active" && $serveractive == "") {
   echo '<script>
   $(document).ready(function(){
-    var interval = "' . ($areload * 1000) . '";
+    var interval = "' . (((empty($areload) || intval($areload) < 5) ? 10 : intval($areload)) * 1000) . '";
     setInterval(function() {
     $("#reloadHotspotActive").load("./hotspot/hotspotactive.php?session=' . $session . '"); }, interval);})
 </script>

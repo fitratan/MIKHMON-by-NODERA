@@ -22,6 +22,13 @@ if (!empty($getlang) && !empty($isocodelang[$getlang])) {
     @setcookie('mikhmon_lang', $getlang, time() + 31536000, '/');
     $langid = $getlang;
     
+    if (isset($_GET['ajax']) || (isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest')) {
+        session_write_close();
+        header('Content-Type: application/json; charset=utf-8');
+        echo json_encode(['status' => 'ok', 'lang' => $getlang]);
+        exit;
+    }
+    
     // Clean return URL
     $targetUrl = $_SERVER['REQUEST_URI'] ?? './admin.php?id=sessions';
     $parsed = parse_url($targetUrl);
