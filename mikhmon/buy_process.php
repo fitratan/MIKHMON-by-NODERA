@@ -525,7 +525,11 @@ if ($action === 'get_packages') {
                 $packages[] = [
             'name'             => $pName,
             'price'            => $price,
-            'formatted_price'  => 'Rp ' . number_format($price, 0, ',', '.'),
+            'formatted_price'  => (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
+                ? number_format($price, 0, ',', ' ') . ' FCFA'
+                : (($currency === '$' || strtoupper($currency) === 'USD')
+                    ? '$' . number_format($price, 2, '.', ',')
+                    : ($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')),
             'validity'         => $inferredValidity,
             'rate_limit'       => !empty($rateLimit) ? $rateLimit : 'Kecepatan Stabil',
             'stock_count'      => $stockCount,
@@ -1571,7 +1575,11 @@ if ($action === 'get_recent_orders') {
             $recent[] = [
                 'phone'     => $maskPhone($ord['phone'] ?? ''),
                 'profile'   => $ord['profile'] ?? ($ord['name'] ?? 'Voucher WiFi'),
-                'price'     => 'Rp ' . number_format($price, 0, ',', '.'),
+                'price'     => (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
+                    ? number_format($price, 0, ',', ' ') . ' FCFA'
+                    : (($currency === '$' || strtoupper($currency) === 'USD')
+                        ? '$' . number_format($price, 2, '.', ',')
+                        : ($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')),
                 'time_ago'  => $timeAgo,
                 'type'      => 'order',
             ];
@@ -1691,7 +1699,11 @@ if ($action === 'check_phone_vouchers' || $action === 'voucher_history' || $acti
                 'status'       => $st,
                 'status_label' => $statusLabel,
                 'profile'      => $ord['profile'] ?? 'Voucher WiFi',
-                'price'        => 'Rp ' . number_format($price, 0, ',', '.'),
+                'price'        => (strtoupper($currency) === 'FCFA' || $activeLang === 'fr')
+                    ? number_format($price, 0, ',', ' ') . ' FCFA'
+                    : (($currency === '$' || strtoupper($currency) === 'USD')
+                        ? '$' . number_format($price, 2, '.', ',')
+                        : ($currency ?: 'Rp') . ' ' . number_format($price, 0, ',', '.')),
                 'username'     => $vUser,
                 'password'     => $vPass,
                 'validity'     => $ord['validity'] ?? ($ord['voucher']['validity'] ?? '-'),

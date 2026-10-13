@@ -50,6 +50,64 @@ if (!function_exists('mikhmon_get_hwid')) {
     }
 }
 
+if (!defined('NODERA_OFFLINE_SECRET_2026')) {
+    define('NODERA_OFFLINE_SECRET_2026', 'NODERA_OFFLINE_SECRET_2026');
+}
+
+if (!function_exists('mikhmon_check_clock_guard')) {
+    function mikhmon_check_clock_guard(): bool {
+        $guardFile = __DIR__ . '/../config/.clock_guard';
+        $now = time();
+        if (file_exists($guardFile)) {
+            $last = (int) @file_get_contents($guardFile);
+            if ($last > 0 && $now < ($last - 300)) {
+                // Jam sistem dimundurkan lebih dari 5 menit
+                return false;
+            }
+        }
+        @file_put_contents($guardFile, (string)$now);
+        return true;
+    }
+}
+
+if (!function_exists('mikhmon_verify_license_signature')) {
+    function mikhmon_verify_license_signature(?string $key = null, ?string $hwid = null, ?string $exp = null, ?string $sig = null): bool {
+        $key = $key ?: (defined('MIKHMON_LICENSE_KEY') ? MIKHMON_LICENSE_KEY : '');
+        $hwid = $hwid ?: (defined('MIKHMON_HWID') ? MIKHMON_HWID : mikhmon_get_hwid());
+        $sig = $sig ?: (defined('MIKHMON_SIGNATURE') ? MIKHMON_SIGNATURE : '');
+        if (empty($sig) || empty($key)) {
+            // Check nodera_license.json if available
+            $jsonFile = __DIR__ . '/../config/nodera_license.json';
+            if (empty($sig) && file_exists($jsonFile)) {
+                $saved = @json_decode(@file_get_contents($jsonFile), true);
+                if (!empty($saved['signature'])) {
+                    $sig = $saved['signature'];
+                }
+            }
+            if (empty($sig)) {
+                return false;
+            }
+        }
+        $rawExp = $exp ?: (defined('MIKHMON_EXPIRY_RAW') ? MIKHMON_EXPIRY_RAW : (defined('MIKHMON_EXPIRY') ? MIKHMON_EXPIRY : 'LIFETIME'));
+        if (empty($rawExp) || $rawExp === '0000-00-00') {
+            $rawExp = 'LIFETIME';
+        }
+        $expected1 = hash('sha256', $key . '|' . $hwid . '|' . $rawExp . '|NODERA_OFFLINE_SECRET_2026');
+        if (hash_equals($expected1, $sig)) {
+            return true;
+        }
+        // Fallback check against formatted expiry
+        $formattedExp = defined('MIKHMON_EXPIRY') ? MIKHMON_EXPIRY : '';
+        if (!empty($formattedExp) && $formattedExp !== 'LIFETIME' && $formattedExp !== '0000-00-00') {
+            $expected2 = hash('sha256', $key . '|' . $hwid . '|' . $formattedExp . '|NODERA_OFFLINE_SECRET_2026');
+            if (hash_equals($expected2, $sig)) {
+                return true;
+            }
+        }
+        return false;
+    }
+}
+
 if (!function_exists('mikhmon_save_desktop_license_data')) {
     function mikhmon_save_desktop_license_data(array $data): array {
         if (empty($data)) {
@@ -64,6 +122,8 @@ if (!function_exists('mikhmon_save_desktop_license_data')) {
         $hwid = trim((string)($data['hwid'] ?? mikhmon_get_hwid()));
         $exp = $data['expires_at'] ?? '';
         $expFormatted = !empty($exp) ? date('Y-m-d H:i:s', strtotime($exp)) : '';
+        $rawExp = $exp ?: 'LIFETIME';
+        $signature = $data['signature'] ?? '';
         $prodName = $data['product_name'] ?? 'Mikhmon Desktop Standalone';
         $nowStr = date('Y-m-d H:i:s');
 
@@ -77,6 +137,8 @@ if (!function_exists('mikhmon_save_desktop_license_data')) {
             . "define('MIKHMON_LICENSE_KEY', " . var_export($licenseKey, true) . ");\n"
             . "define('MIKHMON_HWID', " . var_export($hwid, true) . ");\n"
             . "define('MIKHMON_EXPIRY', " . var_export($expFormatted, true) . ");\n"
+            . "define('MIKHMON_EXPIRY_RAW', " . var_export($rawExp, true) . ");\n"
+            . "define('MIKHMON_SIGNATURE', " . var_export($signature, true) . ");\n"
             . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
             . "define('MIKHMON_PRODUCT_NAME', " . var_export($prodName, true) . ");\n"
             . "define('MIKHMON_ACTIVATED_AT', " . var_export($nowStr, true) . ");\n"
@@ -170,6 +232,17 @@ if (!function_exists('mikhmon_is_expired')) {
     function mikhmon_is_expired(): bool {
         if (defined('MIKHMON_STATUS') && in_array(strtoupper(MIKHMON_STATUS), ['SUSPENDED', 'DISABLED', 'BLOCKED', 'EXPIRED', 'UNLICENSED'], true)) {
             return true;
+        }
+        // Anti-Clock Tampering Guard (Deteksi jam Windows dimundurkan)
+        if (!mikhmon_check_clock_guard()) {
+            return true;
+        }
+        // Anti-Tamper Cryptographic Signature Verification
+        if (mikhmon_is_desktop_mode()) {
+            $hasSig = (defined('MIKHMON_SIGNATURE') && !empty(MIKHMON_SIGNATURE)) || file_exists(__DIR__ . '/../config/nodera_license.json');
+            if ($hasSig && !mikhmon_verify_license_signature()) {
+                return true;
+            }
         }
         $t = mikhmon_expiry_ts();
         if ($t === null) {
@@ -283,6 +356,16 @@ if (!function_exists('mikhmon_is_licensed')) {
                 return false;
             }
 
+            // Anti-Clock Tampering Guard Check
+            if (!mikhmon_check_clock_guard()) {
+                return false;
+            }
+
+            // Anti-Tamper Signature Check
+            if (defined('MIKHMON_SIGNATURE') && !empty(MIKHMON_SIGNATURE) && !mikhmon_verify_license_signature()) {
+                return false;
+            }
+
             // Periodic Background Cloud Verification (setiap 6 jam sekali, bukan tiap page view)
             $verifyMarker = __DIR__ . '/../config/.last_verified';
             $lastVerified = file_exists($verifyMarker) ? (int) @file_get_contents($verifyMarker) : 0;
@@ -373,6 +456,18 @@ if (!function_exists('mikhmon_verify_desktop_license')) {
 
         if (!$response) {
             // Offline Grace Period Check (Non-recursive)
+            if (!mikhmon_check_clock_guard()) {
+                return [
+                    'success' => false,
+                    'message' => 'Manipulasi jam sistem terdeteksi. Silakan sinkronkan waktu perangkat Anda.',
+                ];
+            }
+            if (defined('MIKHMON_SIGNATURE') && !empty(MIKHMON_SIGNATURE) && !mikhmon_verify_license_signature()) {
+                return [
+                    'success' => false,
+                    'message' => 'Integritas file lisensi rusak atau telah dimodifikasi.',
+                ];
+            }
             $isLocalActive = defined('MIKHMON_STATUS') && strtoupper(MIKHMON_STATUS) === 'ACTIVE' && !empty($key);
             $expTs = mikhmon_expiry_ts();
             $notExpired = ($expTs === null) || (time() <= ($expTs + 86399));
@@ -387,7 +482,7 @@ if (!function_exists('mikhmon_verify_desktop_license')) {
             }
             return [
                 'success' => false,
-                'message' => 'Gagal terhubung ke Cloud License Server. Pastikan koneksi internet aktif.',
+                'message' => 'Gagal terhubung ke Cloud License Server dan masa aktif lisensi telah habis.',
             ];
         }
 
@@ -406,9 +501,11 @@ if (!function_exists('mikhmon_reset_local_license')) {
             . "define('MIKHMON_STATUS', 'UNLICENSED');\n"
             . "define('MIKHMON_LICENSE_KEY', '');\n"
             . "define('MIKHMON_HWID', '');\n"
-            . "define('MIKHMON_EXPIRY', '');\n"
-            . "define('MIKHMON_BRAND', 'by NODERA');\n"
-            . "define('MIKHMON_PRODUCT_NAME', 'Mikhmon Standalone');\n"
+            . "define('MIKHMON_EXPIRY', '0000-00-00');\n"
+            . "define('MIKHMON_EXPIRY_RAW', '0000-00-00');\n"
+            . "define('MIKHMON_SIGNATURE', '');\n"
+            . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
+            . "define('MIKHMON_PRODUCT_NAME', 'Mikhmon Desktop Standalone');\n"
             . "define('MIKHMON_ACTIVATED_AT', '');\n"
             . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
 
@@ -580,20 +677,79 @@ if (!function_exists('mikhmon_activate_trial_license')) {
             ];
         }
 
-        // Offline Fallback for first launch
+        // Online connection is strictly required for 7-day free trial activation
         $lang = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? 'id';
-        $expFormatted = date('Y-m-d H:i:s', time() + (7 * 86400));
-        $licenseKey = 'NDR-TRL-' . strtoupper(substr(md5($hwid . 'NODERA_TRIAL_2026'), 0, 12));
-        $prodName = ($lang === 'fr' ? 'Mikhmon Desktop (Essai 7 Jours)' : ($lang === 'en' ? 'Mikhmon Desktop (7-Day Trial)' : 'Mikhmon Desktop (Trial 7 Hari)'));
+        $msgNetErr = ($lang === 'fr' 
+            ? 'Impossible de contacter le serveur d\'activation NODERA pour la période d\'essai gratuit. Connexion Internet requise pour valider l\'appareil.' 
+            : ($lang === 'en' 
+                ? 'Failed to reach NODERA activation server for the 7-day free trial. Internet connection required to validate device.' 
+                : 'Aktivasi masa percobaan 7 hari gratis memerlukan koneksi internet untuk validasi perangkat ke Cloud Panel NODERA.'));
 
-        $data = [
-            'license_key'  => $licenseKey,
-            'hwid'         => $hwid,
-            'status'       => 'ACTIVE',
-            'product_name' => $prodName,
-            'expires_at'   => $expFormatted,
+        return [
+            'success' => false,
+            'message' => $msgNetErr . (!empty($lastErr) ? ' (' . $lastErr . ')' : ''),
         ];
-
-        return mikhmon_save_desktop_license_data($data);
     }
 }
+
+if (!function_exists('mikhmon_render_desktop_heartbeat_script')) {
+    function mikhmon_render_desktop_heartbeat_script(): void {
+        if (!mikhmon_is_desktop_mode()) return;
+        $key = defined('MIKHMON_LICENSE_KEY') ? MIKHMON_LICENSE_KEY : '';
+        $hwid = defined('MIKHMON_HWID') ? MIKHMON_HWID : '';
+        if (empty($key) || empty($hwid)) return;
+        ?>
+        <script>
+        (function() {
+          var _ndrKey = <?= json_encode($key) ?>;
+          var _ndrHwid = <?= json_encode($hwid) ?>;
+          if (!_ndrKey || !_ndrHwid) return;
+
+          function _ndrCheckLicenseHeartbeat() {
+            var apis = [
+              'https://panel.dgtlnetsolution.com/api/desktop-license/verify',
+              'https://digitalnet.dgtlnetsolution.com/api/desktop-license/verify',
+              'https://panel.dgtlnetsolution.com/api/v1/desktop-license/verify'
+            ];
+            
+            function tryApi(idx) {
+              if (idx >= apis.length) return;
+              fetch(apis[idx], {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                body: JSON.stringify({ license_key: _ndrKey, hwid: _ndrHwid })
+              })
+              .then(function(res) { return res.json(); })
+              .then(function(data) {
+                if (data && data.success === false && (data.code === 'HWID_MISMATCH' || data.code === 'HWID_UNBOUND' || data.code === 'INVALID_KEY' || data.code === 'LICENSE_SUSPENDED' || data.code === 'LICENSE_EXPIRED')) {
+                  var fd = new FormData();
+                  fd.append('action', 'ajax_revoke_local_license');
+                  fetch('./admin.php', { method: 'POST', body: fd })
+                  .then(function() {
+                    alert("PEMBERITAHUAN LISENSI NODERA:\n" + (data.message || "Masa aktif lisensi atau trial Anda telah berakhir di Cloud Panel."));
+                    window.location.href = './admin.php?id=login';
+                  });
+                }
+              })
+              .catch(function() {
+                tryApi(idx + 1);
+              });
+            }
+
+            tryApi(0);
+          }
+
+          if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            setTimeout(_ndrCheckLicenseHeartbeat, 1500);
+          } else {
+            window.addEventListener('DOMContentLoaded', function() {
+              setTimeout(_ndrCheckLicenseHeartbeat, 1500);
+            });
+          }
+          setInterval(_ndrCheckLicenseHeartbeat, 600000);
+        })();
+        </script>
+        <?php
+    }
+}
+

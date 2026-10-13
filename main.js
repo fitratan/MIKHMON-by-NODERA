@@ -84,6 +84,39 @@ function getHardwareId() {
   return currentHwid;
 }
 
+const OFFLINE_SECRET = 'NODERA_OFFLINE_SECRET_2026';
+
+// Anti-Tampering: Cryptographic HMAC Signature Verification (Anti-Edit Notepad)
+function verifyLicenseSignature(licenseData) {
+  if (!licenseData || !licenseData.signature) return false;
+  const key = licenseData.license_key || '';
+  const hwid = licenseData.hwid || '';
+  const exp = licenseData.expires_at || 'LIFETIME';
+  const crypto = require('crypto');
+  const expected = crypto.createHash('sha256')
+    .update(`${key}|${hwid}|${exp}|${OFFLINE_SECRET}`)
+    .digest('hex');
+  return licenseData.signature === expected;
+}
+
+// Anti-Tampering: Anti-Clock Rollback Guard (Deteksi Pemunduran Jam Windows)
+function checkClockTampering() {
+  const configDir = getMikhmonConfigDir();
+  const guardPath = path.join(configDir, '.clock_guard');
+  const now = Math.floor(Date.now() / 1000);
+  try {
+    if (fs.existsSync(guardPath)) {
+      const last = parseInt(fs.readFileSync(guardPath, 'utf8'), 10);
+      if (!isNaN(last) && now < (last - 300)) {
+        console.warn('Clock tampering detected! System clock is earlier than last recorded timestamp.');
+        return false;
+      }
+    }
+    fs.writeFileSync(guardPath, String(now), 'utf8');
+  } catch (e) {}
+  return true;
+}
+
 // License Storage & PHP Synchronization Helpers
 function syncLicenseToPhp(licenseData) {
   try {
@@ -100,6 +133,7 @@ function syncLicenseToPhp(licenseData) {
     }
     const prodName = licenseData.product_name || 'Mikhmon Desktop Standalone';
     const nowStr = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    const signature = licenseData.signature || '';
 
     const content = `<?php
 /**
@@ -111,6 +145,8 @@ define('MIKHMON_STATUS', 'ACTIVE');
 define('MIKHMON_LICENSE_KEY', ${JSON.stringify(licenseKey)});
 define('MIKHMON_HWID', ${JSON.stringify(hwid)});
 define('MIKHMON_EXPIRY', ${JSON.stringify(expiry)});
+define('MIKHMON_EXPIRY_RAW', ${JSON.stringify(licenseData.expires_at || 'LIFETIME')});
+define('MIKHMON_SIGNATURE', ${JSON.stringify(signature)});
 define('MIKHMON_BRAND', 'by dgtlnetsolution.com');
 define('MIKHMON_PRODUCT_NAME', ${JSON.stringify(prodName)});
 define('MIKHMON_ACTIVATED_AT', ${JSON.stringify(nowStr)});
@@ -240,6 +276,12 @@ function startPhpServer(port) {
 // Verify License with Cloud API & Grace Period
 async function verifyLicenseOnline(licenseKey) {
   const hwid = getHardwareId();
+
+  // Anti-Clock Rollback Guard Check
+  if (!checkClockTampering()) {
+    return { valid: false, message: 'Manipulasi jam sistem terdeteksi. Silakan sinkronkan waktu perangkat Anda.' };
+  }
+
   try {
     const res = await callLicenseApi('/verify', {
       license_key: licenseKey,
@@ -254,6 +296,7 @@ async function verifyLicenseOnline(licenseKey) {
         product_name: res.data?.product_name || 'Mikhmon Desktop Standalone',
         last_verified_at: new Date().toISOString(),
         expires_at: res.data?.expires_at,
+        signature: res.data?.signature || '',
         features: res.data?.features,
       };
       saveLicense(licenseData);
@@ -261,22 +304,48 @@ async function verifyLicenseOnline(licenseKey) {
       return { valid: true, data: res.data };
     }
 
+    if (res && res.code === 'LICENSE_EXPIRED') {
+      const saved = readSavedLicense() || {};
+      saved.status = 'EXPIRED';
+      saveLicense(saved);
+      return { valid: false, expired: true, message: res.message || 'Masa aktif lisensi telah berakhir.' };
+    }
+
     if (res && res.code === 'HWID_MISMATCH') {
       return { valid: false, message: res.message || 'HWID tidak cocok.' };
     }
   } catch (err) {
-    // Offline Grace Period (3 hari)
+    // Offline Grace Period & Strict Expiration Enforcement
     const saved = readSavedLicense();
     if (saved && saved.license_key === licenseKey && saved.hwid === hwid) {
+      // 1. Anti-Tamper: Signature Check
+      if (saved.signature && !verifyLicenseSignature(saved)) {
+        console.warn('License signature mismatch! Possible manual file tampering.');
+        return { valid: false, message: 'Integritas file lisensi rusak atau telah dimodifikasi.' };
+      }
+
+      // 2. Strict Expiration Date Check (Trial 7 Hari & Lisensi Berbatas Waktu)
+      if (saved.expires_at && saved.expires_at !== 'LIFETIME') {
+        const expTime = new Date(saved.expires_at).getTime();
+        const now = Date.now();
+        const endOfDayBuffer = saved.expires_at.length <= 10 ? 86399000 : 0;
+        if (!isNaN(expTime) && now > (expTime + endOfDayBuffer)) {
+          saved.status = 'EXPIRED';
+          saveLicense(saved);
+          return { valid: false, expired: true, message: 'Masa aktif lisensi atau trial 7 hari Anda telah berakhir.' };
+        }
+      }
+
+      // 3. Grace Period Check (Maksimal 3 hari sejak heartbeat/verifikasi online terakhir)
       const lastVerified = new Date(saved.last_verified_at || 0).getTime();
       const now = Date.now();
       const diffDays = (now - lastVerified) / (1000 * 60 * 60 * 24);
-      if (diffDays <= 3) {
+      if (diffDays >= 0 && diffDays <= 3) {
         syncLicenseToPhp(saved);
         return { valid: true, offline: true, data: saved };
       }
     }
-    return { valid: false, message: 'Gagal menghubungi server aktivasi NODERA.' };
+    return { valid: false, message: 'Gagal menghubungi server aktivasi NODERA dan masa toleransi offline telah habis.' };
   }
 
   return { valid: false, message: 'Lisensi tidak valid.' };
@@ -365,6 +434,7 @@ ipcMain.handle('activate-license', async (event, key) => {
         product_name: res.data?.product_name || 'Mikhmon Desktop Standalone',
         last_verified_at: new Date().toISOString(),
         expires_at: res.data?.expires_at,
+        signature: res.data?.signature || '',
         features: res.data?.features,
       };
       saveLicense(licenseData);
@@ -405,6 +475,7 @@ ipcMain.handle('activate-trial', async () => {
         product_name: res.data?.product_name || 'Mikhmon Desktop (Trial 7 Hari)',
         last_verified_at: new Date().toISOString(),
         expires_at: res.data?.expires_at,
+        signature: res.data?.signature || '',
         is_trial: true,
         features: res.data?.features,
       };
@@ -426,6 +497,14 @@ ipcMain.handle('activate-trial', async () => {
   }
 });
 
+ipcMain.handle('verify-license', async () => {
+  const saved = readSavedLicense();
+  if (!saved || !saved.license_key) {
+    return { valid: false, message: 'Tidak ada lisensi tersimpan.' };
+  }
+  return await verifyLicenseOnline(saved.license_key);
+});
+
 ipcMain.handle('open-external', (event, url) => {
   shell.openExternal(url);
 });
@@ -434,11 +513,36 @@ ipcMain.handle('close-app', () => {
   app.quit();
 });
 
+// Periodic Watchdog for License Expiry (Auto-kick when trial/subscription expires)
+let licenseWatchdogTimer = null;
+function startLicenseWatchdog() {
+  if (licenseWatchdogTimer) clearInterval(licenseWatchdogTimer);
+  // Check every 10 minutes
+  licenseWatchdogTimer = setInterval(async () => {
+    const saved = readSavedLicense();
+    if (!saved || !saved.license_key) {
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        loadActivationScreen();
+      }
+      return;
+    }
+
+    const check = await verifyLicenseOnline(saved.license_key);
+    if (!check.valid) {
+      console.warn('License watchdog check failed:', check.message);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        loadActivationScreen();
+      }
+    }
+  }, 10 * 60 * 1000);
+}
+
 // App Lifecycle
 app.whenReady().then(() => {
   getHardwareId();
   startPhpServer(serverPort);
   createMainWindow();
+  startLicenseWatchdog();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createMainWindow();
@@ -446,6 +550,9 @@ app.whenReady().then(() => {
 });
 
 app.on('window-all-closed', () => {
+  if (licenseWatchdogTimer) {
+    clearInterval(licenseWatchdogTimer);
+  }
   if (phpProcess) {
     phpProcess.kill();
   }
@@ -455,6 +562,9 @@ app.on('window-all-closed', () => {
 });
 
 app.on('will-quit', () => {
+  if (licenseWatchdogTimer) {
+    clearInterval(licenseWatchdogTimer);
+  }
   if (phpProcess) {
     phpProcess.kill();
   }

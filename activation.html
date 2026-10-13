@@ -248,6 +248,10 @@
         btnText: "Aktivasi Lisensi Sekarang",
         verifyingText: "Memverifikasi Lisensi...",
         footerLink: "Kelola Lisensi di Cloud Panel NODERA",
+        trialExpiredAlert: "Masa percobaan 7 hari gratis Anda telah berakhir. Silakan masukkan License Key resmi untuk melanjutkan penggunaan Mikhmon Desktop.",
+        licenseExpiredAlert: "Masa aktif lisensi Anda telah berakhir. Silakan perbarui lisensi di Cloud Panel atau masukkan License Key baru.",
+        trialExpiredBtn: "Masa Percobaan Telah Berakhir",
+        trialBadgeExpired: "KEDALUWARSA",
         trialSuccess: "Masa percobaan 7 hari gratis berhasil diaktifkan! Membuka Mikhmon...",
         trialFail: "Gagal mengklaim Free Trial. Perangkat mungkin sudah pernah menggunakan trial.",
         trialNetError: "Gagal menghubungi server aktivasi NODERA. Pastikan koneksi internet aktif.",
@@ -279,6 +283,10 @@
         btnText: "Activer la Licence Maintenant",
         verifyingText: "Vérification de la licence...",
         footerLink: "Gérer les licences sur le Cloud Panel NODERA",
+        trialExpiredAlert: "Votre période d'essai gratuit de 7 jours a expiré. Veuillez saisir une clé de licence officielle pour continuer à utiliser Mikhmon Desktop.",
+        licenseExpiredAlert: "Votre licence a expiré. Veuillez renouveler votre licence sur le Cloud Panel ou saisir une nouvelle clé de licence.",
+        trialExpiredBtn: "Période d'essai expirée",
+        trialBadgeExpired: "EXPIRÉ",
         trialSuccess: "Essai gratuit de 7 jours activé avec succès ! Ouverture de Mikhmon...",
         trialFail: "Échec de l'activation de l'essai gratuit. Cet appareil a peut-être déjà utilisé l'essai.",
         trialNetError: "Impossible de contacter le serveur d'activation NODERA. Vérifiez votre connexion Internet.",
@@ -310,6 +318,10 @@
         btnText: "Activate License Now",
         verifyingText: "Verifying License...",
         footerLink: "Manage Licenses in NODERA Cloud Panel",
+        trialExpiredAlert: "Your 7-day free trial has expired. Please enter an official License Key to continue using Mikhmon Desktop.",
+        licenseExpiredAlert: "Your license has expired. Please renew your license on Cloud Panel or enter a new License Key.",
+        trialExpiredBtn: "Trial Period Expired",
+        trialBadgeExpired: "EXPIRED",
         trialSuccess: "7-day free trial activated successfully! Opening Mikhmon...",
         trialFail: "Failed to claim Free Trial. This device may have already used a trial.",
         trialNetError: "Failed to reach NODERA activation server. Ensure internet connection is active.",
@@ -323,6 +335,8 @@
 
     let currentLang = 'id';
     let currentHwid = '';
+    let isExpiredState = false;
+    let expiredTypeIsTrial = false;
 
     function setLanguage(lang) {
       if (!translations[lang]) lang = 'id';
@@ -334,9 +348,9 @@
       document.getElementById('i18nHeaderTitle').textContent = t.headerTitle;
       document.getElementById('i18nHeaderSubtitle').textContent = t.headerSubtitle;
       document.getElementById('i18nTrialTitle').textContent = t.trialTitle;
-      document.getElementById('i18nTrialBadge').textContent = t.trialBadge;
+      document.getElementById('i18nTrialBadge').textContent = isExpiredState ? t.trialBadgeExpired : t.trialBadge;
       document.getElementById('i18nTrialDesc').textContent = t.trialDesc;
-      trialBtnText.textContent = t.trialBtnText;
+      trialBtnText.textContent = isExpiredState ? t.trialExpiredBtn : t.trialBtnText;
       document.getElementById('i18nDividerText').textContent = t.dividerText;
       document.getElementById('i18nKeyLabel').textContent = t.keyLabel;
       document.getElementById('i18nKeySubtext').textContent = t.keySubtext;
@@ -353,6 +367,18 @@
       document.getElementById('i18nCsCiLabel').textContent = t.csCiLabel;
       btnText.textContent = t.btnText;
       document.getElementById('i18nFooterLink').textContent = t.footerLink;
+
+      if (isExpiredState) {
+        const expiredMsg = expiredTypeIsTrial ? t.trialExpiredAlert : t.licenseExpiredAlert;
+        alertBox.innerHTML = `
+          <div class="flex items-start gap-2">
+            <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+            </svg>
+            <div>${expiredMsg}</div>
+          </div>
+        `;
+      }
 
       // Update pill buttons state
       document.querySelectorAll('.lang-btn').forEach(btn => {
@@ -401,6 +427,54 @@
         if (window.noderaDesktop) {
           currentHwid = await window.noderaDesktop.getHwid();
           hwidDisplay.textContent = currentHwid || 'NDR-HWID-STANDALONE';
+
+          // Detect previously expired license/trial
+          const savedLic = await window.noderaDesktop.getLicenseInfo();
+          if (savedLic && savedLic.license_key) {
+            const expStr = savedLic.expires_at || '';
+            let isExpired = false;
+            if (expStr && expStr !== 'LIFETIME') {
+              const expTime = new Date(expStr).getTime();
+              const endOfDay = expStr.length <= 10 ? 86399000 : 0;
+              if (!isNaN(expTime) && Date.now() > (expTime + endOfDay)) {
+                isExpired = true;
+              }
+            }
+            if (savedLic.status === 'EXPIRED') {
+              isExpired = true;
+            }
+
+            if (isExpired) {
+              isExpiredState = true;
+              expiredTypeIsTrial = Boolean(savedLic.is_trial || (savedLic.license_key && savedLic.license_key.startsWith('NDR-TRL-')));
+              const t = translations[currentLang];
+              const expiredMsg = expiredTypeIsTrial ? t.trialExpiredAlert : t.licenseExpiredAlert;
+              alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-amber-950/80 border border-amber-500/60 text-amber-200 block shadow-lg';
+              alertBox.innerHTML = `
+                <div class="flex items-start gap-2">
+                  <svg class="w-4 h-4 text-amber-400 shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+                  </svg>
+                  <div>${expiredMsg}</div>
+                </div>
+              `;
+
+              // Disable trial button as trial already expired
+              trialBtn.disabled = true;
+              trialBtn.classList.add('opacity-50', 'cursor-not-allowed');
+              trialBtnText.textContent = t.trialExpiredBtn;
+              const trialBadge = document.getElementById('i18nTrialBadge');
+              if (trialBadge) {
+                trialBadge.textContent = t.trialBadgeExpired;
+                trialBadge.className = 'text-[10px] font-extrabold bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded-full border border-amber-500/30';
+              }
+
+              // Auto focus to license key input
+              setTimeout(() => {
+                input.focus();
+              }, 400);
+            }
+          }
         }
       } catch (err) {
         hwidDisplay.textContent = 'ERROR-GET-HWID';
