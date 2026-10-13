@@ -2,6 +2,7 @@ package com.nodera.mikhmon.admin.ui
 
 import android.widget.Toast
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -82,155 +83,156 @@ fun ActiveUsersScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MikhmonDarkBg)
-            .statusBarsPadding()
-            .padding(16.dp)
+            .background(MikhmonBg)
     ) {
-        // Header
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Column {
-                Text(
-                    text = "Pengguna Aktif Hotspot",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = TextPrimary
-                )
-                Text(
-                    text = "Total ${users.size} sesi online saat ini",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-            }
-
-            IconButton(
-                onClick = { refreshUsers() },
-                enabled = !isLoading
-            ) {
-                if (isLoading) {
-                    CircularProgressIndicator(modifier = Modifier.size(20.dp), color = PrimaryBlueLight, strokeWidth = 2.dp)
-                } else {
-                    Icon(Icons.Default.Refresh, contentDescription = "Refresh", tint = PrimaryBlueLight)
-                }
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Search Bar
-        OutlinedTextField(
-            value = searchQuery,
-            onValueChange = { searchQuery = it },
-            placeholder = { Text("Cari User / IP / MAC...") },
-            leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = TextSecondary) },
-            singleLine = true,
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedTextColor = TextPrimary,
-                unfocusedTextColor = TextPrimary,
-                focusedBorderColor = PrimaryBlue,
-                unfocusedBorderColor = MikhmonCardBorder
-            )
+        // Top Navbar
+        MikhmonNavbar(
+            sessionName = "Hotspot > Active Users",
+            routerHost = config.host,
+            isConnected = true,
+            onRefreshClick = { refreshUsers() },
+            isRefreshing = isLoading,
+            printerName = config.printerName
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (errorMessage != null) {
-            Card(
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(12.dp)
+        ) {
+            // Search Input
+            OutlinedTextField(
+                value = searchQuery,
+                onValueChange = { searchQuery = it },
+                placeholder = { Text("Filter User / IP / MAC...", color = MikhmonTextMuted, fontSize = 12.sp) },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null, tint = MikhmonTextMuted, modifier = Modifier.size(18.dp)) },
+                singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = DangerRedBg),
-                shape = RoundedCornerShape(10.dp)
+                shape = RoundedCornerShape(4.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MikhmonTextPrimary,
+                    unfocusedTextColor = MikhmonTextPrimary,
+                    focusedBorderColor = MikhmonBlue,
+                    unfocusedBorderColor = MikhmonBorder,
+                    focusedContainerColor = MikhmonCardBg,
+                    unfocusedContainerColor = MikhmonCardBg
+                )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Subheader
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = errorMessage ?: "",
-                    color = TextPrimary,
-                    style = MaterialTheme.typography.bodyMedium,
-                    modifier = Modifier.padding(12.dp)
+                    text = "Total ${filteredUsers.size} sesi online aktif",
+                    color = MikhmonTextMuted,
+                    fontSize = 11.sp,
+                    fontWeight = FontWeight.SemiBold
+                )
+
+                Text(
+                    text = "Tarik untuk segarkan",
+                    color = MikhmonTextMuted,
+                    fontSize = 10.sp
                 )
             }
-            Spacer(modifier = Modifier.height(10.dp))
-        }
 
-        // List
-        if (filteredUsers.isEmpty() && !isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize().weight(1f),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Default.WifiOff, contentDescription = null, tint = TextMuted, modifier = Modifier.size(48.dp))
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Text("Tidak ada user aktif ditemukan", color = TextSecondary)
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (errorMessage != null) {
+                Surface(
+                    color = MikhmonRedDark,
+                    shape = RoundedCornerShape(4.dp),
+                    modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp)
+                ) {
+                    Text(
+                        text = errorMessage ?: "",
+                        color = Color.White,
+                        fontSize = 11.sp,
+                        modifier = Modifier.padding(8.dp)
+                    )
                 }
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier.fillMaxWidth().weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(filteredUsers, key = { it.id }) { u ->
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.cardColors(containerColor = MikhmonSurface),
-                        shape = RoundedCornerShape(12.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
+
+            // Table / List
+            if (filteredUsers.isEmpty() && !isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize().weight(1f),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Tidak ada user aktif ditemukan", color = MikhmonTextMuted, fontSize = 13.sp)
+                }
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    items(filteredUsers, key = { it.id }) { u ->
+                        Surface(
+                            color = MikhmonCardBg,
+                            shape = RoundedCornerShape(4.dp),
+                            border = androidx.compose.foundation.BorderStroke(1.dp, MikhmonBorder),
+                            modifier = Modifier.fillMaxWidth()
                         ) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Row(verticalAlignment = Alignment.CenterVertically) {
-                                    Text(
-                                        text = u.user,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                        color = TextPrimary
-                                    )
-                                    Spacer(modifier = Modifier.width(8.dp))
-                                    Surface(
-                                        color = EmeraldBg,
-                                        shape = RoundedCornerShape(4.dp)
-                                    ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(10.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
                                         Text(
-                                            text = u.uptime,
-                                            color = EmeraldActive,
-                                            fontSize = 10.sp,
+                                            text = u.user,
+                                            color = MikhmonTextPrimary,
                                             fontWeight = FontWeight.Bold,
-                                            modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                            fontSize = 14.sp
                                         )
+                                        Spacer(modifier = Modifier.width(6.dp))
+                                        Surface(
+                                            color = MikhmonGreenDark,
+                                            shape = RoundedCornerShape(3.dp)
+                                        ) {
+                                            Text(
+                                                text = u.uptime,
+                                                color = Color.White,
+                                                fontSize = 9.sp,
+                                                fontWeight = FontWeight.Bold,
+                                                modifier = Modifier.padding(horizontal = 4.dp, vertical = 1.dp)
+                                            )
+                                        }
                                     }
+
+                                    Spacer(modifier = Modifier.height(3.dp))
+
+                                    Text(
+                                        text = "IP: ${u.address} • MAC: ${u.macAddress}",
+                                        color = MikhmonTextSecondary,
+                                        fontFamily = FontFamily.Monospace,
+                                        fontSize = 11.sp
+                                    )
+
+                                    Spacer(modifier = Modifier.height(2.dp))
+
+                                    Text(
+                                        text = "↓ ${formatBytes(u.bytesOut)}  •  ↑ ${formatBytes(u.bytesIn)}",
+                                        color = MikhmonTextMuted,
+                                        fontSize = 10.sp
+                                    )
                                 }
 
-                                Spacer(modifier = Modifier.height(4.dp))
-
-                                Text(
-                                    text = "IP: ${u.address} • MAC: ${u.macAddress}",
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontFamily = FontFamily.Monospace),
-                                    color = TextSecondary,
-                                    fontSize = 11.sp
-                                )
-
-                                Spacer(modifier = Modifier.height(2.dp))
-
-                                Text(
-                                    text = "↓ ${formatBytes(u.bytesOut)}  •  ↑ ${formatBytes(u.bytesIn)}",
-                                    color = TextMuted,
-                                    fontSize = 11.sp
-                                )
-                            }
-
-                            // Kick Action
-                            IconButton(
-                                onClick = { userToKick = u }
-                            ) {
-                                Icon(Icons.Default.PersonRemove, contentDescription = "Kick", tint = DangerRed)
+                                // Kick Button (Merah Khas Mikhmon)
+                                IconButton(
+                                    onClick = { userToKick = u },
+                                    modifier = Modifier.size(32.dp)
+                                ) {
+                                    Icon(Icons.Default.DeleteOutline, contentDescription = "Kick", tint = MikhmonRed, modifier = Modifier.size(20.dp))
+                                }
                             }
                         }
                     }
@@ -239,36 +241,36 @@ fun ActiveUsersScreen(
         }
     }
 
-    // Confirm Kick Dialog
+    // Confirm Dialog
     if (userToKick != null) {
         val target = userToKick!!
         AlertDialog(
             onDismissRequest = { userToKick = null },
-            title = { Text("Kick Pengguna?") },
-            text = { Text("Apakah Anda yakin ingin memutus koneksi user '${target.user}' (${target.address})?") },
+            title = { Text("Kick Sesi User?", color = MikhmonTextPrimary, fontWeight = FontWeight.Bold) },
+            text = { Text("Putus koneksi user '${target.user}' (${target.address}) dari MikroTik?", color = MikhmonTextSecondary) },
+            containerColor = MikhmonCardBg,
             confirmButton = {
                 Button(
                     onClick = {
                         coroutineScope.launch {
                             val client = RouterConfigManager.getOrCreateClient(config)
-                            val kickRes = client.kickUser(target.id)
-                            if (kickRes.isSuccess) {
+                            val res = client.kickUser(target.id)
+                            if (res.isSuccess) {
                                 Toast.makeText(context, "User ${target.user} berhasil di-kick!", Toast.LENGTH_SHORT).show()
                                 refreshUsers()
-                            } else {
-                                Toast.makeText(context, "Gagal kick: ${kickRes.exceptionOrNull()?.message}", Toast.LENGTH_SHORT).show()
                             }
                             userToKick = null
                         }
                     },
-                    colors = ButtonDefaults.buttonColors(containerColor = DangerRed)
+                    colors = ButtonDefaults.buttonColors(containerColor = MikhmonRed),
+                    shape = RoundedCornerShape(4.dp)
                 ) {
-                    Text("Kick Sekarang", color = Color.White)
+                    Text("Kick", color = Color.White)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { userToKick = null }) {
-                    Text("Batal")
+                    Text("Batal", color = MikhmonTextSecondary)
                 }
             }
         )

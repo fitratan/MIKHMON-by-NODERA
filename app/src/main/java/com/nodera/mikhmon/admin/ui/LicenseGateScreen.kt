@@ -32,7 +32,6 @@ import com.nodera.mikhmon.admin.licensing.LicenseState
 import com.nodera.mikhmon.admin.theme.*
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun LicenseGateScreen(
     licenseManager: LicenseManager,
@@ -53,325 +52,233 @@ fun LicenseGateScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MikhmonDarkBg)
+            .background(MikhmonBg)
             .statusBarsPadding()
             .navigationBarsPadding()
             .verticalScroll(scrollState)
-            .padding(20.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(20.dp))
 
-        // App Logo / Header
-        Box(
-            modifier = Modifier
-                .size(72.dp)
-                .clip(RoundedCornerShape(18.dp))
-                .background(PrimaryBlue),
-            contentAlignment = Alignment.Center
-        ) {
-            Icon(
-                imageVector = Icons.Default.Security,
-                contentDescription = null,
-                tint = Color.White,
-                modifier = Modifier.size(40.dp)
+        // Mikhmon Header Logo
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = "MIKHMON",
+                color = Color.White,
+                fontWeight = FontWeight.Black,
+                fontSize = 24.sp,
+                letterSpacing = 1.sp
             )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(
-            text = "MIKHMON by NODERA",
-            style = MaterialTheme.typography.headlineMedium,
-            color = TextPrimary,
-            fontWeight = FontWeight.Bold
-        )
-
-        Text(
-            text = "Hardware-Locked Mobile Admin Edition",
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Status Card
-        if (licenseInfo.state == LicenseState.CLOCK_TAMPERED) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = DangerRedBg),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.Warning, contentDescription = null, tint = DangerRed)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Jam Sistem Dimundurkan! Harap sinkronkan waktu perangkat ke otomatis.",
-                        color = TextPrimary,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        } else if (licenseInfo.state == LicenseState.EXPIRED) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = WarningAmberBg),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Row(
-                    modifier = Modifier.padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(Icons.Default.HourglassBottom, contentDescription = null, tint = WarningAmber)
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Text(
-                        text = "Masa aktif lisensi telah habis. Silakan perpanjang lisensi Anda.",
-                        color = TextPrimary,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-
-        // Hardware ID Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MikhmonSurface),
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Column(
-                modifier = Modifier.padding(16.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Spacer(modifier = Modifier.width(8.dp))
+            Surface(
+                color = MikhmonBlue,
+                shape = RoundedCornerShape(3.dp)
             ) {
                 Text(
-                    text = "HARDWARE ID (HWID) PERANGKAT ANDA",
-                    style = MaterialTheme.typography.labelSmall,
-                    color = TextSecondary,
-                    fontWeight = FontWeight.SemiBold
+                    text = "OFFICIAL",
+                    color = Color.White,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
                 )
+            }
+        }
 
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "MikroTik Hotspot Admin Mobile • by NODERA",
+            color = MikhmonTextMuted,
+            fontSize = 12.sp
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // HWID Card
+        MikhmonCard(
+            title = "Aktivasi Lisensi Perangkat (HWID)",
+            icon = Icons.Default.Security
+        ) {
+            Text(
+                text = "Hardware ID unik perangkat Anda:",
+                color = MikhmonTextMuted,
+                fontSize = 11.sp
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Surface(
+                color = MikhmonBg,
+                shape = RoundedCornerShape(4.dp),
+                border = androidx.compose.foundation.BorderStroke(1.dp, MikhmonBorder),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(
+                    text = hwid,
+                    color = MikhmonBlue,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    fontFamily = FontFamily.Monospace,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(12.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                OutlinedButton(
+                    onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip = ClipData.newPlainText("HWID", hwid)
+                        clipboard.setPrimaryClip(clip)
+                        Toast.makeText(context, "HWID berhasil disalin!", Toast.LENGTH_SHORT).show()
+                    },
+                    modifier = Modifier.weight(1f),
+                    shape = RoundedCornerShape(4.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MikhmonTextPrimary)
+                ) {
+                    Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(14.dp))
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Salin HWID", fontSize = 11.sp)
+                }
+
+                Button(
+                    onClick = {
+                        try {
+                            val url = licenseManager.getAdminWhatsAppUrl()
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Gagal buka WA: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    modifier = Modifier.weight(1.3f),
+                    shape = RoundedCornerShape(4.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = MikhmonGreen)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(14.dp), tint = Color.White)
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text("Hubungi Admin WA", fontSize = 11.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text("Masukkan Serial Key:", color = MikhmonTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(4.dp))
+
+            OutlinedTextField(
+                value = inputKey,
+                onValueChange = { inputKey = it },
+                placeholder = { Text("NDR-LIC-...", color = MikhmonTextMuted, fontSize = 12.sp) },
+                singleLine = true,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(4.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedTextColor = MikhmonTextPrimary,
+                    unfocusedTextColor = MikhmonTextPrimary,
+                    focusedBorderColor = MikhmonBlue,
+                    unfocusedBorderColor = MikhmonBorder,
+                    focusedContainerColor = MikhmonBg,
+                    unfocusedContainerColor = MikhmonBg
+                ),
+                trailingIcon = {
+                    IconButton(onClick = {
+                        val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val item = clipboard.primaryClip?.getItemAt(0)?.text?.toString()
+                        if (!item.isNullOrEmpty()) {
+                            inputKey = item.trim()
+                        }
+                    }) {
+                        Icon(Icons.Default.ContentPaste, contentDescription = "Paste", tint = MikhmonBlue, modifier = Modifier.size(18.dp))
+                    }
+                }
+            )
+
+            if (errorMessage != null) {
                 Spacer(modifier = Modifier.height(8.dp))
+                Text(errorMessage ?: "", color = MikhmonRed, fontSize = 12.sp)
+            }
 
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clip(RoundedCornerShape(8.dp))
-                        .background(MikhmonSurfaceVariant)
-                        .padding(vertical = 12.dp, horizontal = 16.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = hwid,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            fontFamily = FontFamily.Monospace,
-                            fontWeight = FontWeight.Bold,
-                            letterSpacing = 1.sp
-                        ),
-                        color = PrimaryBlueLight,
-                        textAlign = TextAlign.Center
-                    )
-                }
+            if (successMessage != null) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(successMessage ?: "", color = MikhmonGreen, fontSize = 12.sp)
+            }
 
-                Spacer(modifier = Modifier.height(12.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    OutlinedButton(
-                        onClick = {
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip = ClipData.newPlainText("HWID", hwid)
-                            clipboard.setPrimaryClip(clip)
-                            Toast.makeText(context, "HWID berhasil disalin ke clipboard!", Toast.LENGTH_SHORT).show()
-                        },
-                        modifier = Modifier.weight(1f),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = TextPrimary),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Icon(Icons.Default.ContentCopy, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Salin HWID", fontSize = 12.sp)
+            Button(
+                onClick = {
+                    coroutineScope.launch {
+                        isLoading = true
+                        errorMessage = null
+                        val res = licenseManager.activateLicense(inputKey)
+                        isLoading = false
+                        if (res.first) {
+                            successMessage = res.second
+                            Toast.makeText(context, res.second, Toast.LENGTH_LONG).show()
+                            onLicenseActivated()
+                        } else {
+                            errorMessage = res.second
+                        }
                     }
-
-                    Button(
-                        onClick = {
-                            try {
-                                val url = licenseManager.getAdminWhatsAppUrl()
-                                val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
-                                context.startActivity(intent)
-                            } catch (e: Exception) {
-                                Toast.makeText(context, "Gagal membuka WhatsApp: ${e.message}", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        modifier = Modifier.weight(1.3f),
-                        colors = ButtonDefaults.buttonColors(containerColor = EmeraldActive),
-                        shape = RoundedCornerShape(8.dp)
-                    ) {
-                        Icon(Icons.Default.Chat, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text("Hubungi Admin WA", fontSize = 12.sp, color = Color.White)
-                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp),
+                shape = RoundedCornerShape(4.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MikhmonBlue),
+                enabled = !isLoading && inputKey.isNotBlank()
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(color = Color.White, strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Memverifikasi...", color = Color.White, fontSize = 13.sp)
+                } else {
+                    Icon(Icons.Default.Key, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Aktivasi Serial Key", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
                 }
+            }
+
+            Spacer(modifier = Modifier.height(10.dp))
+
+            // Trial Button
+            OutlinedButton(
+                onClick = {
+                    val trialRes = licenseManager.activateTrial()
+                    if (trialRes.first) {
+                        Toast.makeText(context, trialRes.second, Toast.LENGTH_LONG).show()
+                        onLicenseActivated()
+                    } else {
+                        errorMessage = trialRes.second
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(40.dp),
+                shape = RoundedCornerShape(4.dp),
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MikhmonYellow)
+            ) {
+                Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(14.dp), tint = MikhmonYellow)
+                Spacer(modifier = Modifier.width(6.dp))
+                Text("Aktifkan Uji Coba (Trial 3 Hari)", fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
             }
         }
 
         Spacer(modifier = Modifier.height(20.dp))
 
-        // Activation Form Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MikhmonSurface),
-            shape = RoundedCornerShape(14.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text(
-                    text = "Aktivasi Serial Key",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = TextPrimary,
-                    fontWeight = FontWeight.Bold
-                )
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-                Text(
-                    text = "Masukkan serial key yang didapat dari admin NODERA atau portal panel.dgtlnetsolution.com",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = TextSecondary
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = inputKey,
-                    onValueChange = { inputKey = it },
-                    label = { Text("Serial Key (NDR-LIC-...)") },
-                    singleLine = true,
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(10.dp),
-                    colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = MikhmonCardBorder,
-                        focusedLabelColor = PrimaryBlueLight,
-                        unfocusedLabelColor = TextSecondary
-                    ),
-                    trailingIcon = {
-                        IconButton(onClick = {
-                            val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val item = clipboard.primaryClip?.getItemAt(0)?.text?.toString()
-                            if (!item.isNullOrEmpty()) {
-                                inputKey = item.trim()
-                            }
-                        }) {
-                            Icon(Icons.Default.ContentPaste, contentDescription = "Paste", tint = PrimaryBlueLight)
-                        }
-                    }
-                )
-
-                if (errorMessage != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = errorMessage ?: "",
-                        color = DangerRed,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                if (successMessage != null) {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Text(
-                        text = successMessage ?: "",
-                        color = EmeraldActive,
-                        style = MaterialTheme.typography.bodyMedium
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Button(
-                    onClick = {
-                        coroutineScope.launch {
-                            isLoading = true
-                            errorMessage = null
-                            successMessage = null
-                            val res = licenseManager.activateLicense(inputKey)
-                            isLoading = false
-                            if (res.first) {
-                                successMessage = res.second
-                                Toast.makeText(context, res.second, Toast.LENGTH_LONG).show()
-                                onLicenseActivated()
-                            } else {
-                                errorMessage = res.second
-                            }
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-                    shape = RoundedCornerShape(10.dp),
-                    enabled = !isLoading && inputKey.isNotBlank()
-                ) {
-                    if (isLoading) {
-                        CircularProgressIndicator(color = Color.White, modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Memverifikasi...", color = Color.White)
-                    } else {
-                        Icon(Icons.Default.Key, contentDescription = null, modifier = Modifier.size(18.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Aktivasi Sekarang", fontWeight = FontWeight.Bold, color = Color.White)
-                    }
-                }
-
-                Spacer(modifier = Modifier.height(12.dp))
-
-                // Trial button
-                OutlinedButton(
-                    onClick = {
-                        val trialRes = licenseManager.activateTrial()
-                        if (trialRes.first) {
-                            Toast.makeText(context, trialRes.second, Toast.LENGTH_LONG).show()
-                            onLicenseActivated()
-                        } else {
-                            errorMessage = trialRes.second
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(44.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = WarningAmber),
-                    shape = RoundedCornerShape(10.dp)
-                ) {
-                    Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Coba Trial Gratis 3 Hari", fontWeight = FontWeight.SemiBold)
-                }
-            }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Default.Lock, contentDescription = null, tint = MikhmonTextMuted, modifier = Modifier.size(12.dp))
+            Spacer(modifier = Modifier.width(4.dp))
+            Text("Hardware-Locked Protection • NODERA Billing Ecosystem", color = MikhmonTextMuted, fontSize = 10.sp)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Security Footnote
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Icon(Icons.Default.Lock, contentDescription = null, tint = TextMuted, modifier = Modifier.size(14.dp))
-            Spacer(modifier = Modifier.width(6.dp))
-            Text(
-                text = "Terkunci 1 Lisensi per Perangkat • Anti-Piracy Guard",
-                style = MaterialTheme.typography.labelSmall,
-                color = TextMuted
-            )
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(20.dp))
     }
 }

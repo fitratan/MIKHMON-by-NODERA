@@ -61,7 +61,7 @@ fun RouterSettingsScreen(
     fun scanPrinters() {
         pairedPrinters = printerManager.getPairedPrinters()
         if (pairedPrinters.isEmpty()) {
-            Toast.makeText(context, "Tidak ada printer Bluetooth yang terpasang di HP ini. Pasangkan terlebih dahulu di Bluetooth Android.", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "Pasangkan printer thermal di Bluetooth HP terlebih dahulu", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -72,97 +72,97 @@ fun RouterSettingsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MikhmonDarkBg)
-            .statusBarsPadding()
-            .verticalScroll(scrollState)
-            .padding(16.dp)
+            .background(MikhmonBg)
     ) {
-        // Header
-        Text(
-            text = "Pengaturan Router & Printer",
-            style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold,
-            color = TextPrimary
-        )
-        Text(
-            text = "Koneksi MikroTik Port 8728 & ESC/POS Bluetooth",
-            style = MaterialTheme.typography.bodyMedium,
-            color = TextSecondary
+        // Top Navbar
+        MikhmonNavbar(
+            sessionName = "Settings > Session",
+            routerHost = host,
+            isConnected = true,
+            onRefreshClick = {},
+            printerName = selectedPrinterName
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Card 1: MikroTik Connection
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MikhmonSurface)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+                .padding(12.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Router, contentDescription = null, tint = PrimaryBlueLight, modifier = Modifier.size(20.dp))
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Parameter MikroTik RouterOS", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
-                }
-
-                Spacer(modifier = Modifier.height(14.dp))
-
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedTextField(
-                        value = host,
-                        onValueChange = { host = it },
-                        label = { Text("IP / Host") },
-                        singleLine = true,
-                        modifier = Modifier.weight(2f),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedBorderColor = PrimaryBlue,
-                            unfocusedBorderColor = MikhmonCardBorder
+            // Card 1: Router MikroTik Session
+            MikhmonCard(
+                title = "Konfigurasi MikroTik (Port 8728 API)",
+                icon = Icons.Default.Router
+            ) {
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Column(modifier = Modifier.weight(2f)) {
+                        Text("IP Router MikroTik", color = MikhmonTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = host,
+                            onValueChange = { host = it },
+                            placeholder = { Text("192.168.88.1", color = MikhmonTextMuted, fontSize = 12.sp) },
+                            singleLine = true,
+                            shape = RoundedCornerShape(4.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = MikhmonTextPrimary,
+                                unfocusedTextColor = MikhmonTextPrimary,
+                                focusedBorderColor = MikhmonBlue,
+                                unfocusedBorderColor = MikhmonBorder,
+                                focusedContainerColor = MikhmonBg,
+                                unfocusedContainerColor = MikhmonBg
+                            )
                         )
-                    )
+                    }
 
-                    OutlinedTextField(
-                        value = port,
-                        onValueChange = { port = it },
-                        label = { Text("Port API") },
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                        singleLine = true,
-                        modifier = Modifier.weight(1f),
-                        shape = RoundedCornerShape(8.dp),
-                        colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedBorderColor = PrimaryBlue,
-                            unfocusedBorderColor = MikhmonCardBorder
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text("Port API", color = MikhmonTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = port,
+                            onValueChange = { port = it },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                            shape = RoundedCornerShape(4.dp),
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedTextColor = MikhmonTextPrimary,
+                                unfocusedTextColor = MikhmonTextPrimary,
+                                focusedBorderColor = MikhmonBlue,
+                                unfocusedBorderColor = MikhmonBorder,
+                                focusedContainerColor = MikhmonBg,
+                                unfocusedContainerColor = MikhmonBg
+                            )
                         )
-                    )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                Text("Username API", color = MikhmonTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Username API") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(4.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = MikhmonCardBorder
+                        focusedTextColor = MikhmonTextPrimary,
+                        unfocusedTextColor = MikhmonTextPrimary,
+                        focusedBorderColor = MikhmonBlue,
+                        unfocusedBorderColor = MikhmonBorder,
+                        focusedContainerColor = MikhmonBg,
+                        unfocusedContainerColor = MikhmonBg
                     )
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                Text("Password API", color = MikhmonTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password API") },
                     visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                     singleLine = true,
                     trailingIcon = {
@@ -170,55 +170,64 @@ fun RouterSettingsScreen(
                             Icon(
                                 if (showPassword) Icons.Default.Visibility else Icons.Default.VisibilityOff,
                                 contentDescription = null,
-                                tint = TextSecondary
+                                tint = MikhmonTextMuted
                             )
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(4.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = MikhmonCardBorder
+                        focusedTextColor = MikhmonTextPrimary,
+                        unfocusedTextColor = MikhmonTextPrimary,
+                        focusedBorderColor = MikhmonBlue,
+                        unfocusedBorderColor = MikhmonBorder,
+                        focusedContainerColor = MikhmonBg,
+                        unfocusedContainerColor = MikhmonBg
                     )
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                Text("Nama Hotspot (Judul Struk)", color = MikhmonTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = hotspotName,
                     onValueChange = { hotspotName = it },
-                    label = { Text("Nama Hotspot (Judul Struk)") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(4.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = MikhmonCardBorder
+                        focusedTextColor = MikhmonTextPrimary,
+                        unfocusedTextColor = MikhmonTextPrimary,
+                        focusedBorderColor = MikhmonBlue,
+                        unfocusedBorderColor = MikhmonBorder,
+                        focusedContainerColor = MikhmonBg,
+                        unfocusedContainerColor = MikhmonBg
                     )
                 )
 
                 Spacer(modifier = Modifier.height(10.dp))
 
+                Text("DNS Name Login (URL)", color = MikhmonTextMuted, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
                 OutlinedTextField(
                     value = dnsName,
                     onValueChange = { dnsName = it },
-                    label = { Text("DNS Name Login (cth: hotspot.local)") },
+                    placeholder = { Text("hotspot.local", color = MikhmonTextMuted, fontSize = 12.sp) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(4.dp),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedTextColor = TextPrimary,
-                        unfocusedTextColor = TextPrimary,
-                        focusedBorderColor = PrimaryBlue,
-                        unfocusedBorderColor = MikhmonCardBorder
+                        focusedTextColor = MikhmonTextPrimary,
+                        unfocusedTextColor = MikhmonTextPrimary,
+                        focusedBorderColor = MikhmonBlue,
+                        unfocusedBorderColor = MikhmonBorder,
+                        focusedContainerColor = MikhmonBg,
+                        unfocusedContainerColor = MikhmonBg
                     )
                 )
 
-                Spacer(modifier = Modifier.height(14.dp))
+                Spacer(modifier = Modifier.height(12.dp))
 
                 // Test Connection Button
                 OutlinedButton(
@@ -241,63 +250,48 @@ fun RouterSettingsScreen(
                                 testClient.close()
                                 Toast.makeText(
                                     context,
-                                    "Koneksi Gagal: ${res.exceptionOrNull()?.message}",
+                                    "Gagal: ${res.exceptionOrNull()?.message}",
                                     Toast.LENGTH_LONG
                                 ).show()
                             }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(4.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MikhmonBlue),
                     enabled = !isTestingConnection
                 ) {
                     if (isTestingConnection) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
+                        CircularProgressIndicator(modifier = Modifier.size(14.dp), strokeWidth = 2.dp)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Menguji Socket Port 8728...")
+                        Text("Menguji Socket Port 8728...", fontSize = 12.sp)
                     } else {
                         Icon(Icons.Default.NetworkCheck, contentDescription = null, modifier = Modifier.size(16.dp))
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text("Uji Koneksi MikroTik")
+                        Text("Tes Koneksi MikroTik Offline", fontSize = 12.sp)
                     }
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
-        // Card 2: Thermal Printer Setup
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            colors = CardDefaults.cardColors(containerColor = MikhmonSurface)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Print, contentDescription = null, tint = EmeraldActive, modifier = Modifier.size(20.dp))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Thermal Printer Bluetooth", fontWeight = FontWeight.Bold, color = TextPrimary, fontSize = 15.sp)
-                    }
-
-                    IconButton(onClick = { scanPrinters() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "Scan", tint = PrimaryBlueLight)
+            // Card 2: Bluetooth Thermal Printer
+            MikhmonCard(
+                title = "Thermal Printer Bluetooth",
+                icon = Icons.Default.Print,
+                headerRightContent = {
+                    IconButton(onClick = { scanPrinters() }, modifier = Modifier.size(24.dp)) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Scan", tint = MikhmonTextPrimary, modifier = Modifier.size(16.dp))
                     }
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
+            ) {
                 Text(
-                    text = "Pilih Printer yang sudah di-pairing di HP:",
-                    color = TextSecondary,
-                    fontSize = 12.sp
+                    text = "Pilih Printer yang sudah dipasangkan di HP:",
+                    color = MikhmonTextMuted,
+                    fontSize = 11.sp
                 )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                Spacer(modifier = Modifier.height(6.dp))
 
                 var printerDropdownExpanded by remember { mutableStateOf(false) }
                 ExposedDropdownMenuBox(
@@ -312,23 +306,25 @@ fun RouterSettingsScreen(
                         modifier = Modifier
                             .menuAnchor()
                             .fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
+                        shape = RoundedCornerShape(4.dp),
                         colors = OutlinedTextFieldDefaults.colors(
-                            focusedTextColor = TextPrimary,
-                            unfocusedTextColor = TextPrimary,
-                            focusedBorderColor = PrimaryBlue,
-                            unfocusedBorderColor = MikhmonCardBorder
+                            focusedTextColor = MikhmonTextPrimary,
+                            unfocusedTextColor = MikhmonTextPrimary,
+                            focusedBorderColor = MikhmonBlue,
+                            unfocusedBorderColor = MikhmonBorder,
+                            focusedContainerColor = MikhmonBg,
+                            unfocusedContainerColor = MikhmonBg
                         )
                     )
 
                     ExposedDropdownMenu(
                         expanded = printerDropdownExpanded,
                         onDismissRequest = { printerDropdownExpanded = false },
-                        modifier = Modifier.background(MikhmonSurfaceVariant)
+                        modifier = Modifier.background(MikhmonCardBg)
                     ) {
                         if (pairedPrinters.isEmpty()) {
                             DropdownMenuItem(
-                                text = { Text("Belum ada printer Bluetooth terpasang", color = TextSecondary) },
+                                text = { Text("Belum ada printer dipasangkan", color = MikhmonTextMuted) },
                                 onClick = { printerDropdownExpanded = false }
                             )
                         } else {
@@ -336,8 +332,8 @@ fun RouterSettingsScreen(
                                 DropdownMenuItem(
                                     text = {
                                         Column {
-                                            Text(p.name, color = TextPrimary, fontWeight = FontWeight.Bold)
-                                            Text(p.address, color = TextSecondary, fontSize = 11.sp)
+                                            Text(p.name, color = MikhmonTextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                                            Text(p.address, color = MikhmonTextMuted, fontSize = 10.sp)
                                         }
                                     },
                                     onClick = {
@@ -351,91 +347,79 @@ fun RouterSettingsScreen(
                     }
                 }
 
-                Spacer(modifier = Modifier.height(12.dp))
+                Spacer(modifier = Modifier.height(10.dp))
 
                 OutlinedButton(
                     onClick = {
-                        if (selectedPrinterAddress.isEmpty()) {
-                            Toast.makeText(context, "Pilih printer terlebih dahulu", Toast.LENGTH_SHORT).show()
-                        } else {
-                            coroutineScope.launch {
-                                isTestingPrinter = true
-                                val res = printerManager.testPrint(selectedPrinterAddress, hotspotName)
-                                isTestingPrinter = false
-                                if (res.isSuccess) {
-                                    Toast.makeText(context, "Cetak sample berhasil!", Toast.LENGTH_SHORT).show()
-                                } else {
-                                    Toast.makeText(context, "Gagal mencetak: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
-                                }
+                        coroutineScope.launch {
+                            isTestingPrinter = true
+                            val res = printerManager.testPrint(selectedPrinterAddress, hotspotName)
+                            isTestingPrinter = false
+                            if (res.isSuccess) {
+                                Toast.makeText(context, "Cetak sample berhasil!", Toast.LENGTH_SHORT).show()
+                            } else {
+                                Toast.makeText(context, "Gagal mencetak: ${res.exceptionOrNull()?.message}", Toast.LENGTH_LONG).show()
                             }
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(8.dp),
+                    shape = RoundedCornerShape(4.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = MikhmonGreen),
                     enabled = !isTestingPrinter && selectedPrinterAddress.isNotEmpty()
                 ) {
-                    if (isTestingPrinter) {
-                        CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Sedang Mencetak...")
-                    } else {
-                        Icon(Icons.Default.Receipt, contentDescription = null, modifier = Modifier.size(16.dp), tint = EmeraldActive)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("Cetak Test Struk ke Printer")
-                    }
+                    Icon(Icons.Default.Receipt, contentDescription = null, modifier = Modifier.size(16.dp), tint = MikhmonGreen)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Tes Cetak Struk ke Printer", fontSize = 12.sp)
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(14.dp))
 
-        // Save Button
-        Button(
-            onClick = {
-                val p = port.toIntOrNull() ?: 8728
-                val updated = RouterConfig(
-                    host = host.trim(),
-                    port = p,
-                    username = username.trim(),
-                    password = password,
-                    hotspotName = hotspotName.trim(),
-                    dnsName = dnsName.trim(),
-                    printerAddress = selectedPrinterAddress,
-                    printerName = selectedPrinterName
-                )
-                RouterConfigManager(context).saveConfig(updated)
-                RouterConfigManager.updateClient(updated)
-                onConfigSaved(updated)
-                Toast.makeText(context, "Konfigurasi berhasil disimpan!", Toast.LENGTH_SHORT).show()
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(50.dp),
-            colors = ButtonDefaults.buttonColors(containerColor = PrimaryBlue),
-            shape = RoundedCornerShape(10.dp)
-        ) {
-            Icon(Icons.Default.Save, contentDescription = null, tint = Color.White)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Simpan Konfigurasi", fontWeight = FontWeight.Bold, color = Color.White)
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Info Card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(10.dp),
-            colors = CardDefaults.cardColors(containerColor = MikhmonSurfaceVariant)
-        ) {
-            Column(modifier = Modifier.padding(14.dp)) {
-                Text("INFORMASI LISENSI PERANGKAT", style = MaterialTheme.typography.labelSmall, color = TextSecondary, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(6.dp))
-                Text("HWID: ${licenseInfo.hwid}", color = PrimaryBlueLight, fontSize = 12.sp, fontFamily = FontFamily.Monospace)
-                Text("Status: ${licenseInfo.message}", color = TextSecondary, fontSize = 12.sp)
-                Text("Versi Aplikasi: v3.2.0 Official MIKHMON Android", color = TextMuted, fontSize = 11.sp)
+            // Save Configuration Button
+            Button(
+                onClick = {
+                    val p = port.toIntOrNull() ?: 8728
+                    val updated = RouterConfig(
+                        host = host.trim(),
+                        port = p,
+                        username = username.trim(),
+                        password = password,
+                        hotspotName = hotspotName.trim(),
+                        dnsName = dnsName.trim(),
+                        printerAddress = selectedPrinterAddress,
+                        printerName = selectedPrinterName
+                    )
+                    RouterConfigManager(context).saveConfig(updated)
+                    RouterConfigManager.updateClient(updated)
+                    onConfigSaved(updated)
+                    Toast.makeText(context, "Konfigurasi MikroTik & Printer Disimpan!", Toast.LENGTH_SHORT).show()
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(44.dp),
+                shape = RoundedCornerShape(4.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = MikhmonBlue)
+            ) {
+                Icon(Icons.Default.Save, contentDescription = null, tint = Color.White, modifier = Modifier.size(16.dp))
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Simpan Konfigurasi", fontWeight = FontWeight.Bold, color = Color.White, fontSize = 13.sp)
             }
-        }
 
-        Spacer(modifier = Modifier.height(30.dp))
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Card 3: License & HWID Info
+            MikhmonCard(
+                title = "Hardware Licensing (Anti-Piracy)",
+                icon = Icons.Default.Security
+            ) {
+                Text("HWID Perangkat:", color = MikhmonTextMuted, fontSize = 11.sp)
+                Text(licenseInfo.hwid, color = MikhmonBlue, fontWeight = FontWeight.Bold, fontSize = 13.sp, fontFamily = FontFamily.Monospace)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("Status: ${licenseInfo.message}", color = MikhmonTextSecondary, fontSize = 11.sp)
+                Text("Official MIKHMON Android Admin by NODERA", color = MikhmonTextMuted, fontSize = 10.sp)
+            }
+
+            Spacer(modifier = Modifier.height(30.dp))
+        }
     }
 }

@@ -17,7 +17,7 @@ import com.nodera.mikhmon.admin.data.RouterConfigManager
 import com.nodera.mikhmon.admin.licensing.LicenseInfo
 import com.nodera.mikhmon.admin.licensing.LicenseManager
 import com.nodera.mikhmon.admin.licensing.LicenseState
-import com.nodera.mikhmon.admin.theme.MikhmonDarkBg
+import com.nodera.mikhmon.admin.theme.MikhmonBg
 import com.nodera.mikhmon.admin.theme.MikhmonTheme
 import com.nodera.mikhmon.admin.ui.LicenseGateScreen
 import com.nodera.mikhmon.admin.ui.MainContainer
@@ -46,7 +46,7 @@ class MainActivity : ComponentActivity() {
             MikhmonTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MikhmonDarkBg
+                    color = MikhmonBg
                 ) {
                     var licenseInfo by remember { mutableStateOf(licenseManager.checkLicense()) }
                     val initialConfig = remember { routerConfigManager.loadConfig() }
