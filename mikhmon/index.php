@@ -186,7 +186,7 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
   $_SESSION['themecolor'] = $themecolor;
 
 // routeros api
-  $nonRouterPages = ['telegram', 'whatsapp', 'billing', 'shop', 'noderapay', 'qris', 'template-selector', 'store-template', 'uplogo'];
+  $nonRouterPages = ['telegram', 'whatsapp', 'billing', 'shop', 'noderapay', 'qris', 'template-selector', 'store-template', 'uplogo', 'thermal-printer'];
   $currentHotspot = $_GET['hotspot'] ?? '';
   $isNonRouterPage = in_array($currentHotspot, $nonRouterPages);
 
@@ -558,6 +558,11 @@ elseif ($removeexpiredhotspotuser != "") {
 // template editor (redirected to selector)
   elseif ($hotspot == "template-editor") {
     echo "<script>window.location='./?hotspot=template-selector&session=" . $session . "'</script>";
+  }
+
+// thermal printer
+  elseif ($hotspot == "thermal-printer") {
+    include_once('./settings/thermalprinter.php');
   }
 
 // upload logo

@@ -1,0 +1,318 @@
+<?php
+// Load language
+$langid = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? '';
+if (empty($langid)) {
+    if (file_exists(__DIR__ . '/../include/lang.php')) {
+        include __DIR__ . '/../include/lang.php';
+    } elseif (file_exists(__DIR__ . '/lang.php')) {
+        include __DIR__ . '/lang.php';
+    }
+}
+if (empty($langid)) {
+    $langid = 'id';
+}
+if (file_exists(__DIR__ . '/../lang/' . $langid . '.php')) {
+    include __DIR__ . '/../lang/' . $langid . '.php';
+} elseif (file_exists(__DIR__ . '/lang/' . $langid . '.php')) {
+    include __DIR__ . '/lang/' . $langid . '.php';
+}
+
+error_reporting(0);
+if (!isset($_SESSION["mikhmon"])) {
+  header("Location:./admin.php?id=login");
+  exit;
+}
+
+if (empty($session)) {
+  $session = $_GET['session'] ?? ($_POST['session'] ?? ($_SESSION['session'] ?? ($_SESSION['mikhmon'] ?? '')));
+}
+$session = trim((string)$session);
+
+$thermal_cfg_file = "./include/thermal_config.php";
+$thermal_config = array();
+if (file_exists($thermal_cfg_file)) {
+  @include($thermal_cfg_file);
+}
+if (!is_array($thermal_config)) {
+  $thermal_config = array();
+}
+
+$cfgSession = $thermal_config[$session] ?? array();
+$paperSize = $cfgSession['paper_size'] ?? '58';
+$printMethod = $cfgSession['print_method'] ?? 'bluetooth';
+$footerNote = $cfgSession['footer_note'] ?? 'Terima kasih atas pembelian Anda';
+$autoCut = ($cfgSession['auto_cut'] ?? 'yes') === 'yes';
+
+$notifyMsg = '';
+
+if (isset($_POST['save_thermal_cfg'])) {
+  $paperSize = in_array($_POST['paper_size'] ?? '', ['58', '80']) ? $_POST['paper_size'] : '58';
+  $printMethod = in_array($_POST['print_method'] ?? '', ['bluetooth', 'rawbt', 'browser']) ? $_POST['print_method'] : 'bluetooth';
+  $footerNote = trim($_POST['footer_note'] ?? '');
+  $autoCut = isset($_POST['auto_cut']);
+
+  $thermal_config[$session] = array(
+    'paper_size' => $paperSize,
+    'print_method' => $printMethod,
+    'footer_note' => $footerNote,
+    'auto_cut' => $autoCut ? 'yes' : 'no',
+    'updated_at' => date('Y-m-d H:i:s'),
+  );
+
+  $cfgContent = '<' . '?php' . "\n" .
+                'if(substr($_SERVER["REQUEST_URI"], -18) == "thermal_config.php"){header("Location:./");};' . "\n" .
+                '$thermal_config = ' . var_export($thermal_config, true) . ";\n";
+  @file_put_contents($thermal_cfg_file, $cfgContent);
+
+  $notifyMsg = '<div class="box bg-success" style="margin-bottom: 12px;"><i class="fa fa-check-circle"></i> ' . ($_settings_saved ?? 'Pengaturan printer thermal berhasil disimpan!') . '</div>';
+}
+?>
+
+<div class="row">
+  <div class="col-12">
+    <?= $notifyMsg; ?>
+  </div>
+
+  <!-- KOLOM 1: KONEKSI & SCANNER BLUETOOTH -->
+  <div class="col-6 col-box-12">
+    <div class="card box-bordered">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+        <h3 style="margin: 0;"><i class="fa fa-bluetooth-b text-primary"></i> <?= $_thermal_printer ?? 'Printer Thermal Bluetooth'; ?></h3>
+        <span id="printerStatusBadge" class="badge" style="background: #64748b; color: #ffffff; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: bold;">
+          <i class="fa fa-circle-o"></i> <?= $_printer_not_connected ?? 'Belum Terhubung'; ?>
+        </span>
+      </div>
+      <div class="card-body">
+        <div id="btAlertArea" style="display: none; margin-bottom: 12px;"></div>
+
+        <table class="table">
+          <tr>
+            <td class="align-middle" style="width: 35%;"><?= $_printer_device ?? 'Nama Printer'; ?></td>
+            <td class="align-middle">
+              <strong id="printerDeviceName" class="text-secondary">-</strong>
+            </td>
+          </tr>
+          <tr>
+            <td class="align-middle"><?= $_connection_status ?? 'Status Koneksi'; ?></td>
+            <td class="align-middle">
+              <span id="printerConnText" style="font-weight: bold; color: #64748b;">Belum Tersambung</span>
+            </td>
+          </tr>
+          <tr>
+            <td class="align-middle"><?= $_test_print_thermal ?? 'Uji Coba Cetak'; ?></td>
+            <td class="align-middle">
+              <small class="text-muted" style="display: block; margin-bottom: 6px;">
+                Mencetak 1 baris konfirmasi: <code>sukses terhubung</code>
+              </small>
+              <button type="button" class="btn bg-success" id="btnTestPrint" onclick="handleTestPrint()" style="margin-right: 6px;" disabled>
+                <i class="fa fa-print"></i> <?= $_test_print_thermal ?? 'Cetak Struk Uji Coba'; ?>
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn bg-primary" id="btnConnect" onclick="handleConnectPrinter()">
+                  <i class="fa fa-search"></i> <?= $_scan_bluetooth_printer ?? 'Pindai Printer Bluetooth'; ?>
+                </button>
+                <button type="button" class="btn bg-danger" id="btnDisconnect" onclick="handleDisconnectPrinter()" style="display: none;">
+                  <i class="fa fa-times"></i> <?= $_disconnect_printer ?? 'Putuskan'; ?>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </table>
+
+        <div style="margin-top: 15px; padding: 10px 12px; background: rgba(59, 130, 246, 0.08); border-left: 3px solid #3b82f6; border-radius: 4px; font-size: 11.5px; line-height: 1.5;">
+          <strong><i class="fa fa-info-circle text-primary"></i> Panduan Koneksi:</strong><br>
+          1. Nyalakan printer thermal Bluetooth Anda (58mm / 80mm).<br>
+          2. Klik tombol <strong>"Pindai Printer Bluetooth"</strong> dan pilih nama printer Anda pada dialog browser.<br>
+          3. Setelah status berubah <span style="color: #16a34a; font-weight: bold;">Terhubung</span>, klik <strong>"Cetak Struk Uji Coba"</strong> untuk menguji cetak.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- KOLOM 2: PENGATURAN FORMAT KERTAS & STRUK -->
+  <div class="col-6 col-box-12">
+    <div class="card box-bordered">
+      <div class="card-header">
+        <h3 style="margin: 0;"><i class="fa fa-sliders"></i> <?= $_thermal_settings ?? 'Pengaturan Format Kertas & Struk'; ?></h3>
+      </div>
+      <div class="card-body">
+        <form action="" method="post">
+          <input type="hidden" name="session" value="<?= htmlspecialchars($session); ?>">
+          <table class="table">
+            <tr>
+              <td class="align-middle" style="width: 38%;"><?= $_paper_size ?? 'Ukuran Kertas Thermal'; ?></td>
+              <td>
+                <select class="form-control" name="paper_size" id="selectPaperSize" onchange="syncPaperSizeLocal(this.value)">
+                  <option value="58" <?= ($paperSize === '58') ? 'selected' : ''; ?>>58 mm (Lebar standar 32 Karakter)</option>
+                  <option value="80" <?= ($paperSize === '80') ? 'selected' : ''; ?>>80 mm (Lebar besar 48 Karakter)</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td class="align-middle"><?= $_print_method ?? 'Metode Pencetakan'; ?></td>
+              <td>
+                <select class="form-control" name="print_method" id="selectPrintMethod" onchange="syncPrintMethodLocal(this.value)">
+                  <option value="bluetooth" <?= ($printMethod === 'bluetooth') ? 'selected' : ''; ?>>Direct Web Bluetooth (Rekomendasi / Instan)</option>
+                  <option value="rawbt" <?= ($printMethod === 'rawbt') ? 'selected' : ''; ?>>RawBT Android App (via URL Intent)</option>
+                  <option value="browser" <?= ($printMethod === 'browser') ? 'selected' : ''; ?>>Browser System Print (window.print)</option>
+                </select>
+              </td>
+            </tr>
+            <tr>
+              <td class="align-middle"><?= $_footer_note ?? 'Catatan Kaki Struk'; ?></td>
+              <td>
+                <input type="text" class="form-control" name="footer_note" id="inputFooterNote" value="<?= htmlspecialchars($footerNote); ?>" placeholder="Contoh: Terima kasih atas pembelian Anda" oninput="syncFooterLocal(this.value)">
+              </td>
+            </tr>
+            <tr>
+              <td class="align-middle"><?= $_auto_cut_paper ?? 'Auto Cut Kertas'; ?></td>
+              <td>
+                <label style="font-weight: normal; cursor: pointer;">
+                  <input type="checkbox" name="auto_cut" value="1" <?= $autoCut ? 'checked' : ''; ?> onchange="syncAutoCutLocal(this.checked)">
+                  <?= $_enable_auto_cut ?? 'Kirim sinyal potong kertas otomatis jika printer mendukung'; ?>
+                </label>
+              </td>
+            </tr>
+            <tr>
+              <td></td>
+              <td>
+                <button type="submit" name="save_thermal_cfg" class="btn bg-primary">
+                  <i class="fa fa-save"></i> <?= $_save ?? 'Simpan Pengaturan'; ?>
+                </button>
+              </td>
+            </tr>
+          </table>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="./js/mikhmon-thermal.js?v=<?= time(); ?>"></script>
+<script>
+function updateUiStatus(status, msg, thermalInstance) {
+  var badge = document.getElementById('printerStatusBadge');
+  var nameEl = document.getElementById('printerDeviceName');
+  var connEl = document.getElementById('printerConnText');
+  var btnTest = document.getElementById('btnTestPrint');
+  var btnConn = document.getElementById('btnConnect');
+  var btnDisconn = document.getElementById('btnDisconnect');
+  var alertEl = document.getElementById('btAlertArea');
+
+  if (status === 'connected') {
+    badge.style.background = '#16a34a';
+    badge.innerHTML = '<i class="fa fa-check-circle"></i> Terhubung';
+    nameEl.textContent = thermalInstance.deviceName || 'Printer Thermal';
+    nameEl.className = 'text-green font-bold';
+    connEl.textContent = '🟢 Siap Mencetak';
+    connEl.style.color = '#16a34a';
+    btnTest.disabled = false;
+    btnDisconn.style.display = 'inline-block';
+    btnConn.innerHTML = '<i class="fa fa-refresh"></i> Ganti Printer';
+
+    if (alertEl) {
+      alertEl.style.display = 'block';
+      alertEl.className = 'box bg-success';
+      alertEl.innerHTML = '<i class="fa fa-check-circle"></i> Berhasil terhubung ke printer <b>' + (thermalInstance.deviceName || '') + '</b>.';
+    }
+  } else if (status === 'connecting') {
+    badge.style.background = '#eab308';
+    badge.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Menghubungkan...';
+    connEl.textContent = msg || 'Menghubungkan ke printer...';
+    connEl.style.color = '#eab308';
+    btnTest.disabled = true;
+  } else {
+    badge.style.background = '#64748b';
+    badge.innerHTML = '<i class="fa fa-circle-o"></i> Belum Terhubung';
+    nameEl.textContent = '-';
+    nameEl.className = 'text-secondary';
+    connEl.textContent = '⚪ Belum Tersambung';
+    connEl.style.color = '#64748b';
+    btnTest.disabled = true;
+    btnDisconn.style.display = 'none';
+    btnConn.innerHTML = '<i class="fa fa-search"></i> Pindai Printer Bluetooth';
+
+    if (status === 'error' && alertEl) {
+      alertEl.style.display = 'block';
+      alertEl.className = 'box bg-danger';
+      alertEl.innerHTML = '<i class="fa fa-warning"></i> ' + (msg || 'Gagal koneksi Bluetooth');
+    }
+  }
+}
+
+if (window.MikhmonThermal) {
+  window.MikhmonThermal.addListener(updateUiStatus);
+
+  // Sync settings to localStorage
+  window.MikhmonThermal.paperSize = <?= json_encode($paperSize); ?>;
+  window.MikhmonThermal.printMethod = <?= json_encode($printMethod); ?>;
+  window.MikhmonThermal.footerText = <?= json_encode($footerNote); ?>;
+  window.MikhmonThermal.autoCut = <?= $autoCut ? 'true' : 'false'; ?>;
+
+  localStorage.setItem('mikhmon_thermal_paper', <?= json_encode($paperSize); ?>);
+  localStorage.setItem('mikhmon_thermal_method', <?= json_encode($printMethod); ?>);
+  localStorage.setItem('mikhmon_thermal_footer', <?= json_encode($footerNote); ?>);
+  localStorage.setItem('mikhmon_thermal_autocut', <?= $autoCut ? "'yes'" : "'no'"; ?>);
+}
+
+function handleConnectPrinter() {
+  if (!window.MikhmonThermal) return;
+  var alertEl = document.getElementById('btAlertArea');
+  if (alertEl) alertEl.style.display = 'none';
+
+  window.MikhmonThermal.connect().catch(function(err) {
+    console.error('Koneksi printer gagal:', err);
+  });
+}
+
+function handleDisconnectPrinter() {
+  if (window.MikhmonThermal) {
+    window.MikhmonThermal.disconnect();
+  }
+}
+
+function handleTestPrint() {
+  if (!window.MikhmonThermal) return;
+  var btn = document.getElementById('btnTestPrint');
+  var origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak...';
+
+  window.MikhmonThermal.testPrint().then(function() {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa fa-check"></i> Berhasil Dicetak!';
+    setTimeout(function() {
+      btn.innerHTML = origHtml;
+    }, 2500);
+  }).catch(function(err) {
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+    alert('Gagal cetak uji coba: ' + (err.message || err));
+  });
+}
+
+function syncPaperSizeLocal(val) {
+  if (window.MikhmonThermal) window.MikhmonThermal.paperSize = val;
+  localStorage.setItem('mikhmon_thermal_paper', val);
+}
+
+function syncPrintMethodLocal(val) {
+  if (window.MikhmonThermal) window.MikhmonThermal.printMethod = val;
+  localStorage.setItem('mikhmon_thermal_method', val);
+}
+
+function syncFooterLocal(val) {
+  if (window.MikhmonThermal) window.MikhmonThermal.footerText = val;
+  localStorage.setItem('mikhmon_thermal_footer', val);
+}
+
+function syncAutoCutLocal(val) {
+  if (window.MikhmonThermal) window.MikhmonThermal.autoCut = val;
+  localStorage.setItem('mikhmon_thermal_autocut', val ? 'yes' : 'no');
+}
+</script>

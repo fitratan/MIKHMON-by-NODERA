@@ -99,6 +99,7 @@ $ids = array(
   "editor",
   "uplogo",
   "settings",
+  "thermal-printer",
 );
 
 // license
@@ -469,6 +470,9 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
       echo "<script>window.location='./admin.php?id=sessions'</script>";
     }
   }
+} elseif ($id == "thermal-printer") {
+  include_once('./include/menu.php');
+  include_once('./settings/thermalprinter.php');
 } elseif ($id == "uplogo"  && !empty($session)) {
   include_once('./include/menu.php');
   include_once('./settings/uplogo.php');

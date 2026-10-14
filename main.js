@@ -376,6 +376,18 @@ function createMainWindow() {
     return { action: 'deny' };
   });
 
+  // Handle Web Bluetooth device discovery in Electron Desktop
+  mainWindow.webContents.on('select-bluetooth-device', (event, deviceList, callback) => {
+    event.preventDefault();
+    if (deviceList && deviceList.length > 0) {
+      const printer = deviceList.find(d => {
+        const name = (d.deviceName || '').toLowerCase();
+        return name.includes('print') || name.includes('pos') || name.includes('rpp') || name.includes('mtp') || name.includes('pt') || name.includes('thermal');
+      }) || deviceList[0];
+      callback(printer.deviceId);
+    }
+  });
+
   checkLicenseAndRoute();
 }
 

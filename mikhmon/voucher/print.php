@@ -165,6 +165,8 @@ if (!isset($_SESSION["mikhmon"])) {
   }
 
 
+  $thermal = $_GET['thermal'] ?? ($_GET['t'] ?? ($_GET['template'] ?? ''));
+  $isThermal = ($userp != "" || $thermal === "yes" || $thermal === "thermal");
 }
 ?>
 <!DOCTYPE html>
@@ -174,6 +176,7 @@ if (!isset($_SESSION["mikhmon"])) {
 		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 		<meta http-equiv="pragma" content="no-cache" />
 		<link rel="icon" href="../img/favicon.png" />
+		<link rel="stylesheet" type="text/css" href="../css/font-awesome/css/font-awesome.min.css" />
 		<script src="../js/qrious.min.js"></script>
 		<style>
 body {
@@ -184,6 +187,42 @@ body {
   margin: 0px;
   -webkit-print-color-adjust: exact !important;
   print-color-adjust: exact !important;
+}
+.thermal-print-bar {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: #1e293b;
+  color: #fff;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  z-index: 9999;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.25);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 13px;
+}
+.thermal-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 4px;
+  border: none;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  text-decoration: none;
+}
+.thermal-btn-primary { background: #2563eb; color: #fff; }
+.thermal-btn-primary:hover { background: #1d4ed8; }
+.thermal-btn-secondary { background: #475569; color: #fff; }
+.thermal-btn-secondary:hover { background: #334155; }
+@media print {
+  .thermal-print-bar { display: none !important; }
 }
 .voucher, table.voucher {
   display: inline-block;
@@ -210,7 +249,20 @@ body {
 }
 		</style>
 	</head>
-	<body onload="window.print()">
+	<body <?= !$isThermal ? 'onload="window.print()"' : ''; ?>>
+
+  <?php if ($isThermal): ?>
+    <div class="thermal-print-bar">
+      <span><i class="fa fa-print text-primary"></i> <strong>Cetak Thermal:</strong></span>
+      <button type="button" class="thermal-btn thermal-btn-primary" onclick="printAllThermalBt()" id="btnBtPrintAll">
+        <i class="fa fa-bluetooth"></i> <span id="btnBtPrintAllText">Cetak via Bluetooth</span>
+      </button>
+      <button type="button" class="thermal-btn thermal-btn-secondary" onclick="window.print()">
+        <i class="fa fa-print"></i> Cetak Browser
+      </button>
+      <span id="btPrintStatus" style="font-size: 11px; opacity: 0.85;"></span>
+    </div>
+  <?php endif; ?>
 
 <?php for ($i = 0; $i < $TotalReg; $i++) {;
   $regtable = $getuser[$i];
@@ -260,6 +312,92 @@ if ($userp != "" || $thermal === "yes" || $thermal === "thermal") {
 <?php 
 } ?>
 
+<?php if ($isThermal): ?>
+<script src="../js/mikhmon-thermal.js?v=<?= time(); ?>"></script>
+<script>
+function updatePrintBarBt(status, msg, thermalInstance) {
+  var btnText = document.getElementById('btnBtPrintAllText');
+  var statusEl = document.getElementById('btPrintStatus');
+  if (status === 'connected') {
+    if (btnText) btnText.innerHTML = 'Cetak ke ' + (thermalInstance.deviceName || 'Bluetooth');
+    if (statusEl) statusEl.innerHTML = '<span style="color:#4ade80;"><i class="fa fa-circle"></i> Terhubung</span>';
+  } else if (status === 'connecting') {
+    if (statusEl) statusEl.innerHTML = '<span style="color:#facc15;"><i class="fa fa-circle-o-notch fa-spin"></i> Menghubungkan...</span>';
+  } else {
+    if (btnText) btnText.innerHTML = 'Cetak via Bluetooth';
+    if (statusEl) statusEl.innerHTML = '<span style="color:#94a3b8;"><i class="fa fa-circle-o"></i> Belum Terhubung</span>';
+  }
+}
+
+if (window.MikhmonThermal) {
+  window.MikhmonThermal.addListener(updatePrintBarBt);
+}
+
+function printAllThermalBt() {
+  if (!window.MikhmonThermal) return;
+  var btnText = document.getElementById('btnBtPrintAllText');
+  var origHtml = btnText ? btnText.innerHTML : 'Cetak via Bluetooth';
+
+  var vouchers = [];
+  var vEls = document.querySelectorAll('.voucher, .v-thermal');
+  if (vEls.length > 0) {
+    vEls.forEach(function(el) {
+      var codeEl = el.querySelector('.v-th-code, .v-code, .qrcode');
+      var code = codeEl ? codeEl.textContent.trim() : '';
+      if (!code && codeEl && codeEl.id) code = codeEl.id;
+
+      var profEl = el.querySelector('.v-th-meta, .v-profile');
+      var prof = profEl ? profEl.textContent.trim() : '';
+
+      var priceEl = el.querySelector('.v-th-price, .v-price');
+      var price = priceEl ? priceEl.textContent.trim() : '';
+
+      vouchers.push({
+        hotspotName: <?= json_encode($hotspotname); ?>,
+        dnsName: <?= json_encode($dnsname); ?>,
+        code: code,
+        profile: prof,
+        price: price
+      });
+    });
+  }
+
+  function doPrint() {
+    if (vouchers.length === 0) {
+      alert('Tidak ada voucher yang dapat dicetak.');
+      return;
+    }
+    if (btnText) btnText.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak (' + vouchers.length + ')...';
+    var p = Promise.resolve();
+    vouchers.forEach(function(v) {
+      p = p.then(function() {
+        return window.MikhmonThermal.printVoucher(v);
+      }).then(function() {
+        return new Promise(function(r) { setTimeout(r, 400); });
+      });
+    });
+
+    p.then(function() {
+      if (btnText) btnText.innerHTML = '<i class="fa fa-check"></i> Selesai Dicetak!';
+      setTimeout(function() { if (btnText) btnText.innerHTML = origHtml; }, 2500);
+    }).catch(function(err) {
+      if (btnText) btnText.innerHTML = origHtml;
+      alert('Gagal cetak Bluetooth: ' + (err.message || err));
+    });
+  }
+
+  if (!window.MikhmonThermal.isConnected) {
+    window.MikhmonThermal.connect().then(function() {
+      doPrint();
+    }).catch(function(err) {
+      alert('Koneksi printer Bluetooth: ' + (err.message || err));
+    });
+  } else {
+    doPrint();
+  }
+}
+</script>
+<?php endif; ?>
 	
 </body>
 </html>

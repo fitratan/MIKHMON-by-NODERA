@@ -113,6 +113,11 @@ if (!isset($_SESSION["mikhmon"]) && empty($_COOKIE['mikhmon_remember'])) {
     $stselector = "active";
     $mpage = $_store_template ?? "Template Toko Online";
     $settmenu = "menu-open";
+  } elseif ($hotspot == "thermal-printer" || $id == "thermal-printer") {
+    $ssett = "active";
+    $sthermal = "active";
+    $mpage = $_thermal_printer ?? "Printer Thermal";
+    $settmenu = "menu-open";
   } elseif ($hotspot == "uplogo") {
     $ssett = "active";
     $uplogo = "active";
@@ -334,7 +339,7 @@ $themeSep = (strpos($cleanThemeUrl, '?') !== false) ? '&' : '?';
 
 <div id="sidenav" class="sidenav">
 <?php if (($id == "settings" && $session == "new") || $id == "settings" && $router == "new") {
-} else if ($id == "settings" || $id == "editor" || $id == "uplogo" || $id == "connect" || $id == "telegram" || $id == "whatsapp" || $id == "noderapay" || $id == "qris" || $id == "billing" || $id == "shop" || $id == "store-template" || $id == "shop-template") {
+} else if ($id == "settings" || $id == "editor" || $id == "uplogo" || $id == "connect" || $id == "telegram" || $id == "whatsapp" || $id == "noderapay" || $id == "qris" || $id == "billing" || $id == "shop" || $id == "store-template" || $id == "shop-template" || $id == "thermal-printer") {
 ?>  
   <div class="menu text-center align-middle card-header" style="border-radius:0;"><h3 id="MikhmonSession"><?= $session; ?></h3></div>
   <a class="connect menu <?= $shome ?? ''; ?>" id="<?= $session; ?>&c=settings"><i class='fa fa-tachometer'></i> <?= $_dashboard ?></a>
@@ -358,6 +363,7 @@ $themeSep = (strpos($cleanThemeUrl, '?') !== false) ? '&' : '?';
     <a href="./admin.php?id=warung&tab=reports<?= !empty($session) ? '&session='.$session : ''; ?>" class="<?= $swarung_reports ?? ''; ?>"> &nbsp;&nbsp;&nbsp;<i class="fa fa-bar-chart"></i> <?= $_selling_report ?? "Laporan Penjualan"; ?> </a>
   </div>
   <a href="./admin.php?id=settings&session=<?= $session; ?>" class="menu <?= $ssettings ?? ''; ?>" title="Mikhmon Settings"><i class='fa fa-gear'></i> <?= $_session_settings ?></a>
+  <a href="./admin.php?id=thermal-printer<?= !empty($session) ? '&session='.$session : ''; ?>" class="menu <?= $sthermal ?? ''; ?>" title="Printer Thermal"><i class="fa fa-print"></i> <?= $_thermal_printer ?? "Printer Thermal"; ?></a>
   <a href="./admin.php?id=whatsapp&session=<?= $session; ?>" class="menu <?= $swhatsapp ?? ''; ?>" title="WhatsApp Gateway"><i class="fa fa-whatsapp"></i> <?= $_whatsapp_gateway ?? "WhatsApp Gateway"; ?></a>
   <a href="./admin.php?id=telegram&session=<?= $session; ?>" class="menu <?= $stelegram ?? ''; ?>" title="Telegram Bot"><i class="fa fa-paper-plane"></i> <?= $_telegram_bot ?? "Telegram Bot"; ?></a>
   <a href="./admin.php?id=uplogo&session=<?= $session; ?>" class="menu <?= $suplogo ?? ''; ?>"><i class="fa fa-upload "></i> <?= $_upload_logo ?></a>
@@ -609,11 +615,12 @@ include('./info.php');
   <!--report-->
   <a href="./?report=selling&idbl=<?= date("m") . date("Y"); ?>&session=<?= $session; ?>" class="menu <?= $sselling ?? ''; ?>"><i class="nav-icon fa fa-money"></i> <?= $_report ?></a>
   <!--settings-->
-  <div class="dropdown-btn <?= ($ssett ?? '') . ($stelegram ?? '') . ($swhatsapp ?? '') . ($stselector ?? ''); ?>"><i class=" fa fa-gear"></i> <?= $_settings ?> 
+  <div class="dropdown-btn <?= ($ssett ?? '') . ($stelegram ?? '') . ($swhatsapp ?? '') . ($stselector ?? '') . ($sthermal ?? ''); ?>"><i class=" fa fa-gear"></i> <?= $_settings ?> 
     <i class="fa fa-caret-down"></i> &nbsp;
   </div>
   <div class="dropdown-container <?= $settmenu ?? ''; ?>">
     <a href="./admin.php?id=settings&session=<?= $session; ?>" class="menu "> <i class="fa fa-gear "></i> <?= $_session_settings ?> </a>
+    <a href="./?hotspot=thermal-printer&session=<?= $session; ?>" class="menu <?= $sthermal ?? ''; ?>"> <i class="fa fa-print "></i> <?= $_thermal_printer ?? 'Printer Thermal'; ?> </a>
     <a href="./?hotspot=whatsapp&session=<?= $session; ?>" class="menu <?= $swhatsapp ?? ''; ?>"> <i class="fa fa-whatsapp"></i> <?= $_whatsapp_gateway ?? "WhatsApp Gateway"; ?> </a>
     <a href="./?hotspot=template-selector&session=<?= $session; ?>" class="menu <?= $tselector ?? ''; ?>"> <i class="fa fa-paint-brush "></i> <?= $_template_editor ?? 'Template Voucher' ?> </a>
     <a href="./?hotspot=store-template&session=<?= $session; ?>" class="menu <?= $stselector ?? ''; ?>"> <i class="fa fa-desktop "></i> <?= $_store_template ?? "Template Toko Online"; ?> </a>

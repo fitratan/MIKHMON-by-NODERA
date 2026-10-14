@@ -1406,6 +1406,34 @@ include_once __DIR__ . '/include/headhtml.php';
           </div>
 
           <div class="col-4 col-box-12">
+            <div class="card box-bordered" style="margin-bottom: 15px;">
+              <div class="card-header" style="display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 13px;"><i class="fa fa-print text-primary"></i> <?= $_thermal_printer ?? 'Printer Thermal Bluetooth'; ?></h3>
+                <span id="warungBtBadge" class="badge" style="background: #64748b; color: #fff; font-size: 10px; padding: 2px 6px; border-radius: 4px;">
+                  Belum Terhubung
+                </span>
+              </div>
+              <div class="card-body">
+                <div style="font-size: 11px; margin-bottom: 8px;">
+                  Status: <strong id="warungBtDeviceName" class="text-secondary">-</strong>
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 6px;">
+                  <button type="button" class="btn bg-primary btn-block btn-sm" id="btnWarungScanBt" onclick="warungConnectBt()">
+                    <i class="fa fa-bluetooth"></i> Pindai Printer Bluetooth
+                  </button>
+                  <button type="button" class="btn bg-success btn-block btn-sm" id="btnWarungTestBt" onclick="warungTestPrintBt()" disabled>
+                    <i class="fa fa-print"></i> Cetak Struk Uji Coba
+                  </button>
+                  <button type="button" class="btn bg-danger btn-block btn-sm" id="btnWarungDisconnBt" onclick="warungDisconnectBt()" style="display: none;">
+                    <i class="fa fa-times"></i> Putuskan Printer
+                  </button>
+                </div>
+                <small class="text-muted" style="display: block; font-size: 10px; margin-top: 8px; line-height: 1.4;">
+                  <i class="fa fa-info-circle"></i> Kompatibel printer POS 58mm/80mm (Panda, VSC, Iware, Eppos, dll). Uji coba hanya mencetak 1 baris: <code>sukses terhubung</code>.
+                </small>
+              </div>
+            </div>
+
             <div class="card">
               <div class="card-header">
                 <h3><i class="fa fa-mobile"></i> <?= $_pwa_app_title ?? 'Aplikasi PWA Warung'; ?></h3>
@@ -1536,8 +1564,8 @@ include_once __DIR__ . '/include/headhtml.php';
         </div>
 
         <div style="display: flex; gap: 6px; width: 100%; justify-content: center; align-items: center; box-sizing: border-box;">
-          <button type="button" class="btn bg-primary" onclick="window.print()" title="<?= $_print_receipt_btn ?? 'Cetak Struk Thermal'; ?>" style="flex: 1; padding: 7px 6px; font-size: 12px; font-weight: bold; white-space: nowrap; text-align: center;">
-            <i class="fa fa-print"></i> <?= $_print ?? 'Cetak'; ?>
+          <button type="button" class="btn bg-primary" onclick="warungPrintReceiptSmart()" id="btnWarungPrint" title="<?= $_print_receipt_btn ?? 'Cetak Struk Thermal'; ?>" style="flex: 1; padding: 7px 6px; font-size: 12px; font-weight: bold; white-space: nowrap; text-align: center;">
+            <i class="fa fa-print"></i> <span id="btnWarungPrintText"><?= $_print ?? 'Cetak'; ?></span>
           </button>
           <button type="button" class="btn bg-success" onclick="sendReceiptWhatsapp()" title="<?= $_send_to_whatsapp ?? 'Kirim ke WhatsApp'; ?>" style="flex: 1; padding: 7px 6px; font-size: 12px; font-weight: bold; white-space: nowrap; text-align: center;">
             <i class="fa fa-whatsapp"></i> WhatsApp
@@ -2084,6 +2112,117 @@ Klik ikon Install (+) di sebelah kanan kolom URL / Address Bar browser Anda, ata
 
 • Mobile (Android / iOS):
 Buka menu browser lalu pilih "Tambahkan ke Layar Utama" / "Add to Home Screen".'); ?>);
+  }
+}
+</script>
+<script src="./js/mikhmon-thermal.js?v=<?= time(); ?>"></script>
+<script>
+function updateWarungBtUi(status, msg, thermalInstance) {
+  var badge = document.getElementById('warungBtBadge');
+  var nameEl = document.getElementById('warungBtDeviceName');
+  var btnTest = document.getElementById('btnWarungTestBt');
+  var btnScan = document.getElementById('btnWarungScanBt');
+  var btnDisconn = document.getElementById('btnWarungDisconnBt');
+  var btnPrintText = document.getElementById('btnWarungPrintText');
+
+  if (status === 'connected') {
+    if (badge) {
+      badge.style.background = '#16a34a';
+      badge.innerHTML = '<i class="fa fa-check-circle"></i> Terhubung';
+    }
+    if (nameEl) {
+      nameEl.textContent = thermalInstance.deviceName || 'Printer Thermal';
+      nameEl.className = 'text-green font-bold';
+    }
+    if (btnTest) btnTest.disabled = false;
+    if (btnDisconn) btnDisconn.style.display = 'block';
+    if (btnScan) btnScan.innerHTML = '<i class="fa fa-refresh"></i> Ganti Printer';
+    if (btnPrintText) btnPrintText.innerHTML = '<i class="fa fa-bluetooth"></i> Cetak Bluetooth';
+  } else if (status === 'connecting') {
+    if (badge) {
+      badge.style.background = '#eab308';
+      badge.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Menghubungkan...';
+    }
+    if (nameEl) nameEl.textContent = msg || 'Menghubungkan...';
+    if (btnTest) btnTest.disabled = true;
+  } else {
+    if (badge) {
+      badge.style.background = '#64748b';
+      badge.textContent = 'Belum Terhubung';
+    }
+    if (nameEl) {
+      nameEl.textContent = '-';
+      nameEl.className = 'text-secondary';
+    }
+    if (btnTest) btnTest.disabled = true;
+    if (btnDisconn) btnDisconn.style.display = 'none';
+    if (btnScan) btnScan.innerHTML = '<i class="fa fa-bluetooth"></i> Pindai Printer Bluetooth';
+    if (btnPrintText) btnPrintText.textContent = '<?= $_print ?? "Cetak"; ?>';
+  }
+}
+
+if (window.MikhmonThermal) {
+  window.MikhmonThermal.addListener(updateWarungBtUi);
+}
+
+function warungConnectBt() {
+  if (!window.MikhmonThermal) return;
+  window.MikhmonThermal.connect().catch(function(err) {
+    alert('Koneksi printer Bluetooth: ' + (err.message || err));
+  });
+}
+
+function warungDisconnectBt() {
+  if (window.MikhmonThermal) {
+    window.MikhmonThermal.disconnect();
+  }
+}
+
+function warungTestPrintBt() {
+  if (!window.MikhmonThermal) return;
+  var btn = document.getElementById('btnWarungTestBt');
+  var origHtml = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak...';
+
+  window.MikhmonThermal.testPrint().then(function() {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="fa fa-check"></i> Berhasil Dicetak!';
+    setTimeout(function() { btn.innerHTML = origHtml; }, 2000);
+  }).catch(function(err) {
+    btn.disabled = false;
+    btn.innerHTML = origHtml;
+    alert('Gagal cetak uji coba: ' + (err.message || err));
+  });
+}
+
+function warungPrintReceiptSmart() {
+  if (window.MikhmonThermal && window.MikhmonThermal.isConnected) {
+    var vData = {
+      hotspotName: <?= json_encode($hotspotname); ?>,
+      dnsName: <?= json_encode($dnsname); ?>,
+      profile: document.getElementById('rcProfile') ? document.getElementById('rcProfile').textContent : '',
+      validity: document.getElementById('rcValidity') ? document.getElementById('rcValidity').textContent : '',
+      price: document.getElementById('rcPrice') ? document.getElementById('rcPrice').textContent : '',
+      code: document.getElementById('rcCode') ? document.getElementById('rcCode').textContent : '',
+      warungName: document.getElementById('rcWarung') ? document.getElementById('rcWarung').textContent : ''
+    };
+    var printBtnText = document.getElementById('btnWarungPrintText');
+    var origText = printBtnText ? printBtnText.innerHTML : 'Cetak';
+    if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak...';
+
+    window.MikhmonThermal.printVoucher(vData).then(function() {
+      if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-check"></i> Tercetak!';
+      setTimeout(function() {
+        if (printBtnText) printBtnText.innerHTML = origText;
+      }, 2000);
+    }).catch(function(err) {
+      if (printBtnText) printBtnText.innerHTML = origText;
+      alert('Gagal cetak Bluetooth (' + (err.message || err) + '). Membuka dialog cetak browser...');
+      window.print();
+    });
+  } else {
+    window.print();
   }
 }
 </script>
