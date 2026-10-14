@@ -1424,6 +1424,9 @@ include_once __DIR__ . '/include/headhtml.php';
                   <button type="button" class="btn bg-success btn-block btn-sm" id="btnWarungTestBt" onclick="warungTestPrintBt()" disabled>
                     <i class="fa fa-print"></i> Cetak Struk Uji Coba
                   </button>
+                  <button type="button" class="btn bg-secondary btn-block btn-sm" id="btnWarungTestRawBt" onclick="warungTestPrintRawBt()" title="Uji cetak via RawBT Android">
+                    <i class="fa fa-android"></i> Tes RawBT Android
+                  </button>
                   <button type="button" class="btn bg-danger btn-block btn-sm" id="btnWarungDisconnBt" onclick="warungDisconnectBt()" style="display: none;">
                     <i class="fa fa-times"></i> Putuskan Printer
                   </button>
@@ -1602,6 +1605,86 @@ include_once __DIR__ . '/include/headhtml.php';
 
         <button type="button" class="btn bg-secondary btn-block" style="width: 100%; box-sizing: border-box;" onclick="closeWarungModal('dialogTopupQris')">
           <i class="fa fa-times"></i> <?= $_close ?? 'Tutup'; ?>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- DIALOG: SCAN PRINTER THERMAL & PANDUAN IZIN ANDROID (WARUNG) -->
+  <div id="dialogScanBtModalWarung" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 99999; align-items: center; justify-content: center; padding: 15px; box-sizing: border-box;">
+    <div class="card" style="width: 100%; max-width: 440px; margin: 0 auto; box-shadow: 0 12px 35px rgba(0,0,0,0.45); border-radius: 6px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
+      <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
+        <h3 style="margin: 0; font-size: 14px; font-weight: bold;">
+          <i class="fa fa-bluetooth-b text-primary"></i> Hubungkan Printer Thermal
+        </h3>
+        <a href="javascript:void(0)" onclick="closeWarungScanModal()" class="text-secondary" style="font-size: 22px; text-decoration: none; line-height: 1; padding: 0 4px;">&times;</a>
+      </div>
+      
+      <div class="card-body" style="padding: 15px; overflow-y: auto;">
+        <!-- STEP CHECKLIST IZIN ANDROID -->
+        <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 6px; padding: 10px 12px; margin-bottom: 15px;">
+          <div style="font-weight: bold; font-size: 12px; margin-bottom: 6px; color: #2563eb;">
+            <i class="fa fa-shield"></i> Syarat &amp; Perizinan Android:
+          </div>
+          <div style="font-size: 11.5px; line-height: 1.5; color: inherit;">
+            <div style="display: flex; gap: 8px; margin-bottom: 5px;">
+              <i class="fa fa-map-marker text-danger" style="margin-top: 2px;"></i>
+              <span><b>GPS / Lokasi HP Aktif:</b> Android mewajibkan akses lokasi agar Chrome dapat memindai Bluetooth.</span>
+            </div>
+            <div style="display: flex; gap: 8px; margin-bottom: 5px;">
+              <i class="fa fa-bluetooth text-primary" style="margin-top: 2px;"></i>
+              <span><b>Bluetooth HP &amp; Printer ON:</b> Pastikan printer menyala dan lampu indikator aktif.</span>
+            </div>
+            <div style="display: flex; gap: 8px;">
+              <i class="fa fa-check-circle text-green" style="margin-top: 2px;"></i>
+              <span><b>Izin Perangkat Sekitar:</b> Jika Chrome meminta izin <i>"Nearby devices"</i>, pilih <b>Izinkan</b>.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- PILIHAN SCAN TOMBOL -->
+        <div style="margin-bottom: 15px;">
+          <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;" class="text-secondary">
+            Pilih Mode Pindai Bluetooth:
+          </div>
+          <button type="button" class="btn bg-primary btn-block" onclick="startWarungBtScan('printers')" style="padding: 10px; font-size: 12.5px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa fa-magic"></i> Pindai Printer POS (Cerdas - Bersih)
+          </button>
+          <div style="font-size: 10.5px; margin-bottom: 10px; line-height: 1.3;" class="text-muted">
+            *Menyaring daftar agar hanya menampilkan printer POS (Panda, VSC, Eppos, RPP, MPT, PT-210, dll) dan menyembunyikan TV/Smartwatch.
+          </div>
+
+          <button type="button" class="btn bg-secondary btn-block" onclick="startWarungBtScan('all')" style="padding: 8px; font-size: 11.5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
+            <i class="fa fa-search"></i> Pindai Semua Perangkat BLE
+          </button>
+          <div style="font-size: 10.5px; line-height: 1.3; margin-top: 4px;" class="text-muted">
+            *Gunakan jika nama printer kustom Anda tidak muncul pada mode cerdas.
+          </div>
+        </div>
+
+        <!-- KARTU KHUSUS ANDROID / RAWBT -->
+        <div style="border-top: 1px dashed rgba(128,128,128,0.3); padding-top: 12px; margin-top: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <b style="font-size: 11.5px;"><i class="fa fa-android text-green"></i> Opsi Android: RawBT Print</b>
+            <span class="badge" style="background: #16a34a; color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 3px;">100% Kompatibel</span>
+          </div>
+          <div style="font-size: 11px; line-height: 1.4; margin-bottom: 10px;" class="text-secondary">
+            Printer Anda tipe <b>Bluetooth Classic SPP</b> (bukan BLE) atau kabel <b>USB OTG</b>? Gunakan <b>RawBT Android</b> untuk mencetak tanpa batasan browser!
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button type="button" class="btn bg-success" onclick="warungTestPrintRawBt()" style="flex: 1; padding: 8px 6px; font-size: 11px; font-weight: bold;">
+              <i class="fa fa-print"></i> Tes Cetak RawBT
+            </button>
+            <a href="https://play.google.com/store/apps/details?id=ru.a402d.rawbtprinter" target="_blank" class="btn bg-secondary" style="padding: 8px 10px; font-size: 11px;">
+              <i class="fa fa-download"></i> Pasang RawBT
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card-footer" style="padding: 10px 15px; text-align: right; background: rgba(0,0,0,0.03); border-top: 1px solid rgba(0,0,0,0.08);">
+        <button type="button" class="btn bg-secondary" onclick="closeWarungScanModal()" style="padding: 6px 14px; font-size: 11.5px;">
+          Tutup
         </button>
       </div>
     </div>
@@ -2154,6 +2237,27 @@ function updateWarungBtUi(status, msg, thermalInstance) {
       nameEl.textContent = '-';
       nameEl.className = 'text-secondary';
     }
+  } else if (status === 'cancelled' || status === 'idle') {
+    if (!thermalInstance || !thermalInstance.isConnected) {
+      if (badge) {
+        badge.style.background = '#64748b';
+        badge.innerHTML = 'Belum Terhubung';
+      }
+      if (nameEl) {
+        nameEl.textContent = '-';
+        nameEl.className = 'text-secondary';
+      }
+      if (btnTest) btnTest.disabled = true;
+    }
+  } else {
+    if (badge) {
+      badge.style.background = '#64748b';
+      badge.innerHTML = 'Belum Terhubung';
+    }
+    if (nameEl) {
+      nameEl.textContent = '-';
+      nameEl.className = 'text-secondary';
+    }
     if (btnTest) btnTest.disabled = true;
     if (btnDisconn) btnDisconn.style.display = 'none';
     if (btnScan) btnScan.innerHTML = '<i class="fa fa-bluetooth"></i> Pindai Printer Bluetooth';
@@ -2165,10 +2269,25 @@ if (window.MikhmonThermal) {
   window.MikhmonThermal.addListener(updateWarungBtUi);
 }
 
+function openWarungScanModal() {
+  var m = document.getElementById('dialogScanBtModalWarung');
+  if (m) m.style.display = 'flex';
+}
+
+function closeWarungScanModal() {
+  var m = document.getElementById('dialogScanBtModalWarung');
+  if (m) m.style.display = 'none';
+}
+
 function warungConnectBt() {
+  openWarungScanModal();
+}
+
+function startWarungBtScan(mode) {
+  closeWarungScanModal();
   if (!window.MikhmonThermal) return;
-  window.MikhmonThermal.connect().catch(function(err) {
-    alert('Koneksi printer Bluetooth: ' + (err.message || err));
+  window.MikhmonThermal.connect(mode).catch(function(err) {
+    console.error('Koneksi printer Bluetooth error:', err);
   });
 }
 
@@ -2181,49 +2300,78 @@ function warungDisconnectBt() {
 function warungTestPrintBt() {
   if (!window.MikhmonThermal) return;
   var btn = document.getElementById('btnWarungTestBt');
-  var origHtml = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak...';
+  var origHtml = btn ? btn.innerHTML : 'Cetak Struk Uji Coba';
+  if (btn) {
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak...';
+  }
 
   window.MikhmonThermal.testPrint().then(function() {
-    btn.disabled = false;
-    btn.innerHTML = '<i class="fa fa-check"></i> Berhasil Dicetak!';
-    setTimeout(function() { btn.innerHTML = origHtml; }, 2000);
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check"></i> Berhasil Dicetak!';
+      setTimeout(function() { btn.innerHTML = origHtml; }, 2000);
+    }
   }).catch(function(err) {
-    btn.disabled = false;
-    btn.innerHTML = origHtml;
+    if (btn) {
+      btn.disabled = false;
+      btn.innerHTML = origHtml;
+    }
     alert('Gagal cetak uji coba: ' + (err.message || err));
   });
 }
 
-function warungPrintReceiptSmart() {
-  if (window.MikhmonThermal && window.MikhmonThermal.isConnected) {
-    var vData = {
-      hotspotName: <?= json_encode($hotspotname); ?>,
-      dnsName: <?= json_encode($dnsname); ?>,
-      profile: document.getElementById('rcProfile') ? document.getElementById('rcProfile').textContent : '',
-      validity: document.getElementById('rcValidity') ? document.getElementById('rcValidity').textContent : '',
-      price: document.getElementById('rcPrice') ? document.getElementById('rcPrice').textContent : '',
-      code: document.getElementById('rcCode') ? document.getElementById('rcCode').textContent : '',
-      warungName: document.getElementById('rcWarung') ? document.getElementById('rcWarung').textContent : ''
-    };
-    var printBtnText = document.getElementById('btnWarungPrintText');
-    var origText = printBtnText ? printBtnText.innerHTML : 'Cetak';
-    if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak...';
-
-    window.MikhmonThermal.printVoucher(vData).then(function() {
-      if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-check"></i> Tercetak!';
-      setTimeout(function() {
-        if (printBtnText) printBtnText.innerHTML = origText;
-      }, 2000);
-    }).catch(function(err) {
-      if (printBtnText) printBtnText.innerHTML = origText;
-      alert('Gagal cetak Bluetooth (' + (err.message || err) + '). Membuka dialog cetak browser...');
-      window.print();
-    });
-  } else {
-    window.print();
+function warungTestPrintRawBt() {
+  if (window.MikhmonThermal) {
+    window.MikhmonThermal.testPrintRawBT();
   }
+}
+
+function getReceiptVoucherData() {
+  return {
+    hotspotName: <?= json_encode($hotspotname); ?>,
+    dnsName: <?= json_encode($dnsname); ?>,
+    profile: document.getElementById('rcProfile') ? document.getElementById('rcProfile').textContent.trim() : '',
+    validity: document.getElementById('rcValidity') ? document.getElementById('rcValidity').textContent.trim() : '',
+    price: document.getElementById('rcPrice') ? document.getElementById('rcPrice').textContent.trim() : '',
+    code: document.getElementById('rcCode') ? document.getElementById('rcCode').textContent.trim() : '',
+    warungName: document.getElementById('rcWarung') ? document.getElementById('rcWarung').textContent.trim() : ''
+  };
+}
+
+function warungPrintReceiptSmart() {
+  var vData = getReceiptVoucherData();
+  var printBtnText = document.getElementById('btnWarungPrintText');
+  var origText = printBtnText ? printBtnText.innerHTML : 'Cetak';
+
+  if (window.MikhmonThermal) {
+    if (window.MikhmonThermal.printMethod === 'rawbt') {
+      window.MikhmonThermal.printVoucherRawBT(vData);
+      return;
+    }
+
+    if (window.MikhmonThermal.isConnected) {
+      if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak...';
+      window.MikhmonThermal.printVoucher(vData).then(function() {
+        if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-check"></i> Tercetak!';
+        setTimeout(function() {
+          if (printBtnText) printBtnText.innerHTML = origText;
+        }, 2000);
+      }).catch(function(err) {
+        if (printBtnText) printBtnText.innerHTML = origText;
+        alert('Gagal cetak Bluetooth (' + (err.message || err) + '). Membuka dialog cetak browser...');
+        window.print();
+      });
+      return;
+    }
+
+    if (window.MikhmonThermal.isAndroid()) {
+      window.MikhmonThermal.printVoucherRawBT(vData);
+      return;
+    }
+  }
+
+  window.print();
 }
 </script>
 </body>

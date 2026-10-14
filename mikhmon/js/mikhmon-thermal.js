@@ -1,8 +1,9 @@
 /**
  * ============================================================================
- * MIKHMON THERMAL PRINTER BLUETOOTH ENGINE (ESC/POS)
- * Universal Web Bluetooth Driver for 58mm & 80mm POS Printers
+ * MIKHMON THERMAL PRINTER ENGINE (ESC/POS & RAWBT)
+ * Universal Driver for 58mm & 80mm POS Printers
  * (Panda, VSC, Iware, Eppos, GOOJPRT, RPP02N, POS-5802, MPT-II, PT-210, etc.)
+ * Supports Web Bluetooth (BLE) & RawBT Android Intent (Bluetooth Classic/USB)
  * ============================================================================
  */
 (function(window) {
@@ -19,6 +20,23 @@
     '0000ffff-0000-1000-8000-00805f9b34fb'  // Generic
   ];
 
+  var PRINTER_PREFIXES = [
+    'POS', 'pos', 'Print', 'print', 'RPP', 'rpp', 'MPT', 'mpt', 'MTP', 'mtp',
+    'PT-', 'pt-', 'PT', 'pt', 'VSC', 'vsc', 'Panda', 'panda', 'Iware', 'iware',
+    'Eppos', 'eppos', 'Zjiang', 'zjiang', 'GOOJPRT', 'goojprt', 'Thermal', 'thermal',
+    'XP-', 'xp-', 'XP', 'JP-', 'JP', 'EP-', 'EP', 'Bluetooth', 'bluetooth',
+    'Mobile', 'ESC', 'SPP', '58', '80'
+  ];
+
+  function isUserCancelled(err) {
+    if (!err) return false;
+    var name = err.name || '';
+    var msg = (err.message || '').toLowerCase();
+    return name === 'NotFoundError' || name === 'AbortError' ||
+           msg.indexOf('user cancelled') !== -1 ||
+           msg.indexOf('cancelled') !== -1;
+  }
+
   var MikhmonThermal = {
     device: null,
     server: null,
@@ -33,6 +51,10 @@
 
     isSupported: function() {
       return (typeof navigator !== 'undefined' && 'bluetooth' in navigator);
+    },
+
+    isAndroid: function() {
+      return (typeof navigator !== 'undefined' && /Android/i.test(navigator.userAgent));
     },
 
     addListener: function(fn) {
@@ -51,26 +73,41 @@
       }
     },
 
-    connect: async function() {
+    /**
+     * Connect to Bluetooth device
+     * @param {string} mode - 'printers' (default, filtered) or 'all' (acceptAllDevices)
+     */
+    connect: async function(mode) {
+      mode = mode || 'printers';
       var self = this;
       if (!self.isSupported()) {
-        throw new Error('Web Bluetooth tidak didukung pada browser ini. Harap gunakan Google Chrome, Edge, atau Opera.');
+        throw new Error('Web Bluetooth tidak didukung pada browser ini. Harap gunakan Google Chrome pada Android/PC.');
       }
 
       try {
         self.notifyListeners('connecting', 'Mencari printer Bluetooth di sekitar...');
 
-        var device = await navigator.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices: KNOWN_SERVICES
-        });
+        var reqOptions = {};
+        if (mode === 'all') {
+          reqOptions = {
+            acceptAllDevices: true,
+            optionalServices: KNOWN_SERVICES
+          };
+        } else {
+          reqOptions = {
+            filters: PRINTER_PREFIXES.map(function(pfx) { return { namePrefix: pfx }; }),
+            optionalServices: KNOWN_SERVICES
+          };
+        }
 
+        var device = await navigator.bluetooth.requestDevice(reqOptions);
         if (!device) {
-          throw new Error('Tidak ada perangkat yang dipilih.');
+          self.notifyListeners('idle', 'Tidak ada perangkat dipilih');
+          return { cancelled: true };
         }
 
         self.device = device;
-        self.deviceName = device.name || 'Printer Bluetooth (' + device.id.slice(0, 5) + ')';
+        self.deviceName = device.name || 'Printer Bluetooth (' + (device.id ? device.id.slice(0, 5) : 'POS') + ')';
 
         device.addEventListener('gattserverdisconnected', function() {
           self.isConnected = false;
@@ -134,6 +171,10 @@
         self.notifyListeners('connected', 'Terhubung ke ' + self.deviceName);
         return { success: true, name: self.deviceName };
       } catch (err) {
+        if (isUserCancelled(err)) {
+          self.notifyListeners('idle', 'Pemindaian dibatalkan');
+          return { cancelled: true };
+        }
         self.isConnected = false;
         self.notifyListeners('error', err.message || 'Gagal koneksi Bluetooth');
         throw err;
@@ -169,12 +210,37 @@
         }
         await new Promise(function(resolve) { setTimeout(resolve, 25); });
       }
+      return true;
     },
 
     /**
-     * TEST PRINT SESUAI REQUEST: HANYA SATU KALIMAT SAJA ("sukses terhubung")
+     * Kirim data biner ESC/POS via RawBT Intent (Android)
      */
-    testPrint: async function() {
+    printRawBT: function(uint8Bytes) {
+      var bin = '';
+      var bytes = (uint8Bytes instanceof Uint8Array) ? uint8Bytes : new Uint8Array(uint8Bytes);
+      for (var i = 0; i < bytes.length; i++) {
+        bin += String.fromCharCode(bytes[i]);
+      }
+      var b64 = window.btoa(bin);
+      var intentUrl = 'intent:base64,' + b64 + '#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;S.browser_fallback_url=https%3A%2F%2Fplay.google.com%2Fstore%2Fapps%2Fdetails%3Fid%3Dru.a402d.rawbtprinter;end;';
+
+      var link = document.createElement('a');
+      link.href = intentUrl;
+      link.style.display = 'none';
+      document.body.appendChild(link);
+      link.click();
+      setTimeout(function() {
+        if (link.parentNode) link.parentNode.removeChild(link);
+      }, 1000);
+      return true;
+    },
+
+    /**
+     * Generate byte ESC/POS untuk Test Print
+     * SESUAI REQUEST USER: HANYA SATU KALIMAT SAJA ("sukses terhubung")
+     */
+    buildTestPrintBytes: function() {
       var encoder = new TextEncoder();
       var textBytes = encoder.encode('sukses terhubung\n\n\n');
 
@@ -187,19 +253,38 @@
         commands.push(textBytes[i]);
       }
 
-      // Cut paper / feed
       if (this.autoCut) {
         commands.push(0x1D, 0x56, 0x00); // GS V 0: Full cut
       }
 
-      await this.sendRawBytes(new Uint8Array(commands));
-      return true;
+      return new Uint8Array(commands);
     },
 
     /**
-     * Cetak Struk Voucher / Transaksi
+     * TEST PRINT SESUAI REQUEST: HANYA SATU KALIMAT SAJA ("sukses terhubung")
      */
-    printVoucher: async function(data) {
+    testPrint: async function(forceMethod) {
+      var method = forceMethod || this.printMethod;
+      if (method === 'rawbt' || (!this.isConnected && this.isAndroid())) {
+        return this.testPrintRawBT();
+      }
+      var bytes = this.buildTestPrintBytes();
+      return await this.sendRawBytes(bytes);
+    },
+
+    /**
+     * Test print via RawBT Android
+     */
+    testPrintRawBT: function() {
+      var bytes = this.buildTestPrintBytes();
+      return this.printRawBT(bytes);
+    },
+
+    /**
+     * Generate byte ESC/POS untuk Voucher
+     */
+    buildVoucherBytes: function(data) {
+      data = data || {};
       var encoder = new TextEncoder();
       var width = (this.paperSize === '80') ? 48 : 32;
       var sep = '';
@@ -266,8 +351,32 @@
         add([0x1D, 0x56, 0x00]); // Cut
       }
 
-      await this.sendRawBytes(new Uint8Array(cmds));
-      return true;
+      return new Uint8Array(cmds);
+    },
+
+    /**
+     * Cetak Struk Voucher / Transaksi (Otomatis deteksi BLE atau RawBT)
+     */
+    printVoucher: async function(data) {
+      if (this.printMethod === 'rawbt') {
+        return this.printVoucherRawBT(data);
+      }
+      if (this.isConnected) {
+        var bytes = this.buildVoucherBytes(data);
+        return await this.sendRawBytes(bytes);
+      }
+      if (this.isAndroid()) {
+        return this.printVoucherRawBT(data);
+      }
+      throw new Error('Printer thermal belum terhubung.');
+    },
+
+    /**
+     * Cetak Voucher via RawBT Android
+     */
+    printVoucherRawBT: function(data) {
+      var bytes = this.buildVoucherBytes(data);
+      return this.printRawBT(bytes);
     }
   };
 

@@ -257,6 +257,9 @@ body {
       <button type="button" class="thermal-btn thermal-btn-primary" onclick="printAllThermalBt()" id="btnBtPrintAll">
         <i class="fa fa-bluetooth"></i> <span id="btnBtPrintAllText">Cetak via Bluetooth</span>
       </button>
+      <button type="button" class="thermal-btn thermal-btn-secondary" onclick="printAllThermalRawBt()" id="btnRawBtPrintAll" title="Cetak via RawBT Android">
+        <i class="fa fa-android"></i> RawBT Android
+      </button>
       <button type="button" class="thermal-btn thermal-btn-secondary" onclick="window.print()">
         <i class="fa fa-print"></i> Cetak Browser
       </button>
@@ -333,11 +336,7 @@ if (window.MikhmonThermal) {
   window.MikhmonThermal.addListener(updatePrintBarBt);
 }
 
-function printAllThermalBt() {
-  if (!window.MikhmonThermal) return;
-  var btnText = document.getElementById('btnBtPrintAllText');
-  var origHtml = btnText ? btnText.innerHTML : 'Cetak via Bluetooth';
-
+function collectVouchers() {
   var vouchers = [];
   var vEls = document.querySelectorAll('.voucher, .v-thermal');
   if (vEls.length > 0) {
@@ -361,6 +360,26 @@ function printAllThermalBt() {
       });
     });
   }
+  return vouchers;
+}
+
+function printAllThermalRawBt() {
+  if (!window.MikhmonThermal) return;
+  var vouchers = collectVouchers();
+  if (vouchers.length === 0) {
+    alert('Tidak ada voucher yang dapat dicetak.');
+    return;
+  }
+  vouchers.forEach(function(v) {
+    window.MikhmonThermal.printVoucherRawBT(v);
+  });
+}
+
+function printAllThermalBt() {
+  if (!window.MikhmonThermal) return;
+  var btnText = document.getElementById('btnBtPrintAllText');
+  var origHtml = btnText ? btnText.innerHTML : 'Cetak via Bluetooth';
+  var vouchers = collectVouchers();
 
   function doPrint() {
     if (vouchers.length === 0) {
@@ -387,10 +406,14 @@ function printAllThermalBt() {
   }
 
   if (!window.MikhmonThermal.isConnected) {
-    window.MikhmonThermal.connect().then(function() {
+    window.MikhmonThermal.connect('printers').then(function(res) {
+      if (res && res.cancelled) return;
       doPrint();
     }).catch(function(err) {
-      alert('Koneksi printer Bluetooth: ' + (err.message || err));
+      var isCancel = (err && (err.name === 'NotFoundError' || err.name === 'AbortError' || (err.message && err.message.toLowerCase().indexOf('cancelled') !== -1)));
+      if (!isCancel) {
+        alert('Koneksi printer Bluetooth: ' + (err.message || err));
+      }
     });
   } else {
     doPrint();
