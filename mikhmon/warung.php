@@ -646,16 +646,6 @@ include_once __DIR__ . '/include/headhtml.php';
 
 <?php if (!$currentWarung): ?>
   <!-- =========================================================================
-  <!-- Language Switcher Bar -->
-  <div style="display: flex; justify-content: center; align-items: center; gap: 8px; margin-bottom: 12px;">
-    <span style="font-size: 11px; font-weight: bold; opacity: 0.7; text-transform: uppercase;"><?= $_choose_language ?? 'Bahasa'; ?>:</span>
-    <div style="display: inline-flex; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 2px; border: 1px solid rgba(120,120,120,0.3);">
-      <a href="./warung.php?<?= !empty($session) ? 'session=' . urlencode($session) . '&' : ''; ?>setlang=id" style="font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 4px; text-decoration: none; <?= (($langid ?? 'id') === 'id') ? 'background: #0073C6; color: #ffffff;' : 'color: inherit; opacity: 0.75;' ?>">ID</a>
-      <a href="./warung.php?<?= !empty($session) ? 'session=' . urlencode($session) . '&' : ''; ?>setlang=fr" style="font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 4px; text-decoration: none; <?= (($langid ?? 'id') === 'fr') ? 'background: #0073C6; color: #ffffff;' : 'color: inherit; opacity: 0.75;' ?>">FR</a>
-      <a href="./warung.php?<?= !empty($session) ? 'session=' . urlencode($session) . '&' : ''; ?>setlang=en" style="font-size: 11px; font-weight: bold; padding: 3px 10px; border-radius: 4px; text-decoration: none; <?= (($langid ?? 'id') === 'en') ? 'background: #0073C6; color: #ffffff;' : 'color: inherit; opacity: 0.75;' ?>">EN</a>
-    </div>
-  </div>
-
   <div class="login-box" style="padding-top: 15px; margin: 15px auto;">
     <div class="card">
       <div class="card-header text-center">
@@ -711,6 +701,22 @@ include_once __DIR__ . '/include/headhtml.php';
 
           <div style="margin-bottom: 10px; width: 100%;">
             <input style="width: 100%; height: 38px; font-weight: bold; font-size: 15px; margin: 0 !important;" class="btn-login bg-primary pointer" type="submit" name="login" value="<?= $_login_warung_btn ?? 'Masuk ke Warung'; ?>">
+          </div>
+
+          <!-- Language Selector (Properly Placed Below Login Button matching Admin Login) -->
+          <div style="margin-top: 14px; margin-bottom: 10px; text-align: center; border-top: 1px solid rgba(127,127,127,0.2); padding-top: 10px;">
+            <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+              <label for="loginLangSelect" style="font-size: 12px; font-weight: bold; margin: 0; opacity: 0.8; display: inline-flex; align-items: center; gap: 4px;">
+                <i class="fa fa-globe"></i> <?= !empty($_choose_language) ? $_choose_language : 'Bahasa'; ?>:
+              </label>
+              <select name="login_lang" id="loginLangSelect" class="form-control" style="width: auto; height: 32px; padding: 3px 8px; font-size: 12px; display: inline-block; margin: 0 !important;" onchange="window.location.replace('./warung.php?<?= !empty($session) ? 'session=' . urlencode($session) . '&' : ''; ?>setlang='+encodeURIComponent(this.value)+'&_t='+Date.now());">
+                <?php foreach ($isocodelang as $code => $name): ?>
+                  <option value="<?= $code; ?>" <?= (($langid ?? 'id') === $code) ? 'selected' : ''; ?>>
+                    <?= htmlspecialchars($name); ?>
+                  </option>
+                <?php endforeach; ?>
+              </select>
+            </div>
           </div>
 
           <div style="margin-bottom: 6px; width: 100%;">
@@ -1615,29 +1621,29 @@ include_once __DIR__ . '/include/headhtml.php';
     <div class="card" style="width: 100%; max-width: 440px; margin: 0 auto; box-shadow: 0 12px 35px rgba(0,0,0,0.45); border-radius: 6px; overflow: hidden; max-height: 90vh; display: flex; flex-direction: column;">
       <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 15px;">
         <h3 style="margin: 0; font-size: 14px; font-weight: bold;">
-          <i class="fa fa-bluetooth-b text-primary"></i> Hubungkan Printer Thermal
+          <i class="fa fa-bluetooth-b text-primary"></i> <?= $_connect_thermal_printer ?? 'Hubungkan Printer Thermal'; ?>
         </h3>
-        <a href="javascript:void(0)" onclick="closeWarungScanModal()" class="text-secondary" style="font-size: 22px; text-decoration: none; line-height: 1; padding: 0 4px;">&times;</a>
+        <a href="javascript:void(0)" onclick="closeWarungScanModal()" class="text-secondary" style="font-size: 22px; text-decoration: none; line-height: 1; padding: 0 4px;" aria-label="<?= $_close ?? 'Tutup'; ?>">&times;</a>
       </div>
       
       <div class="card-body" style="padding: 15px; overflow-y: auto;">
         <!-- STEP CHECKLIST IZIN ANDROID -->
         <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.25); border-radius: 6px; padding: 10px 12px; margin-bottom: 15px;">
           <div style="font-weight: bold; font-size: 12px; margin-bottom: 6px; color: #2563eb;">
-            <i class="fa fa-shield"></i> Syarat &amp; Perizinan Android:
+            <i class="fa fa-shield"></i> <?= $_android_perm_title ?? 'Syarat &amp; Perizinan Android:'; ?>
           </div>
           <div style="font-size: 11.5px; line-height: 1.5; color: inherit;">
             <div style="display: flex; gap: 8px; margin-bottom: 5px;">
               <i class="fa fa-map-marker text-danger" style="margin-top: 2px;"></i>
-              <span><b>GPS / Lokasi HP Aktif:</b> Android mewajibkan akses lokasi agar Chrome dapat memindai Bluetooth.</span>
+              <span><?= $_android_perm_gps ?? '<b>GPS / Lokasi HP Aktif:</b> Android mewajibkan akses lokasi agar Chrome dapat memindai Bluetooth.'; ?></span>
             </div>
             <div style="display: flex; gap: 8px; margin-bottom: 5px;">
               <i class="fa fa-bluetooth text-primary" style="margin-top: 2px;"></i>
-              <span><b>Bluetooth HP &amp; Printer ON:</b> Pastikan printer menyala dan lampu indikator aktif.</span>
+              <span><?= $_android_perm_bt ?? '<b>Bluetooth HP &amp; Printer ON:</b> Pastikan printer menyala dan lampu indikator aktif.'; ?></span>
             </div>
             <div style="display: flex; gap: 8px;">
               <i class="fa fa-check-circle text-green" style="margin-top: 2px;"></i>
-              <span><b>Izin Perangkat Sekitar:</b> Jika Chrome meminta izin <i>"Nearby devices"</i>, pilih <b>Izinkan</b>.</span>
+              <span><?= $_android_perm_nearby ?? '<b>Izin Perangkat Sekitar:</b> Jika Chrome meminta izin <i>"Nearby devices"</i>, pilih <b>Izinkan</b>.'; ?></span>
             </div>
           </div>
         </div>
@@ -1645,38 +1651,38 @@ include_once __DIR__ . '/include/headhtml.php';
         <!-- PILIHAN SCAN TOMBOL -->
         <div style="margin-bottom: 15px;">
           <div style="font-size: 11px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;" class="text-secondary">
-            Pilih Mode Pindai Bluetooth:
+            <?= $_choose_bt_scan_mode ?? 'Pilih Mode Pindai Bluetooth:'; ?>
           </div>
           <button type="button" class="btn bg-primary btn-block" onclick="startWarungBtScan('printers')" style="padding: 10px; font-size: 12.5px; font-weight: bold; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <i class="fa fa-magic"></i> Pindai Printer POS (Cerdas - Bersih)
+            <i class="fa fa-magic"></i> <?= $_scan_pos_printers_smart ?? 'Pindai Printer POS (Cerdas - Bersih)'; ?>
           </button>
           <div style="font-size: 10.5px; margin-bottom: 10px; line-height: 1.3;" class="text-muted">
-            *Menyaring daftar agar hanya menampilkan printer POS (Panda, VSC, Eppos, RPP, MPT, PT-210, dll) dan menyembunyikan TV/Smartwatch.
+            *<?= $_scan_pos_printers_smart_hint ?? 'Menyaring daftar agar hanya menampilkan printer POS (Panda, VSC, Eppos, RPP, MPT, PT-210, dll) dan menyembunyikan TV/Smartwatch.'; ?>
           </div>
 
           <button type="button" class="btn bg-secondary btn-block" onclick="startWarungBtScan('all')" style="padding: 8px; font-size: 11.5px; display: flex; align-items: center; justify-content: center; gap: 8px;">
-            <i class="fa fa-search"></i> Pindai Semua Perangkat BLE
+            <i class="fa fa-search"></i> <?= $_scan_all_ble_devices ?? 'Pindai Semua Perangkat BLE'; ?>
           </button>
           <div style="font-size: 10.5px; line-height: 1.3; margin-top: 4px;" class="text-muted">
-            *Gunakan jika nama printer kustom Anda tidak muncul pada mode cerdas.
+            *<?= $_scan_all_ble_devices_hint ?? 'Gunakan jika nama printer kustom Anda tidak muncul pada mode cerdas.'; ?>
           </div>
         </div>
 
         <!-- KARTU KHUSUS ANDROID / RAWBT -->
         <div style="border-top: 1px dashed rgba(128,128,128,0.3); padding-top: 12px; margin-top: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
-            <b style="font-size: 11.5px;"><i class="fa fa-android text-green"></i> Opsi Android: RawBT Print</b>
-            <span class="badge" style="background: #16a34a; color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 3px;">100% Kompatibel</span>
+            <b style="font-size: 11.5px;"><i class="fa fa-android text-green"></i> <?= $_android_rawbt_option ?? 'Opsi Android: RawBT Print'; ?></b>
+            <span class="badge" style="background: #16a34a; color: #fff; font-size: 9px; padding: 2px 5px; border-radius: 3px;"><?= $_rawbt_compatibility_badge ?? '100% Kompatibel'; ?></span>
           </div>
           <div style="font-size: 11px; line-height: 1.4; margin-bottom: 10px;" class="text-secondary">
-            Printer Anda tipe <b>Bluetooth Classic SPP</b> (bukan BLE) atau kabel <b>USB OTG</b>? Gunakan <b>RawBT Android</b> untuk mencetak tanpa batasan browser!
+            <?= $_rawbt_desc ?? 'Printer Anda tipe <b>Bluetooth Classic SPP</b> (bukan BLE) atau kabel <b>USB OTG</b>? Gunakan <b>RawBT Android</b> untuk mencetak tanpa batasan browser!'; ?>
           </div>
           <div style="display: flex; gap: 6px;">
             <button type="button" class="btn bg-success" onclick="warungTestPrintRawBt()" style="flex: 1; padding: 8px 6px; font-size: 11px; font-weight: bold;">
-              <i class="fa fa-print"></i> Tes Cetak RawBT
+              <i class="fa fa-print"></i> <?= $_test_rawbt ?? 'Tes Cetak RawBT'; ?>
             </button>
             <a href="https://play.google.com/store/apps/details?id=ru.a402d.rawbtprinter" target="_blank" class="btn bg-secondary" style="padding: 8px 10px; font-size: 11px;">
-              <i class="fa fa-download"></i> Pasang RawBT
+              <i class="fa fa-download"></i> <?= $_install_rawbt ?? 'Pasang RawBT'; ?>
             </a>
           </div>
         </div>
@@ -1684,7 +1690,7 @@ include_once __DIR__ . '/include/headhtml.php';
 
       <div class="card-footer" style="padding: 10px 15px; text-align: right; background: rgba(0,0,0,0.03); border-top: 1px solid rgba(0,0,0,0.08);">
         <button type="button" class="btn bg-secondary" onclick="closeWarungScanModal()" style="padding: 6px 14px; font-size: 11.5px;">
-          Tutup
+          <?= $_close ?? 'Tutup'; ?>
         </button>
       </div>
     </div>

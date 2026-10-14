@@ -235,7 +235,7 @@ for ($i = 0; $i < $TotalReg; $i++) {
   }
   $popup = "javascript:window.open('./voucher/print.php?user=" . $usermode . "-" . $uname . "&qr=no&session=" . $session . "','_blank','width=320,height=550').print();";
   $popupQR = "javascript:window.open('./voucher/print.php?user=" . $usermode . "-" . $uname . "&qr=yes&session=" . $session . "','_blank','width=320,height=550').print();";
-  $popupThermal = "javascript:window.open('./voucher/print.php?user=" . $usermode . "-" . $uname . "&thermal=yes&session=" . $session . "','_blank','width=320,height=550').print();";
+  $popupThermal = "javascript:window.open('./voucher/print.php?user=" . $usermode . "-" . $uname . "&thermal=yes&session=" . $session . "','_blank','width=360,height=620');";
   echo "<td><a title='" . ($_open ?? "Open") . " " . htmlspecialchars($uname, ENT_QUOTES) . "' href=./?hotspot-user=" . $uid . "&session=" . $session . "><i class='fa fa-edit'></i> " . $uname . " </a>";
   echo '</td><td class"text-center"><a title="' . ($_print ?? "Print") . " " . htmlspecialchars($uname, ENT_QUOTES) . '" href="' . $popup . '"><i class="fa fa-print"></i></a> &nbsp; <a title="' . ($_print_qr ?? "Print QR") . " " . htmlspecialchars($uname, ENT_QUOTES) . '" href="' . $popupQR . '"><i class="fa fa-qrcode"></i></a> &nbsp; <a title="' . ($_print_thermal ?? "Thermal") . " " . htmlspecialchars($uname, ENT_QUOTES) . '" href="' . $popupThermal . '"><i class="fa fa-ticket"></i></a></td>';
   echo "<td>" . $uprofile . "</td>";

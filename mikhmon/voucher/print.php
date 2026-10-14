@@ -34,6 +34,13 @@ if (!isset($_SESSION["mikhmon"])) {
   include_once('../include/config.php');
   include_once('../include/readcfg.php');
 
+  $langid = $_SESSION['lang'] ?? $_COOKIE['mikhmon_lang'] ?? 'id';
+  if (file_exists('../lang/' . $langid . '.php')) {
+    include_once('../lang/' . $langid . '.php');
+  } elseif (file_exists('../lang/id.php')) {
+    include_once('../lang/id.php');
+  }
+
   include_once('../lib/formatbytesbites.php');
 
   $id = $_GET['id'];
@@ -166,7 +173,7 @@ if (!isset($_SESSION["mikhmon"])) {
 
 
   $thermal = $_GET['thermal'] ?? ($_GET['t'] ?? ($_GET['template'] ?? ''));
-  $isThermal = ($userp != "" || $thermal === "yes" || $thermal === "thermal");
+  $isThermal = ($thermal === "yes" || $thermal === "thermal");
 }
 ?>
 <!DOCTYPE html>
@@ -253,15 +260,15 @@ body {
 
   <?php if ($isThermal): ?>
     <div class="thermal-print-bar">
-      <span><i class="fa fa-print text-primary"></i> <strong>Cetak Thermal:</strong></span>
+      <span><i class="fa fa-print text-primary"></i> <strong><?= $_print_thermal ?? 'Cetak Thermal'; ?>:</strong></span>
       <button type="button" class="thermal-btn thermal-btn-primary" onclick="printAllThermalBt()" id="btnBtPrintAll">
-        <i class="fa fa-bluetooth"></i> <span id="btnBtPrintAllText">Cetak via Bluetooth</span>
+        <i class="fa fa-bluetooth"></i> <span id="btnBtPrintAllText"><?= $_print_via_bluetooth ?? 'Cetak via Bluetooth'; ?></span>
       </button>
-      <button type="button" class="thermal-btn thermal-btn-secondary" onclick="printAllThermalRawBt()" id="btnRawBtPrintAll" title="Cetak via RawBT Android">
-        <i class="fa fa-android"></i> RawBT Android
+      <button type="button" class="thermal-btn thermal-btn-secondary" onclick="printAllThermalRawBt()" id="btnRawBtPrintAll" title="<?= $_test_rawbt ?? 'Cetak via RawBT Android'; ?>">
+        <i class="fa fa-android"></i> <?= $_rawbt_android ?? 'RawBT Android'; ?>
       </button>
       <button type="button" class="thermal-btn thermal-btn-secondary" onclick="window.print()">
-        <i class="fa fa-print"></i> Cetak Browser
+        <i class="fa fa-print"></i> <?= $_print_browser ?? 'Cetak Browser'; ?>
       </button>
       <span id="btPrintStatus" style="font-size: 11px; opacity: 0.85;"></span>
     </div>
@@ -301,8 +308,7 @@ body {
   $num = $i + 1;
   ?>
 <?php
-$thermal = $_GET['thermal'] ?? ($_GET['t'] ?? ($_GET['template'] ?? ''));
-if ($userp != "" || $thermal === "yes" || $thermal === "thermal") {
+if ($isThermal) {
   include('./template-thermal.php');
 } else {
   if ($small == "yes") {
@@ -318,17 +324,23 @@ if ($userp != "" || $thermal === "yes" || $thermal === "thermal") {
 <?php if ($isThermal): ?>
 <script src="../js/mikhmon-thermal.js?v=<?= time(); ?>"></script>
 <script>
+var LANG_CONNECTED = <?= json_encode($_status_connected ?? 'Terhubung'); ?>;
+var LANG_CONNECTING = <?= json_encode($_status_connecting ?? 'Menghubungkan...'); ?>;
+var LANG_NOT_CONNECTED = <?= json_encode($_printer_not_connected ?? 'Belum Terhubung'); ?>;
+var LANG_PRINT_VIA_BT = <?= json_encode($_print_via_bluetooth ?? 'Cetak via Bluetooth'); ?>;
+var LANG_PRINT_TO = <?= json_encode($_print ?? 'Cetak ke'); ?>;
+
 function updatePrintBarBt(status, msg, thermalInstance) {
   var btnText = document.getElementById('btnBtPrintAllText');
   var statusEl = document.getElementById('btPrintStatus');
   if (status === 'connected') {
-    if (btnText) btnText.innerHTML = 'Cetak ke ' + (thermalInstance.deviceName || 'Bluetooth');
-    if (statusEl) statusEl.innerHTML = '<span style="color:#4ade80;"><i class="fa fa-circle"></i> Terhubung</span>';
+    if (btnText) btnText.innerHTML = LANG_PRINT_TO + ' (' + (thermalInstance.deviceName || 'Bluetooth') + ')';
+    if (statusEl) statusEl.innerHTML = '<span style="color:#4ade80;"><i class="fa fa-circle"></i> ' + LANG_CONNECTED + '</span>';
   } else if (status === 'connecting') {
-    if (statusEl) statusEl.innerHTML = '<span style="color:#facc15;"><i class="fa fa-circle-o-notch fa-spin"></i> Menghubungkan...</span>';
+    if (statusEl) statusEl.innerHTML = '<span style="color:#facc15;"><i class="fa fa-circle-o-notch fa-spin"></i> ' + LANG_CONNECTING + '</span>';
   } else {
-    if (btnText) btnText.innerHTML = 'Cetak via Bluetooth';
-    if (statusEl) statusEl.innerHTML = '<span style="color:#94a3b8;"><i class="fa fa-circle-o"></i> Belum Terhubung</span>';
+    if (btnText) btnText.innerHTML = LANG_PRINT_VIA_BT;
+    if (statusEl) statusEl.innerHTML = '<span style="color:#94a3b8;"><i class="fa fa-circle-o"></i> ' + LANG_NOT_CONNECTED + '</span>';
   }
 }
 
@@ -348,6 +360,9 @@ function collectVouchers() {
       var profEl = el.querySelector('.v-th-meta, .v-profile');
       var prof = profEl ? profEl.textContent.trim() : '';
 
+      var valEl = el.querySelector('.v-th-validity');
+      var val = valEl ? valEl.textContent.trim() : '';
+
       var priceEl = el.querySelector('.v-th-price, .v-price');
       var price = priceEl ? priceEl.textContent.trim() : '';
 
@@ -356,6 +371,7 @@ function collectVouchers() {
         dnsName: <?= json_encode($dnsname); ?>,
         code: code,
         profile: prof,
+        validity: val,
         price: price
       });
     });
@@ -378,7 +394,7 @@ function printAllThermalRawBt() {
 function printAllThermalBt() {
   if (!window.MikhmonThermal) return;
   var btnText = document.getElementById('btnBtPrintAllText');
-  var origHtml = btnText ? btnText.innerHTML : 'Cetak via Bluetooth';
+  var origHtml = btnText ? btnText.innerHTML : LANG_PRINT_VIA_BT;
   var vouchers = collectVouchers();
 
   function doPrint() {

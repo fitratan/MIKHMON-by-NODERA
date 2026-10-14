@@ -166,6 +166,25 @@ if (!function_exists('mikhmon_save_desktop_license_data')) {
     }
 }
 
+// Check if license is supplied via environment or Electron storage
+$envLicKey = getenv('NODERA_LICENSE_KEY');
+$envLicFile = getenv('NODERA_LICENSE_FILE');
+$envLicStatus = getenv('NODERA_LICENSE_STATUS') ?: 'ACTIVE';
+$envLicExp = getenv('NODERA_LICENSE_EXPIRY') ?: 'LIFETIME';
+$envLicSig = getenv('NODERA_LICENSE_SIGNATURE') ?: '';
+$envLicProd = getenv('NODERA_LICENSE_PRODUCT') ?: 'Mikhmon Desktop Standalone';
+
+if (empty($envLicKey) && !empty($envLicFile) && file_exists($envLicFile)) {
+    $fData = @json_decode(@file_get_contents($envLicFile), true);
+    if (is_array($fData) && !empty($fData['license_key'])) {
+        $envLicKey = $fData['license_key'];
+        $envLicStatus = $fData['status'] ?? 'ACTIVE';
+        $envLicExp = $fData['expires_at'] ?? 'LIFETIME';
+        $envLicSig = $fData['signature'] ?? '';
+        $envLicProd = $fData['product_name'] ?? 'Mikhmon Desktop Standalone';
+    }
+}
+
 // Auto-sync license from Electron storage or local json if config/license.php missing
 if (!function_exists('mikhmon_sync_license_from_storage')) {
     function mikhmon_sync_license_from_storage(): void {
@@ -174,8 +193,11 @@ if (!function_exists('mikhmon_sync_license_from_storage')) {
             return;
         }
         $jsonCandidates = [
+            getenv('NODERA_LICENSE_FILE') ?: '',
             __DIR__ . '/../config/nodera_license.json',
+            getenv('APPDATA') ? (getenv('APPDATA') . '/mikhmon-desktop-nodera/nodera_license.json') : '',
             getenv('APPDATA') ? (getenv('APPDATA') . '/Mikhmon Desktop by NODERA/nodera_license.json') : '',
+            getenv('HOME') ? (getenv('HOME') . '/.config/mikhmon-desktop-nodera/nodera_license.json') : '',
             getenv('HOME') ? (getenv('HOME') . '/.config/Mikhmon Desktop by NODERA/nodera_license.json') : '',
         ];
         foreach ($jsonCandidates as $cand) {
@@ -198,6 +220,22 @@ if (!file_exists($__licenseFile)) {
 }
 if (file_exists($__licenseFile)) {
     @include_once $__licenseFile;
+}
+
+// Fallback define from environment if file did not define it
+if (!empty($envLicKey) && (!defined('MIKHMON_LICENSE_KEY') || empty(MIKHMON_LICENSE_KEY))) {
+    if (!defined('MIKHMON_MODE')) define('MIKHMON_MODE', 'DESKTOP');
+    if (!defined('MIKHMON_STATUS')) define('MIKHMON_STATUS', $envLicStatus);
+    if (!defined('MIKHMON_LICENSE_KEY')) define('MIKHMON_LICENSE_KEY', $envLicKey);
+    if (!defined('MIKHMON_HWID')) define('MIKHMON_HWID', getenv('NODERA_DESKTOP_HWID') ?: mikhmon_get_hwid());
+    $expFormatted = ($envLicExp !== 'LIFETIME' && !empty($envLicExp) && $envLicExp !== '0000-00-00') ? date('Y-m-d H:i:s', strtotime($envLicExp)) : '';
+    if (!defined('MIKHMON_EXPIRY')) define('MIKHMON_EXPIRY', $expFormatted);
+    if (!defined('MIKHMON_EXPIRY_RAW')) define('MIKHMON_EXPIRY_RAW', $envLicExp);
+    if (!defined('MIKHMON_SIGNATURE')) define('MIKHMON_SIGNATURE', $envLicSig);
+    if (!defined('MIKHMON_BRAND')) define('MIKHMON_BRAND', 'by dgtlnetsolution.com');
+    if (!defined('MIKHMON_PRODUCT_NAME')) define('MIKHMON_PRODUCT_NAME', $envLicProd);
+    if (!defined('MIKHMON_ACTIVATED_AT')) define('MIKHMON_ACTIVATED_AT', date('Y-m-d H:i:s'));
+    if (!defined('MIKHMON_SUBDOMAIN')) define('MIKHMON_SUBDOMAIN', 'desktop');
 }
 
 if (!defined('MIKHMON_BRAND')) {

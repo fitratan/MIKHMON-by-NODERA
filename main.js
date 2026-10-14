@@ -258,13 +258,24 @@ function startPhpServer(port) {
   console.log(`Starting PHP server on port ${port} pointing to ${mikhmonPath} using ${phpBinary}...`);
 
   const hwid = getHardwareId();
+  const savedLicense = readSavedLicense();
+  const phpEnv = {
+    ...process.env,
+    NODERA_DESKTOP_HWID: hwid,
+    NODERA_LICENSE_FILE: LICENSE_FILE,
+  };
+  if (savedLicense && savedLicense.license_key) {
+    phpEnv.NODERA_LICENSE_KEY = savedLicense.license_key;
+    phpEnv.NODERA_LICENSE_STATUS = savedLicense.status || 'ACTIVE';
+    phpEnv.NODERA_LICENSE_EXPIRY = savedLicense.expires_at || 'LIFETIME';
+    phpEnv.NODERA_LICENSE_SIGNATURE = savedLicense.signature || '';
+    phpEnv.NODERA_LICENSE_PRODUCT = savedLicense.product_name || 'Mikhmon Desktop Standalone';
+  }
+
   phpProcess = spawn(phpBinary, phpArgs, {
     cwd: mikhmonPath,
     stdio: 'ignore',
-    env: {
-      ...process.env,
-      NODERA_DESKTOP_HWID: hwid,
-    },
+    env: phpEnv,
   });
 
   phpProcess.on('error', (err) => {
@@ -452,6 +463,13 @@ ipcMain.handle('activate-license', async (event, key) => {
       saveLicense(licenseData);
       syncLicenseToPhp(licenseData);
 
+      // Restart PHP process so it picks up the newly activated license environment immediately
+      if (phpProcess) {
+        try { phpProcess.kill(); } catch (e) {}
+        phpProcess = null;
+      }
+      startPhpServer(serverPort);
+
       setTimeout(() => {
         loadMikhmonApp();
       }, 1000);
@@ -493,6 +511,13 @@ ipcMain.handle('activate-trial', async () => {
       };
       saveLicense(licenseData);
       syncLicenseToPhp(licenseData);
+
+      // Restart PHP process so it picks up the newly activated trial license environment immediately
+      if (phpProcess) {
+        try { phpProcess.kill(); } catch (e) {}
+        phpProcess = null;
+      }
+      startPhpServer(serverPort);
 
       setTimeout(() => {
         loadMikhmonApp();
