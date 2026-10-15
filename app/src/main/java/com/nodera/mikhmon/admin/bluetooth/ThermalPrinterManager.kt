@@ -5,9 +5,12 @@ import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Context
+import android.content.SharedPreferences
 import com.nodera.mikhmon.admin.router.GeneratedVoucher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import org.json.JSONArray
+import org.json.JSONObject
 import java.io.OutputStream
 import java.nio.charset.Charset
 import java.util.UUID
@@ -22,6 +25,9 @@ class ThermalPrinterManager(private val context: Context) {
     companion object {
         // Standard Bluetooth Serial Port Profile (SPP) UUID
         private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
+        private const val PREFS_NAME = "mikhmon_printer_prefs"
+        private const val KEY_PRINTER_ADDR = "selected_printer_address"
+        private const val KEY_PRINTER_NAME = "selected_printer_name"
 
         // ESC/POS Command bytes
         private val CMD_INIT = byteArrayOf(0x1B, 0x40) // ESC @
@@ -35,6 +41,10 @@ class ThermalPrinterManager(private val context: Context) {
         private val CMD_FEED_3 = byteArrayOf(0x0A, 0x0A, 0x0A)
     }
 
+    private val prefs: SharedPreferences by lazy {
+        context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+    }
+
     private val bluetoothAdapter: BluetoothAdapter? by lazy {
         BluetoothAdapter.getDefaultAdapter()
     }
@@ -42,6 +52,18 @@ class ThermalPrinterManager(private val context: Context) {
     fun isBluetoothSupported(): Boolean = bluetoothAdapter != null
 
     fun isBluetoothEnabled(): Boolean = bluetoothAdapter?.isEnabled == true
+
+    fun getSelectedPrinterAddress(): String {
+        return prefs.getString(KEY_PRINTER_ADDR, "") ?: ""
+    }
+
+    fun getSelectedPrinterName(): String {
+        return prefs.getString(KEY_PRINTER_NAME, "") ?: ""
+    }
+
+    fun setSelectedPrinter(address: String, name: String) {
+        prefs.edit().putString(KEY_PRINTER_ADDR, address).putString(KEY_PRINTER_NAME, name).apply()
+    }
 
     @SuppressLint("MissingPermission")
     fun getPairedPrinters(): List<PairedPrinter> {
@@ -57,6 +79,55 @@ class ThermalPrinterManager(private val context: Context) {
             } ?: emptyList()
         } catch (e: Exception) {
             emptyList()
+        }
+    }
+
+    fun getPairedPrintersJson(): String {
+        val printers = getPairedPrinters()
+        val arr = JSONArray()
+        for (p in printers) {
+            val obj = JSONObject()
+            obj.put("name", p.name)
+            obj.put("address", p.address)
+            arr.put(obj)
+        }
+        return arr.toString()
+    }
+
+    @SuppressLint("MissingPermission")
+    fun printRawEscPosSync(targetAddress: String?, bytes: ByteArray): String {
+        val adapter = bluetoothAdapter ?: return "Bluetooth tidak tersedia di perangkat"
+        if (!adapter.isEnabled) return "Bluetooth sedang nonaktif. Silakan aktifkan Bluetooth di HP Anda."
+
+        val address = if (!targetAddress.isNullOrBlank()) {
+            targetAddress
+        } else {
+            val saved = getSelectedPrinterAddress()
+            if (saved.isNotBlank()) saved else {
+                val list = getPairedPrinters()
+                if (list.isNotEmpty()) list.first().address else null
+            }
+        } ?: return "Tidak ada printer Bluetooth yang dipasangkan di HP. Silakan pairing printer Bluetooth terlebih dahulu."
+
+        var socket: BluetoothSocket? = null
+        var outputStream: OutputStream? = null
+
+        return try {
+            val device: BluetoothDevice = adapter.getRemoteDevice(address)
+            adapter.cancelDiscovery()
+
+            socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
+            socket.connect()
+            outputStream = socket.outputStream
+
+            outputStream.write(bytes)
+            outputStream.flush()
+            "OK"
+        } catch (e: Exception) {
+            "Gagal mencetak thermal: ${e.message}"
+        } finally {
+            try { outputStream?.close() } catch (_: Exception) {}
+            try { socket?.close() } catch (_: Exception) {}
         }
     }
 

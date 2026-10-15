@@ -341,6 +341,8 @@ class PhpServerManager(private val context: Context) {
             memory_limit = 512M
             max_execution_time = 0
             max_input_time = -1
+            upload_max_filesize = 32M
+            post_max_size = 32M
             sys_temp_dir = "$cacheDir"
             upload_tmp_dir = "$cacheDir"
             session.save_path = "${sessionDir.absolutePath}"
@@ -366,6 +368,8 @@ class PhpServerManager(private val context: Context) {
             "-d", "opcache.enable=0",
             "-d", "opcache.enable_cli=0",
             "-d", "max_execution_time=0",
+            "-d", "upload_max_filesize=32M",
+            "-d", "post_max_size=32M",
             "-d", "sys_temp_dir=$cacheDir",
             "-d", "upload_tmp_dir=$cacheDir",
             "-d", "session.save_path=${sessionDir.absolutePath}",
@@ -377,6 +381,7 @@ class PhpServerManager(private val context: Context) {
 
         val env = pb.environment()
         env["NODERA_DESKTOP_HWID"] = hwid
+        env["PHP_CLI_SERVER_WORKERS"] = "6"
         env["TMPDIR"] = cacheDir
         env["TEMP"] = cacheDir
         env["TMP"] = cacheDir
