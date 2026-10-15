@@ -2233,15 +2233,6 @@ function updateWarungBtUi(status, msg, thermalInstance) {
     }
     if (nameEl) nameEl.textContent = msg || 'Menghubungkan...';
     if (btnTest) btnTest.disabled = true;
-  } else {
-    if (badge) {
-      badge.style.background = '#64748b';
-      badge.textContent = 'Belum Terhubung';
-    }
-    if (nameEl) {
-      nameEl.textContent = '-';
-      nameEl.className = 'text-secondary';
-    }
   } else if (status === 'cancelled' || status === 'idle') {
     if (!thermalInstance || !thermalInstance.isConnected) {
       if (badge) {
@@ -2333,6 +2324,8 @@ function warungTestPrintRawBt() {
 }
 
 function getReceiptVoucherData() {
+  var logoEl = document.querySelector('.warung-receipt img') || document.querySelector('#modalReceipt img');
+  var logoSrc = logoEl ? logoEl.getAttribute('src') : <?= json_encode($warungLogo); ?>;
   return {
     hotspotName: <?= json_encode($hotspotname); ?>,
     dnsName: <?= json_encode($dnsname); ?>,
@@ -2340,7 +2333,8 @@ function getReceiptVoucherData() {
     validity: document.getElementById('rcValidity') ? document.getElementById('rcValidity').textContent.trim() : '',
     price: document.getElementById('rcPrice') ? document.getElementById('rcPrice').textContent.trim() : '',
     code: document.getElementById('rcCode') ? document.getElementById('rcCode').textContent.trim() : '',
-    warungName: document.getElementById('rcWarung') ? document.getElementById('rcWarung').textContent.trim() : ''
+    warungName: document.getElementById('rcWarung') ? document.getElementById('rcWarung').textContent.trim() : '',
+    logo: logoSrc
   };
 }
 
@@ -2355,25 +2349,23 @@ function warungPrintReceiptSmart() {
       return;
     }
 
-    if (window.MikhmonThermal.isConnected) {
-      if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak...';
-      window.MikhmonThermal.printVoucher(vData).then(function() {
-        if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-check"></i> Tercetak!';
-        setTimeout(function() {
-          if (printBtnText) printBtnText.innerHTML = origText;
-        }, 2000);
-      }).catch(function(err) {
+    if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-circle-o-notch fa-spin"></i> Mencetak...';
+
+    window.MikhmonThermal.printVoucher(vData).then(function() {
+      if (printBtnText) printBtnText.innerHTML = '<i class="fa fa-check"></i> Tercetak!';
+      setTimeout(function() {
         if (printBtnText) printBtnText.innerHTML = origText;
+      }, 2000);
+    }).catch(function(err) {
+      if (printBtnText) printBtnText.innerHTML = origText;
+      if (window.MikhmonThermal.isAndroid()) {
+        window.MikhmonThermal.printVoucherRawBT(vData);
+      } else {
         alert('Gagal cetak Bluetooth (' + (err.message || err) + '). Membuka dialog cetak browser...');
         window.print();
-      });
-      return;
-    }
-
-    if (window.MikhmonThermal.isAndroid()) {
-      window.MikhmonThermal.printVoucherRawBT(vData);
-      return;
-    }
+      }
+    });
+    return;
   }
 
   window.print();

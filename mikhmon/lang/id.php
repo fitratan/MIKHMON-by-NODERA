@@ -1838,4 +1838,6 @@ $_print_browser = "Cetak Browser";
 $_rawbt_android = "RawBT Android";
 $_username_label = "Username";
 $_password_label = "Password";
+$_print_single_voucher = "Cetak Voucher Ini";
+$_print_single = "Cetak 1 Saja";
 

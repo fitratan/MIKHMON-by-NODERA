@@ -83,6 +83,9 @@ if ($vShowDataLimit && !empty($datalimit)) {
     padding: 0 !important;
     background: #fff !important;
   }
+  .no-print, .th-card-actions, .thermal-print-bar {
+    display: none !important;
+  }
   .thermal-receipt-card {
     border: none !important;
     box-shadow: none !important;
@@ -97,7 +100,13 @@ if ($vShowDataLimit && !empty($datalimit)) {
 }
 </style>
 
-<div class="voucher v-thermal thermal-receipt-card">
+<div class="voucher v-thermal thermal-receipt-card"
+     data-num="<?= $num ?? 1; ?>"
+     data-code="<?= htmlspecialchars($username); ?>"
+     data-password="<?= htmlspecialchars($password); ?>"
+     data-profile="<?= htmlspecialchars($thProfile); ?>"
+     data-validity="<?= htmlspecialchars($thValidity); ?>"
+     data-price="<?= htmlspecialchars($price); ?>">
   <?php if ($vShowLogo && !empty($logo)): ?>
     <div style="text-align: center; margin-bottom: 4px;">
       <img src="<?= $logo; ?>" alt="Logo" style="max-height: 38px; max-width: 130px; height: auto; object-fit: contain; margin: 0 auto; display: inline-block;">
@@ -162,4 +171,13 @@ if ($vShowDataLimit && !empty($datalimit)) {
 
   <div style="font-size: 10px; font-weight: bold;"><?= htmlspecialchars($hotspotname); ?></div>
   <div style="font-size: 9px; margin-top: 2px; color: #6b7280;"><?= $_thank_you_purchase ?? 'Terima kasih atas pembelian Anda'; ?></div>
+
+  <div class="th-card-actions no-print" style="margin-top: 8px; padding-top: 6px; border-top: 1px dashed #cbd5e1; display: flex; gap: 6px; justify-content: center; align-items: center;">
+    <button type="button" class="btn-th-single" onclick="printSingleThermalCard(this)" title="<?= $_print ?? 'Cetak'; ?> #<?= $num ?? 1; ?>" style="background: #0284c7; color: #fff; border: 1px solid #0284c7; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">
+      <i class="fa fa-print"></i> <?= $_print_single_voucher ?? 'Cetak Voucher Ini'; ?>
+    </button>
+    <button type="button" class="btn-th-single-rawbt" onclick="printSingleThermalCardRawBt(this)" title="RawBT Android #<?= $num ?? 1; ?>" style="background: #475569; color: #fff; border: 1px solid #475569; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+      <i class="fa fa-android"></i> RawBT
+    </button>
+  </div>
 </div>

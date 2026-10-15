@@ -6,6 +6,10 @@ const { spawn, execSync } = require('child_process');
 const axios = require('axios');
 const { machineIdSync } = require('node-machine-id');
 
+// Enable Web Bluetooth support
+app.commandLine.appendSwitch('enable-web-bluetooth', 'true');
+app.commandLine.appendSwitch('enable-experimental-web-platform-features', 'true');
+
 // Global Configurations
 const APP_NAME = 'Mikhmon Desktop by NODERA';
 const PRIMARY_API = 'https://panel.dgtlnetsolution.com/api/desktop-license';
@@ -381,26 +385,67 @@ function createMainWindow() {
     autoHideMenuBar: true,
   });
 
-  // Handle external link opening
+  // Handle external link and popup window opening
   mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith(`http://127.0.0.1:${serverPort}`) || url.startsWith('http://localhost') || url.includes('/voucher/print.php') || url.includes('warung.php')) {
+      return {
+        action: 'allow',
+        overrideBrowserWindowOptions: {
+          width: 440,
+          height: 700,
+          autoHideMenuBar: true,
+          webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+          }
+        }
+      };
+    }
     shell.openExternal(url);
     return { action: 'deny' };
   });
 
-  // Handle Web Bluetooth device discovery in Electron Desktop
-  mainWindow.webContents.on('select-bluetooth-device', (event, deviceList, callback) => {
-    event.preventDefault();
-    if (deviceList && deviceList.length > 0) {
-      const printer = deviceList.find(d => {
-        const name = (d.deviceName || '').toLowerCase();
-        return name.includes('print') || name.includes('pos') || name.includes('rpp') || name.includes('mtp') || name.includes('pt') || name.includes('thermal');
-      }) || deviceList[0];
-      callback(printer.deviceId);
-    }
-  });
-
   checkLicenseAndRoute();
 }
+
+// Global Web Bluetooth device discovery handler for Electron
+app.on('web-contents-created', (event, contents) => {
+  let btTimeout = null;
+  contents.on('select-bluetooth-device', (event, deviceList, callback) => {
+    event.preventDefault();
+    if (deviceList && deviceList.length > 0) {
+      const PRINTER_KEYWORDS = [
+        'print', 'pos', 'rpp', 'mtp', 'mpt', 'pt-', 'pt', 'vsc', 'panda',
+        'iware', 'eppos', 'zjiang', 'goojprt', 'thermal', 'xp-', 'jp-', 'ep-',
+        'bluetooth', 'mobile', 'esc', 'spp', '58', '80'
+      ];
+      const printer = deviceList.find(d => {
+        const name = (d.deviceName || '').toLowerCase();
+        return PRINTER_KEYWORDS.some(kw => name.includes(kw));
+      }) || deviceList[0];
+
+      if (printer) {
+        if (btTimeout) {
+          clearTimeout(btTimeout);
+          btTimeout = null;
+        }
+        callback(printer.deviceId);
+        return;
+      }
+    }
+
+    if (!btTimeout) {
+      btTimeout = setTimeout(() => {
+        if (deviceList && deviceList.length > 0) {
+          callback(deviceList[0].deviceId);
+        } else {
+          callback('');
+        }
+        btTimeout = null;
+      }, 6000);
+    }
+  });
+});
 
 async function checkLicenseAndRoute() {
   const saved = readSavedLicense();
