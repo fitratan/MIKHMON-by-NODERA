@@ -1831,4 +1831,15 @@ $_print_browser = "Impression Navigateur";
 $_rawbt_android = "RawBT Android";
 $_username_label = "Identifiant";
 $_password_label = "Mot de passe";
+$_print_single_voucher = "Imprimer ce Coupon";
+$_print_single = "Imprimer 1 Seul";
+$_print_all_vouchers = "Tout Imprimer";
+$_print_success = "Impression Terminée !";
+$_print_failed = "Échec de l'impression";
+$_no_voucher_to_print = "Aucun coupon à imprimer.";
+$_confirm_batch_thermal_print = "Vous êtes sur le point d'imprimer plusieurs coupons sur l'imprimante thermique. Le rouleau de papier sera long. Continuer ?";
+$_printing = "Impression en cours...";
+$_scan_bluetooth_printer = "Scanner Imprimante Bluetooth";
+$_printer_not_connected = "Non Connectée";
+$_printer_connected = "Connectée";
 
