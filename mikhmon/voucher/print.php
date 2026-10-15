@@ -297,6 +297,9 @@ body {
       <button type="button" class="thermal-btn thermal-btn-secondary" onclick="window.print()">
         <i class="fa fa-print"></i> <?= $_print_browser ?? 'Cetak Browser'; ?>
       </button>
+      <button type="button" class="thermal-btn thermal-btn-secondary" onclick="window.history.back()" title="Kembali">
+        <i class="fa fa-arrow-left"></i> <?= $_back ?? 'Kembali'; ?>
+      </button>
       <span id="btPrintStatus" style="font-size: 11px; opacity: 0.85;"></span>
     </div>
   <?php endif; ?>

@@ -57,7 +57,11 @@
     _connectingPromise: null,
 
     isSupported: function() {
-      return (typeof navigator !== 'undefined' && 'bluetooth' in navigator);
+      return (typeof navigator !== 'undefined' && 'bluetooth' in navigator) || this.isNoderaAndroid();
+    },
+
+    isNoderaAndroid: function() {
+      return (typeof window !== 'undefined' && window.nodera && typeof window.nodera.printThermalEscPos === 'function');
     },
 
     isAndroid: function() {
@@ -165,6 +169,31 @@
      */
     autoConnect: async function() {
       var self = this;
+      if (self.isNoderaAndroid()) {
+        try {
+          var savedName = (window.nodera.getSelectedPrinterName && window.nodera.getSelectedPrinterName()) || '';
+          if (!savedName && window.nodera.getPairedPrinters) {
+            var printersJson = window.nodera.getPairedPrinters();
+            var printers = JSON.parse(printersJson || '[]');
+            if (printers.length > 0) {
+              if (window.nodera.setSelectedPrinter) {
+                window.nodera.setSelectedPrinter(printers[0].address, printers[0].name);
+              }
+              savedName = printers[0].name;
+            }
+          }
+          if (savedName) {
+            self.deviceName = savedName;
+            self.isConnected = true;
+            self.notifyListeners('connected', 'Terhubung ke ' + self.deviceName);
+            return true;
+          }
+        } catch (e) {
+          console.warn('Nodera Android printer init error:', e);
+        }
+        return false;
+      }
+
       if (!self.isSupported() || !navigator.bluetooth.getDevices) {
         return false;
       }
@@ -215,6 +244,11 @@
      */
     ensureConnected: async function() {
       var self = this;
+      if (self.isNoderaAndroid()) {
+        if (self.isConnected) return true;
+        return await self.autoConnect();
+      }
+
       if (self.isConnected && self.characteristic && self.device && self.device.gatt && self.device.gatt.connected) {
         return true;
       }
@@ -255,6 +289,50 @@
     connect: async function(mode) {
       mode = mode || 'printers';
       var self = this;
+      if (self.isNoderaAndroid()) {
+        try {
+          var printersJson = (window.nodera.getPairedPrinters && window.nodera.getPairedPrinters()) || '[]';
+          var printers = JSON.parse(printersJson || '[]');
+          if (printers.length === 0) {
+            alert('Tidak ada printer Bluetooth yang terpasang (paired) di HP. Silakan pairing printer Anda di Pengaturan Bluetooth HP terlebih dahulu.');
+            self.notifyListeners('idle', 'Belum ada printer Bluetooth');
+            throw new Error('Belum ada printer Bluetooth dipasangkan');
+          }
+          if (printers.length === 1) {
+            if (window.nodera.setSelectedPrinter) {
+              window.nodera.setSelectedPrinter(printers[0].address, printers[0].name);
+            }
+            self.deviceName = printers[0].name;
+            self.isConnected = true;
+            self.notifyListeners('connected', 'Terhubung ke ' + self.deviceName);
+            return { success: true, name: self.deviceName };
+          }
+          var optionsText = 'Pilih nomor printer Bluetooth yang ingin digunakan:\n';
+          for (var i = 0; i < printers.length; i++) {
+            optionsText += (i + 1) + '. ' + printers[i].name + ' (' + printers[i].address + ')\n';
+          }
+          var choice = prompt(optionsText, '1');
+          if (!choice) {
+            self.notifyListeners('idle', 'Pemilihan dibatalkan');
+            return { cancelled: true };
+          }
+          var idx = parseInt(choice, 10) - 1;
+          if (idx >= 0 && idx < printers.length) {
+            if (window.nodera.setSelectedPrinter) {
+              window.nodera.setSelectedPrinter(printers[idx].address, printers[idx].name);
+            }
+            self.deviceName = printers[idx].name;
+            self.isConnected = true;
+            self.notifyListeners('connected', 'Terhubung ke ' + self.deviceName);
+            return { success: true, name: self.deviceName };
+          }
+          return { cancelled: true };
+        } catch (err) {
+          self.notifyListeners('error', err.message || 'Gagal memilih printer');
+          throw err;
+        }
+      }
+
       if (!self.isSupported()) {
         throw new Error('Web Bluetooth tidak didukung pada browser ini. Harap gunakan Google Chrome pada Android/PC.');
       }
@@ -294,6 +372,11 @@
     },
 
     disconnect: function() {
+      if (this.isNoderaAndroid()) {
+        this.isConnected = false;
+        this.notifyListeners('disconnected', 'Printer diputuskan');
+        return;
+      }
       if (this.device && this.device.gatt && this.device.gatt.connected) {
         try {
           this.device.gatt.disconnect();
@@ -306,6 +389,22 @@
     },
 
     sendRawBytes: async function(bytes) {
+      var self = this;
+      if (self.isNoderaAndroid()) {
+        var bin = '';
+        var uint8 = (bytes instanceof Uint8Array) ? bytes : new Uint8Array(bytes);
+        for (var i = 0; i < uint8.length; i++) {
+          bin += String.fromCharCode(uint8[i]);
+        }
+        var b64 = window.btoa(bin);
+        var res = window.nodera.printThermalEscPos(b64);
+        if (res === 'OK') {
+          return true;
+        } else {
+          throw new Error(res || 'Gagal mencetak thermal');
+        }
+      }
+
       if (!this.isConnected || !this.characteristic) {
         throw new Error('Printer thermal belum terhubung. Silakan sambungkan terlebih dahulu.');
       }
@@ -809,6 +908,11 @@
         } catch (e) {
           console.warn('Gagal membaca logo:', e);
         }
+      }
+
+      if (self.isNoderaAndroid()) {
+        var bytes = self.buildVoucherBytes(data, logoBytes);
+        return await self.sendRawBytes(bytes);
       }
 
       if (self.printMethod === 'rawbt') {
