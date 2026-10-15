@@ -645,7 +645,6 @@ include_once __DIR__ . '/include/headhtml.php';
 </style>
 
 <?php if (!$currentWarung): ?>
-  <!-- =========================================================================
   <div class="login-box" style="padding-top: 15px; margin: 15px auto;">
     <div class="card">
       <div class="card-header text-center">
