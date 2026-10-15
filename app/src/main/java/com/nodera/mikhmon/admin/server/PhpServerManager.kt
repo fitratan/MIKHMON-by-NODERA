@@ -238,7 +238,9 @@ class PhpServerManager(private val context: Context) {
     }
 
     /**
-     * Starts the local PHP server process serving Mikhmon web app on 0.0.0.0:port
+     * Starts the local PHP server process serving Mikhmon web app on 0.0.0.0:port.
+     * Includes retry logic: if PHP crashes on first attempt (SELinux, missing libs),
+     * re-extracts the binary from APK and retries once.
      */
     suspend fun startServer(hwid: String, port: Int = DEFAULT_PORT): Result<Int> = withContext(Dispatchers.IO) {
         runCatching {
@@ -247,105 +249,185 @@ class PhpServerManager(private val context: Context) {
                 return@runCatching port
             }
 
-            val binaryToUse = phpBinary
-            if (!binaryToUse.exists()) {
-                throw IllegalStateException("Binary PHP tidak ditemukan di ${binaryToUse.absolutePath}")
-            }
-            ensureExecutable(binaryToUse)
+            val maxAttempts = 2
+            var lastError: Exception? = null
 
-            if (!File(mikhmonDir, "admin.php").exists()) {
-                throw IllegalStateException("Desktop Mikhmon files not found in ${mikhmonDir.absolutePath}")
-            }
+            for (attempt in 1..maxAttempts) {
+                try {
+                    val result = attemptStartServer(hwid, port, attempt)
+                    return@runCatching result
+                } catch (e: Exception) {
+                    lastError = e
+                    Log.w(TAG, "Server start attempt $attempt failed: ${e.message}")
 
-            val cacheDir = context.cacheDir.absolutePath
-            val sessionDir = File(context.filesDir, "sessions")
-            if (!sessionDir.exists()) sessionDir.mkdirs()
-
-            val phpIni = File(context.filesDir, "php.ini")
-            val caFile = File(mikhmonDir, "cacert.pem")
-            val caPathStr = if (caFile.exists()) caFile.absolutePath else ""
-
-            phpIni.writeText(
-                """
-                [PHP]
-                memory_limit = 512M
-                max_execution_time = 0
-                max_input_time = -1
-                sys_temp_dir = "$cacheDir"
-                upload_tmp_dir = "$cacheDir"
-                session.save_path = "${sessionDir.absolutePath}"
-                curl.cainfo = "$caPathStr"
-                openssl.cafile = "$caPathStr"
-                date.timezone = "Asia/Jakarta"
-
-                [opcache]
-                opcache.enable = 0
-                opcache.enable_cli = 0
-                opcache.lockfile_path = "$cacheDir"
-                """.trimIndent()
-            )
-
-            // Make sure logFile exists and clear old log if too large
-            if (logFile.exists() && logFile.length() > 500_000) {
-                logFile.writeText("")
+                    // On first failure, try re-extracting PHP binary from APK as fallback
+                    if (attempt < maxAttempts) {
+                        Log.i(TAG, "Retrying with fresh binary extraction...")
+                        val filesBin = File(File(context.filesDir, "bin"), "php")
+                        if (filesBin.exists()) filesBin.delete()
+                        forceExtractPhpFromApk()
+                        kotlinx.coroutines.delay(500)
+                    }
+                }
             }
 
-            val pb = ProcessBuilder(
-                binaryToUse.absolutePath,
-                "-c", phpIni.absolutePath,
-                "-d", "opcache.enable=0",
-                "-d", "opcache.enable_cli=0",
-                "-d", "max_execution_time=0",
-                "-d", "sys_temp_dir=$cacheDir",
-                "-d", "upload_tmp_dir=$cacheDir",
-                "-d", "session.save_path=${sessionDir.absolutePath}",
-                "-S", "0.0.0.0:$port",
-                "-t", mikhmonDir.absolutePath
-            )
-            pb.directory(mikhmonDir)
-            pb.redirectErrorStream(true)
+            throw lastError ?: IllegalStateException("Failed to start PHP server after $maxAttempts attempts")
+        }
+    }
 
-            val env = pb.environment()
-            env["NODERA_DESKTOP_HWID"] = hwid
-            env["TMPDIR"] = cacheDir
-            env["TEMP"] = cacheDir
-            env["TMP"] = cacheDir
-            env["HOME"] = context.filesDir.absolutePath
+    private fun forceExtractPhpFromApk() {
+        val filesBin = File(File(context.filesDir, "bin"), "php")
+        try {
+            filesBin.parentFile?.mkdirs()
+            ZipInputStream(FileInputStream(context.packageCodePath)).use { zipIn ->
+                var entry = zipIn.nextEntry
+                while (entry != null) {
+                    if (entry.name == "lib/arm64-v8a/libphp.so") {
+                        FileOutputStream(filesBin).use { out ->
+                            zipIn.copyTo(out)
+                        }
+                        ensureExecutable(filesBin)
+                        Log.i(TAG, "Force-extracted PHP binary to ${filesBin.absolutePath} (${filesBin.length()} bytes)")
+                        return
+                    }
+                    zipIn.closeEntry()
+                    entry = zipIn.nextEntry
+                }
+            }
+            Log.w(TAG, "libphp.so not found inside APK zip entries")
+        } catch (e: Exception) {
+            Log.e(TAG, "Force extraction failed: ${e.message}")
+        }
+    }
 
-            pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile))
+    private suspend fun attemptStartServer(hwid: String, port: Int, attempt: Int): Int {
+        val binaryToUse = phpBinary
+        if (!binaryToUse.exists()) {
+            throw IllegalStateException("Binary PHP tidak ditemukan di ${binaryToUse.absolutePath}")
+        }
+        ensureExecutable(binaryToUse)
 
-            Log.i(TAG, "Launching PHP: ${binaryToUse.absolutePath} -S 0.0.0.0:$port -t ${mikhmonDir.absolutePath}")
-            val process = pb.start()
-            serverProcess = process
+        // Verify binary is actually executable by running --version
+        try {
+            val versionCheck = ProcessBuilder(binaryToUse.absolutePath, "-v")
+                .redirectErrorStream(true)
+                .start()
+            val versionOutput = versionCheck.inputStream.bufferedReader().readText()
+            val versionExit = versionCheck.waitFor()
+            Log.i(TAG, "PHP binary check (attempt $attempt): exit=$versionExit output=${versionOutput.take(200)}")
+            if (versionExit != 0) {
+                throw IllegalStateException("PHP binary failed version check (exit $versionExit): ${versionOutput.take(300)}")
+            }
+        } catch (e: Exception) {
+            if (e is IllegalStateException) throw e
+            throw IllegalStateException("PHP binary cannot execute: ${e.message}")
+        }
 
-            val startTime = System.currentTimeMillis()
-            val timeoutMs = 15000L
-            var ready = false
+        if (!File(mikhmonDir, "admin.php").exists()) {
+            throw IllegalStateException("Desktop Mikhmon files not found in ${mikhmonDir.absolutePath}")
+        }
 
-            while (System.currentTimeMillis() - startTime < timeoutMs) {
-                if (isServerListening(port) || isHttpReady(port)) {
+        val cacheDir = context.cacheDir.absolutePath
+        val sessionDir = File(context.filesDir, "sessions")
+        if (!sessionDir.exists()) sessionDir.mkdirs()
+
+        val phpIni = File(context.filesDir, "php.ini")
+        val caFile = File(mikhmonDir, "cacert.pem")
+        val caPathStr = if (caFile.exists()) caFile.absolutePath else ""
+
+        phpIni.writeText(
+            """
+            [PHP]
+            memory_limit = 512M
+            max_execution_time = 0
+            max_input_time = -1
+            sys_temp_dir = "$cacheDir"
+            upload_tmp_dir = "$cacheDir"
+            session.save_path = "${sessionDir.absolutePath}"
+            curl.cainfo = "$caPathStr"
+            openssl.cafile = "$caPathStr"
+            date.timezone = "Asia/Jakarta"
+
+            [opcache]
+            opcache.enable = 0
+            opcache.enable_cli = 0
+            opcache.lockfile_path = "$cacheDir"
+            """.trimIndent()
+        )
+
+        // Clear old log
+        if (logFile.exists() && logFile.length() > 500_000) {
+            logFile.writeText("")
+        }
+
+        val pb = ProcessBuilder(
+            binaryToUse.absolutePath,
+            "-c", phpIni.absolutePath,
+            "-d", "opcache.enable=0",
+            "-d", "opcache.enable_cli=0",
+            "-d", "max_execution_time=0",
+            "-d", "sys_temp_dir=$cacheDir",
+            "-d", "upload_tmp_dir=$cacheDir",
+            "-d", "session.save_path=${sessionDir.absolutePath}",
+            "-S", "0.0.0.0:$port",
+            "-t", mikhmonDir.absolutePath
+        )
+        pb.directory(mikhmonDir)
+        pb.redirectErrorStream(true)
+
+        val env = pb.environment()
+        env["NODERA_DESKTOP_HWID"] = hwid
+        env["TMPDIR"] = cacheDir
+        env["TEMP"] = cacheDir
+        env["TMP"] = cacheDir
+        env["HOME"] = context.filesDir.absolutePath
+        // Ensure linker can find libs in app native dir
+        val nativeLibDir = context.applicationInfo.nativeLibraryDir
+        env["LD_LIBRARY_PATH"] = "$nativeLibDir:/system/lib64:/vendor/lib64"
+
+        pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile))
+
+        Log.i(TAG, "Launching PHP (attempt $attempt): ${binaryToUse.absolutePath} -S 0.0.0.0:$port -t ${mikhmonDir.absolutePath}")
+        val process = pb.start()
+        serverProcess = process
+
+        val startTime = System.currentTimeMillis()
+        val timeoutMs = 20000L
+        var ready = false
+
+        while (System.currentTimeMillis() - startTime < timeoutMs) {
+            if (isHttpReady(port)) {
+                ready = true
+                break
+            }
+            if (isServerListening(port)) {
+                // Socket open but HTTP not yet ready, give it a moment
+                kotlinx.coroutines.delay(300)
+                if (isHttpReady(port)) {
                     ready = true
                     break
                 }
-                if (!process.isAlive) {
-                    val logSnippet = if (logFile.exists()) {
-                        logFile.readLines().takeLast(30).joinToString("\n")
-                    } else "No logs recorded"
-                    throw IllegalStateException("PHP server process exited unexpectedly with code ${process.exitValue()}:\n$logSnippet")
-                }
-                kotlinx.coroutines.delay(150)
             }
-
-            if (!ready) {
+            if (!process.isAlive) {
                 val logSnippet = if (logFile.exists()) {
-                    logFile.readLines().takeLast(30).joinToString("\n")
+                    logFile.readLines().takeLast(40).joinToString("\n")
                 } else "No logs recorded"
-                throw IllegalStateException("Timed out waiting for PHP server on port $port.\nLogs:\n$logSnippet")
+                throw IllegalStateException("PHP process crashed (exit ${process.exitValue()}, attempt $attempt):\n$logSnippet")
             }
-
-            Log.i(TAG, "PHP server verified running and listening on port $port")
-            port
+            kotlinx.coroutines.delay(200)
         }
+
+        if (!ready) {
+            process.destroyForcibly()
+            serverProcess = null
+            val logSnippet = if (logFile.exists()) {
+                logFile.readLines().takeLast(40).joinToString("\n")
+            } else "No logs recorded"
+            throw IllegalStateException("Timeout waiting for PHP server on port $port (attempt $attempt).\nLogs:\n$logSnippet")
+        }
+
+        Log.i(TAG, "PHP server verified running on port $port (attempt $attempt)")
+        return port
     }
 
     fun stopServer() {
