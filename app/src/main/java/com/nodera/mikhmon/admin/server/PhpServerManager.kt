@@ -8,26 +8,38 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileInputStream
 import java.io.FileOutputStream
+import java.net.HttpURLConnection
 import java.net.InetSocketAddress
+import java.net.ServerSocket
 import java.net.Socket
-import java.util.zip.GZIPInputStream
+import java.net.URL
 import java.util.zip.ZipInputStream
 
 class PhpServerManager(private val context: Context) {
 
     companion object {
         private const val TAG = "PhpServerManager"
-        const val DEFAULT_PORT = 8080
+        const val DEFAULT_PORT = 8788
     }
 
     private var serverProcess: Process? = null
-    val phpBinary: File = File(File(context.filesDir, "bin"), "php")
+    val phpBinary: File
+        get() {
+            val nativeBin = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
+            if (nativeBin.exists()) return nativeBin
+
+            val filesBin = File(File(context.filesDir, "bin"), "php")
+            if (filesBin.exists()) return filesBin
+
+            return nativeBin
+        }
+
     val mikhmonDir: File = File(context.filesDir, "mikhmon")
     val logFile: File = File(context.filesDir, "php_server.log")
     private val versionFile: File = File(context.filesDir, ".installed_version")
 
     /**
-     * Checks if local PHP server is responding on 127.0.0.1:port
+     * Checks if local TCP port is accepting socket connections
      */
     fun isServerListening(port: Int = DEFAULT_PORT): Boolean {
         return try {
@@ -41,7 +53,41 @@ class PhpServerManager(private val context: Context) {
     }
 
     /**
-     * Extracts php binary and desktop mikhmon files from assets to app internal filesDir.
+     * Probes if PHP web server is actually responding with HTTP headers (200..399)
+     */
+    fun isHttpReady(port: Int = DEFAULT_PORT): Boolean {
+        return try {
+            val url = URL("http://127.0.0.1:$port/admin.php")
+            val conn = url.openConnection() as HttpURLConnection
+            conn.connectTimeout = 300
+            conn.readTimeout = 800
+            conn.instanceFollowRedirects = false
+            val code = conn.responseCode
+            conn.disconnect()
+            code in 200..399
+        } catch (_: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Finds the next open local TCP port starting from startPort
+     */
+    fun findAvailablePort(startPort: Int = DEFAULT_PORT): Int {
+        for (port in startPort until startPort + 50) {
+            try {
+                ServerSocket(port).use {
+                    return port
+                }
+            } catch (_: Exception) {
+                // Occupied, check next
+            }
+        }
+        return startPort
+    }
+
+    /**
+     * Extracts desktop mikhmon files from assets to app internal filesDir and ensures PHP binary is ready.
      * Preserves user router configurations in mikhmon/config across updates.
      */
     suspend fun prepareEnvironment(hwid: String): Result<Unit> = withContext(Dispatchers.IO) {
@@ -51,35 +97,57 @@ class PhpServerManager(private val context: Context) {
             } else ""
 
             val currentVersion = BuildConfig.VERSION_CODE.toString()
+            val nativeBin = File(context.applicationInfo.nativeLibraryDir, "libphp.so")
+            val filesBin = File(File(context.filesDir, "bin"), "php")
+
+            if (installedVersion != currentVersion && filesBin.exists()) {
+                filesBin.delete()
+            }
+
+            // If libphp.so was not unpacked automatically by OS, extract it from APK packageCodePath
+            if (!nativeBin.exists() && !filesBin.exists()) {
+                Log.w(TAG, "libphp.so not found in nativeLibraryDir. Extracting from APK...")
+                try {
+                    filesBin.parentFile?.mkdirs()
+                    ZipInputStream(FileInputStream(context.packageCodePath)).use { zipIn ->
+                        var entry = zipIn.nextEntry
+                        while (entry != null) {
+                            if (entry.name == "lib/arm64-v8a/libphp.so") {
+                                FileOutputStream(filesBin).use { out ->
+                                    zipIn.copyTo(out)
+                                }
+                                ensureExecutable(filesBin)
+                                Log.i(TAG, "Extracted fallback php binary to ${filesBin.absolutePath}")
+                                break
+                            }
+                            zipIn.closeEntry()
+                            entry = zipIn.nextEntry
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.w(TAG, "Fallback APK extraction failed: ${e.message}")
+                }
+            }
+
+            val binaryToUse = phpBinary
+            if (binaryToUse.exists()) {
+                ensureExecutable(binaryToUse)
+            } else {
+                throw IllegalStateException("Binary PHP (libphp.so) tidak ditemukan di ${context.applicationInfo.nativeLibraryDir}")
+            }
+
             val needsExtraction = installedVersion != currentVersion ||
-                    !phpBinary.exists() ||
                     !File(mikhmonDir, "admin.php").exists()
 
             if (!needsExtraction) {
                 Log.i(TAG, "Environment already initialized for version $currentVersion")
-                ensureExecutable(phpBinary)
+                cleanupStaleLicenseFiles()
                 syncHwid(hwid)
                 return@runCatching
             }
 
-            Log.i(TAG, "Preparing environment: extracting PHP engine and Desktop Mikhmon files...")
+            Log.i(TAG, "Preparing environment: extracting Desktop Mikhmon files...")
 
-            // 1. Extract and un-gzip PHP binary
-            val binDir = phpBinary.parentFile ?: File(context.filesDir, "bin")
-            if (!binDir.exists()) binDir.mkdirs()
-
-            if (phpBinary.exists()) {
-                phpBinary.delete()
-            }
-
-            context.assets.open("bin/php-arm64.bin").use { assetIn ->
-                FileOutputStream(phpBinary).use { out ->
-                    assetIn.copyTo(out)
-                }
-            }
-            ensureExecutable(phpBinary)
-
-            // 2. Extract mikhmon.zip to filesDir/mikhmon
             if (!mikhmonDir.exists()) {
                 mikhmonDir.mkdirs()
             }
@@ -89,7 +157,6 @@ class PhpServerManager(private val context: Context) {
                     var entry = zipIn.nextEntry
                     while (entry != null) {
                         val entryName = entry.name
-                        // Normalize path, removing leading mikhmon/ if included in zip
                         val relativePath = if (entryName.startsWith("mikhmon/")) {
                             entryName.substring("mikhmon/".length)
                         } else {
@@ -107,7 +174,6 @@ class PhpServerManager(private val context: Context) {
                                 targetFile.mkdirs()
                             } else {
                                 targetFile.parentFile?.mkdirs()
-                                // Preserve user configs in mikhmon/config/ if they already exist
                                 val isUserConfig = relativePath.startsWith("config/") &&
                                         (relativePath.endsWith(".php") || relativePath.endsWith(".json")) &&
                                         targetFile.exists()
@@ -125,12 +191,28 @@ class PhpServerManager(private val context: Context) {
                 }
             }
 
-            // 3. Write HWID to mikhmon config/.hwid
+            cleanupStaleLicenseFiles()
             syncHwid(hwid)
-
-            // 4. Save version stamp
             versionFile.writeText(currentVersion)
             Log.i(TAG, "Environment preparation completed successfully.")
+        }
+    }
+
+    private fun cleanupStaleLicenseFiles() {
+        try {
+            val configDir = File(mikhmonDir, "config")
+            if (configDir.exists()) {
+                val staleLic = File(configDir, "license.php")
+                if (staleLic.exists() && staleLic.readText().contains("75C2-3B7E-02B0")) {
+                    staleLic.delete()
+                    Log.i(TAG, "Deleted stale dummy license.php")
+                }
+                File(configDir, ".reset_alert").delete()
+                File(configDir, ".trial_attempted").delete()
+                File(configDir, ".clock_guard").delete()
+            }
+        } catch (e: Exception) {
+            Log.w(TAG, "Error cleaning stale license files: ${e.message}")
         }
     }
 
@@ -156,20 +238,20 @@ class PhpServerManager(private val context: Context) {
     }
 
     /**
-     * Starts the local PHP server process serving Mikhmon web app on 127.0.0.1:port
+     * Starts the local PHP server process serving Mikhmon web app on 0.0.0.0:port
      */
     suspend fun startServer(hwid: String, port: Int = DEFAULT_PORT): Result<Int> = withContext(Dispatchers.IO) {
         runCatching {
-            if (isServerListening(port)) {
-                Log.i(TAG, "PHP server is already running on port $port")
+            if (isHttpReady(port)) {
+                Log.i(TAG, "PHP server is already running and responding on port $port")
                 return@runCatching port
             }
 
-            // Ensure binary exists and is executable
-            if (!phpBinary.exists()) {
-                throw IllegalStateException("PHP binary not found at ${phpBinary.absolutePath}")
+            val binaryToUse = phpBinary
+            if (!binaryToUse.exists()) {
+                throw IllegalStateException("Binary PHP tidak ditemukan di ${binaryToUse.absolutePath}")
             }
-            ensureExecutable(phpBinary)
+            ensureExecutable(binaryToUse)
 
             if (!File(mikhmonDir, "admin.php").exists()) {
                 throw IllegalStateException("Desktop Mikhmon files not found in ${mikhmonDir.absolutePath}")
@@ -187,12 +269,14 @@ class PhpServerManager(private val context: Context) {
                 """
                 [PHP]
                 memory_limit = 512M
-                max_execution_time = 300
+                max_execution_time = 0
+                max_input_time = -1
                 sys_temp_dir = "$cacheDir"
                 upload_tmp_dir = "$cacheDir"
                 session.save_path = "${sessionDir.absolutePath}"
                 curl.cainfo = "$caPathStr"
                 openssl.cafile = "$caPathStr"
+                date.timezone = "Asia/Jakarta"
 
                 [opcache]
                 opcache.enable = 0
@@ -201,15 +285,21 @@ class PhpServerManager(private val context: Context) {
                 """.trimIndent()
             )
 
+            // Make sure logFile exists and clear old log if too large
+            if (logFile.exists() && logFile.length() > 500_000) {
+                logFile.writeText("")
+            }
+
             val pb = ProcessBuilder(
-                phpBinary.absolutePath,
+                binaryToUse.absolutePath,
                 "-c", phpIni.absolutePath,
                 "-d", "opcache.enable=0",
                 "-d", "opcache.enable_cli=0",
+                "-d", "max_execution_time=0",
                 "-d", "sys_temp_dir=$cacheDir",
                 "-d", "upload_tmp_dir=$cacheDir",
                 "-d", "session.save_path=${sessionDir.absolutePath}",
-                "-S", "127.0.0.1:$port",
+                "-S", "0.0.0.0:$port",
                 "-t", mikhmonDir.absolutePath
             )
             pb.directory(mikhmonDir)
@@ -222,26 +312,24 @@ class PhpServerManager(private val context: Context) {
             env["TMP"] = cacheDir
             env["HOME"] = context.filesDir.absolutePath
 
-            // Log output to file
             pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile))
 
-            Log.i(TAG, "Launching PHP: ${phpBinary.absolutePath} -S 127.0.0.1:$port -t ${mikhmonDir.absolutePath}")
+            Log.i(TAG, "Launching PHP: ${binaryToUse.absolutePath} -S 0.0.0.0:$port -t ${mikhmonDir.absolutePath}")
             val process = pb.start()
             serverProcess = process
 
-            // Wait for server to bind port
             val startTime = System.currentTimeMillis()
             val timeoutMs = 15000L
             var ready = false
 
             while (System.currentTimeMillis() - startTime < timeoutMs) {
-                if (isServerListening(port)) {
+                if (isServerListening(port) || isHttpReady(port)) {
                     ready = true
                     break
                 }
                 if (!process.isAlive) {
                     val logSnippet = if (logFile.exists()) {
-                        logFile.readLines().takeLast(15).joinToString("\n")
+                        logFile.readLines().takeLast(30).joinToString("\n")
                     } else "No logs recorded"
                     throw IllegalStateException("PHP server process exited unexpectedly with code ${process.exitValue()}:\n$logSnippet")
                 }
@@ -250,9 +338,9 @@ class PhpServerManager(private val context: Context) {
 
             if (!ready) {
                 val logSnippet = if (logFile.exists()) {
-                    logFile.readLines().takeLast(15).joinToString("\n")
+                    logFile.readLines().takeLast(30).joinToString("\n")
                 } else "No logs recorded"
-                throw IllegalStateException("Timed out waiting for PHP server on 127.0.0.1:$port.\nLogs:\n$logSnippet")
+                throw IllegalStateException("Timed out waiting for PHP server on port $port.\nLogs:\n$logSnippet")
             }
 
             Log.i(TAG, "PHP server verified running and listening on port $port")

@@ -11,8 +11,11 @@ android {
         applicationId = "com.nodera.mikhmon.admin"
         minSdk = 24
         targetSdk = 28
-        versionCode = 320
-        versionName = "3.2.0"
+        versionCode = 322
+        versionName = "3.2.2"
+        ndk {
+            abiFilters.addAll(listOf("arm64-v8a"))
+        }
     }
 
     buildTypes {
@@ -40,6 +43,7 @@ android {
     packaging {
       jniLibs {
         useLegacyPackaging = true
+        keepDebugSymbols += "**/libphp.so"
       }
       resources {
         excludes += "/META-INF/{AL2.0,LGPL2.1}"

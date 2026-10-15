@@ -36,15 +36,20 @@ import com.nodera.mikhmon.admin.theme.*
 class MikhmonWebBridge(
     private val context: Context,
     private val hwid: String,
-    private val onOpenLicense: () -> Unit,
+    private val onBackToLauncher: () -> Unit,
     private val getWebView: () -> WebView?
 ) {
     @JavascriptInterface
     fun getHwid(): String = hwid
 
     @JavascriptInterface
+    fun backToHome() {
+        onBackToLauncher()
+    }
+
+    @JavascriptInterface
     fun openLicenseSettings() {
-        onOpenLicense()
+        // Desktop mikhmon handles licensing internally in PHP
     }
 
     @JavascriptInterface
@@ -68,8 +73,7 @@ class MikhmonWebBridge(
 fun MikhmonWebViewScreen(
     initialUrl: String,
     hwid: String,
-    licenseInfo: LicenseInfo,
-    onOpenLicenseGate: () -> Unit
+    onBackToLauncher: () -> Unit
 ) {
     val context = LocalContext.current
     var webViewInstance by remember { mutableStateOf<WebView?>(null) }
@@ -88,12 +92,14 @@ fun MikhmonWebViewScreen(
         fileUploadCallback = null
     }
 
-    BackHandler(enabled = canGoBack) {
+    BackHandler(enabled = true) {
         webViewInstance?.let { webView ->
             if (webView.canGoBack()) {
                 webView.goBack()
+            } else {
+                onBackToLauncher()
             }
-        }
+        } ?: onBackToLauncher()
     }
 
     Scaffold(
@@ -107,7 +113,7 @@ fun MikhmonWebViewScreen(
                     title = {
                         Column {
                             Text(
-                                text = "MIKHMON Admin",
+                                text = "MIKHMON by NODERA",
                                 fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -133,8 +139,8 @@ fun MikhmonWebViewScreen(
                         }) {
                             Icon(Icons.Default.Refresh, contentDescription = "Reload", tint = Color.White)
                         }
-                        IconButton(onClick = onOpenLicenseGate) {
-                            Icon(Icons.Default.VerifiedUser, contentDescription = "License", tint = MikhmonGreen)
+                        IconButton(onClick = onBackToLauncher) {
+                            Icon(Icons.Default.PowerSettingsNew, contentDescription = "Keluar / Launcher", tint = Color(0xFFEF4444))
                         }
                         IconButton(onClick = { showTopBar = false }) {
                             Icon(Icons.Default.Fullscreen, contentDescription = "Full Screen", tint = MikhmonTextMuted)
@@ -193,7 +199,7 @@ fun MikhmonWebViewScreen(
                         val bridge = MikhmonWebBridge(
                             context = ctx,
                             hwid = hwid,
-                            onOpenLicense = onOpenLicenseGate,
+                            onBackToLauncher = onBackToLauncher,
                             getWebView = { this }
                         )
                         addJavascriptInterface(bridge, "nodera")
