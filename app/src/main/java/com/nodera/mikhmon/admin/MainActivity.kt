@@ -36,13 +36,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
+import com.nodera.mikhmon.admin.licensing.LicenseInfo
 import com.nodera.mikhmon.admin.licensing.LicenseManager
+import com.nodera.mikhmon.admin.licensing.LicenseState
 import com.nodera.mikhmon.admin.server.PhpServerManager
 import com.nodera.mikhmon.admin.theme.*
+import com.nodera.mikhmon.admin.ui.LicenseGateScreen
 import com.nodera.mikhmon.admin.ui.MikhmonWebViewScreen
 import kotlinx.coroutines.launch
 
 enum class AppScreen {
+    LICENSE_GATE,
     LAUNCHER,
     WEBVIEW
 }
@@ -77,7 +81,17 @@ class MainActivity : ComponentActivity() {
                     val coroutineScope = rememberCoroutineScope()
                     val hwid = remember { licenseManager.getHardwareId() }
 
-                    var currentScreen by remember { mutableStateOf(AppScreen.LAUNCHER) }
+                    var licenseInfo by remember { mutableStateOf(licenseManager.checkLicense()) }
+                    val initialScreen = remember {
+                        when (licenseInfo.state) {
+                            LicenseState.ACTIVE_LIFETIME,
+                            LicenseState.ACTIVE_SUBSCRIPTION,
+                            LicenseState.ACTIVE_TRIAL -> AppScreen.LAUNCHER
+                            else -> AppScreen.LICENSE_GATE
+                        }
+                    }
+
+                    var currentScreen by remember { mutableStateOf(initialScreen) }
                     var isServerStarting by remember { mutableStateOf(false) }
                     var startingStage by remember { mutableStateOf("Mempersiapkan...") }
                     var serverPort by remember { mutableStateOf<Int?>(null) }
@@ -92,6 +106,18 @@ class MainActivity : ComponentActivity() {
 
                     fun startServerAndLaunch() {
                         if (isServerStarting) return
+
+                        // Enforce license verification before launching server
+                        val freshLicense = licenseManager.checkLicense()
+                        licenseInfo = freshLicense
+                        if (freshLicense.state != LicenseState.ACTIVE_LIFETIME &&
+                            freshLicense.state != LicenseState.ACTIVE_SUBSCRIPTION &&
+                            freshLicense.state != LicenseState.ACTIVE_TRIAL) {
+                            Toast.makeText(context, freshLicense.message.ifEmpty { "Lisensi tidak valid!" }, Toast.LENGTH_LONG).show()
+                            currentScreen = AppScreen.LICENSE_GATE
+                            return
+                        }
+
                         isServerStarting = true
                         errorMessage = null
 
@@ -135,9 +161,20 @@ class MainActivity : ComponentActivity() {
                         label = "screen_transition"
                     ) { target ->
                         when (target) {
+                            AppScreen.LICENSE_GATE -> {
+                                LicenseGateScreen(
+                                    licenseManager = licenseManager,
+                                    licenseInfo = licenseInfo,
+                                    onLicenseActivated = {
+                                        licenseInfo = licenseManager.checkLicense()
+                                        currentScreen = AppScreen.LAUNCHER
+                                    }
+                                )
+                            }
                             AppScreen.LAUNCHER -> {
                                 NoderaLauncherScreen(
                                     hwid = hwid,
+                                    licenseInfo = licenseInfo,
                                     serverPort = serverPort,
                                     isStarting = isServerStarting,
                                     startingStage = startingStage,
@@ -145,7 +182,8 @@ class MainActivity : ComponentActivity() {
                                     onDismissError = { errorMessage = null },
                                     onStartServer = { startServerAndLaunch() },
                                     onOpenWebView = { currentScreen = AppScreen.WEBVIEW },
-                                    onStopServer = { stopServer() }
+                                    onStopServer = { stopServer() },
+                                    onOpenLicenseGate = { currentScreen = AppScreen.LICENSE_GATE }
                                 )
                             }
                             AppScreen.WEBVIEW -> {
@@ -188,6 +226,7 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun NoderaLauncherScreen(
     hwid: String,
+    licenseInfo: LicenseInfo,
     serverPort: Int?,
     isStarting: Boolean,
     startingStage: String,
@@ -195,7 +234,8 @@ fun NoderaLauncherScreen(
     onDismissError: () -> Unit,
     onStartServer: () -> Unit,
     onOpenWebView: () -> Unit,
-    onStopServer: () -> Unit
+    onStopServer: () -> Unit,
+    onOpenLicenseGate: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -289,6 +329,67 @@ fun NoderaLauncherScreen(
                             contentDescription = "Salin HWID",
                             tint = MikhmonBlue,
                             modifier = Modifier.size(13.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                // License Status Chip
+                val licBadgeBg = when (licenseInfo.state) {
+                    LicenseState.ACTIVE_LIFETIME -> MikhmonGreen.copy(alpha = 0.15f)
+                    LicenseState.ACTIVE_SUBSCRIPTION -> MikhmonBlue.copy(alpha = 0.15f)
+                    LicenseState.ACTIVE_TRIAL -> MikhmonYellow.copy(alpha = 0.15f)
+                    else -> MikhmonRed.copy(alpha = 0.15f)
+                }
+                val licBadgeBorder = when (licenseInfo.state) {
+                    LicenseState.ACTIVE_LIFETIME -> MikhmonGreen
+                    LicenseState.ACTIVE_SUBSCRIPTION -> MikhmonBlue
+                    LicenseState.ACTIVE_TRIAL -> MikhmonYellow
+                    else -> MikhmonRed
+                }
+                val licBadgeText = when (licenseInfo.state) {
+                    LicenseState.ACTIVE_LIFETIME -> "✓ Lisensi Lifetime Aktif"
+                    LicenseState.ACTIVE_SUBSCRIPTION -> "✓ Langganan Aktif (${licenseInfo.remainingDays} Hari)"
+                    LicenseState.ACTIVE_TRIAL -> "⚡ Mode Trial (${licenseInfo.remainingDays} Hari Tersisa)"
+                    else -> "✕ Belum Terlisensi (Klik Aktivasi)"
+                }
+                val licBadgeIcon = when (licenseInfo.state) {
+                    LicenseState.ACTIVE_LIFETIME -> Icons.Default.CheckCircle
+                    LicenseState.ACTIVE_SUBSCRIPTION -> Icons.Default.Verified
+                    LicenseState.ACTIVE_TRIAL -> Icons.Default.RocketLaunch
+                    else -> Icons.Default.Lock
+                }
+
+                Surface(
+                    color = licBadgeBg,
+                    shape = RoundedCornerShape(20.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, licBadgeBorder),
+                    modifier = Modifier.clickable { onOpenLicenseGate() }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            licBadgeIcon,
+                            contentDescription = null,
+                            tint = licBadgeBorder,
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = licBadgeText,
+                            color = licBadgeBorder,
+                            fontSize = 11.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Icon(
+                            Icons.Default.ChevronRight,
+                            contentDescription = null,
+                            tint = licBadgeBorder.copy(alpha = 0.7f),
+                            modifier = Modifier.size(12.dp)
                         )
                     }
                 }

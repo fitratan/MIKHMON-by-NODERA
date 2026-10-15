@@ -202,8 +202,8 @@ fun MikhmonWebViewScreen(
                         containerColor = MikhmonSurface
                     ),
                     actions = {
-                        // Action buttons for voucher printing
                         if (isVoucherPrintPage) {
+                            // Tombol khusus halaman cetak voucher: Cetak Thermal Bluetooth & Cetak PDF
                             IconButton(
                                 onClick = {
                                     webViewInstance?.evaluateJavascript("""
@@ -226,44 +226,15 @@ fun MikhmonWebViewScreen(
                             ) {
                                 Icon(Icons.Default.Print, contentDescription = "Cetak PDF/Browser", tint = MikhmonBlue)
                             }
-                        }
-
-                        // Reset Zoom button (requested by user)
-                        IconButton(
-                            onClick = {
-                                webViewInstance?.let { wb ->
-                                    while (wb.zoomOut()) { /* reset zoom levels */ }
-                                    wb.evaluateJavascript("""
-                                        (function() {
-                                            var meta = document.querySelector('meta[name="viewport"]');
-                                            if (meta) {
-                                                meta.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes');
-                                            }
-                                        })();
-                                    """.trimIndent(), null)
-                                    Toast.makeText(context, "Zoom di-reset", Toast.LENGTH_SHORT).show()
-                                }
+                        } else {
+                            // Halaman biasa: hanya Refresh dan Keluar ke Launcher
+                            IconButton(onClick = {
+                                webViewInstance?.reload()
+                            }) {
+                                Icon(Icons.Default.Refresh, contentDescription = "Muat Ulang", tint = Color.White)
                             }
-                        ) {
-                            Icon(Icons.Default.FitScreen, contentDescription = "Reset Zoom", tint = Color.White)
-                        }
-
-                        IconButton(onClick = {
-                            webViewInstance?.loadUrl(initialUrl)
-                        }) {
-                            Icon(Icons.Default.Home, contentDescription = "Home", tint = Color.White)
-                        }
-                        IconButton(onClick = {
-                            webViewInstance?.reload()
-                        }) {
-                            Icon(Icons.Default.Refresh, contentDescription = "Reload", tint = Color.White)
-                        }
-                        IconButton(onClick = onBackToLauncher) {
-                            Icon(Icons.Default.PowerSettingsNew, contentDescription = "Keluar / Launcher", tint = Color(0xFFEF4444))
-                        }
-                        if (!isVoucherPrintPage) {
-                            IconButton(onClick = { showTopBar = false }) {
-                                Icon(Icons.Default.Fullscreen, contentDescription = "Full Screen", tint = MikhmonTextMuted)
+                            IconButton(onClick = onBackToLauncher) {
+                                Icon(Icons.Default.PowerSettingsNew, contentDescription = "Keluar / Ganti Host", tint = Color(0xFFEF4444))
                             }
                         }
                     }

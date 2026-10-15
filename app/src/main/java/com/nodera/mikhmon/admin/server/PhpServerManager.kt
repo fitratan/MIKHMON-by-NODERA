@@ -390,6 +390,24 @@ class PhpServerManager(private val context: Context) {
         val nativeLibDir = context.applicationInfo.nativeLibraryDir
         env["LD_LIBRARY_PATH"] = "$nativeLibDir:/system/lib64:/vendor/lib64"
 
+        try {
+            val licInfo = com.nodera.mikhmon.admin.licensing.LicenseManager(context).checkLicense()
+            if (licInfo.state == com.nodera.mikhmon.admin.licensing.LicenseState.ACTIVE_LIFETIME ||
+                licInfo.state == com.nodera.mikhmon.admin.licensing.LicenseState.ACTIVE_SUBSCRIPTION ||
+                licInfo.state == com.nodera.mikhmon.admin.licensing.LicenseState.ACTIVE_TRIAL) {
+                env["NODERA_LICENSE_KEY"] = licInfo.licenseKey
+                env["NODERA_LICENSE_STATUS"] = "ACTIVE"
+                env["NODERA_LICENSE_EXPIRY"] = if (licInfo.expiresAt > 0) {
+                    java.text.SimpleDateFormat("yyyy-MM-dd HH:mm:ss", java.util.Locale.US).format(java.util.Date(licInfo.expiresAt * 1000L))
+                } else "LIFETIME"
+                env["NODERA_LICENSE_PRODUCT"] = when (licInfo.state) {
+                    com.nodera.mikhmon.admin.licensing.LicenseState.ACTIVE_TRIAL -> "Mikhmon Mobile Admin (Trial)"
+                    com.nodera.mikhmon.admin.licensing.LicenseState.ACTIVE_SUBSCRIPTION -> "Mikhmon Mobile Admin (Subscription)"
+                    else -> "Mikhmon Mobile Admin (Lifetime)"
+                }
+            }
+        } catch (_: Exception) {}
+
         pb.redirectOutput(ProcessBuilder.Redirect.appendTo(logFile))
 
         Log.i(TAG, "Launching PHP (attempt $attempt): ${binaryToUse.absolutePath} -S 0.0.0.0:$port -t ${mikhmonDir.absolutePath}")
