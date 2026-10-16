@@ -1,4 +1,14 @@
 <?php
+$_p_domain = function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : (
+    (defined('MIKHMON_BRAND') && strpos(MIKHMON_BRAND, 'airnetsolution.com') !== false) ||
+    (!empty($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'airnetsolution.com') !== false) ||
+    (strpos(__DIR__, 'nodera-africa') !== false || strpos(__DIR__, 'africa') !== false) ? 'airnetsolution.com' : '" . $_p_domain . "'
+);
+$_p_panel = 'panel.' . $_p_domain;
+$_p_gateway = 'gateway.' . $_p_domain;
+$_p_wa = 'wa.' . $_p_domain;
+$_p_shop = 'shop.' . $_p_domain;
+
 // MIKHMON Language Dictionary
 $_about = "Tungkol";
 $_action = "Aksyon";
@@ -227,7 +237,7 @@ $_nodera_pay_connected = "Nakakonekta ang Mga Kredensyal ng NODERA PAY";
 $_noderapay_merchant_code = "Merchant Code ng NODERA Pay";
 $_noderapay_merchant_code_hint = "Merchant Code mula sa iyong portal ng NODERA PAY (hal: NP-MCH-0001).";
 $_noderapay_secret_key = "Lihim na API Key ng NODERA Pay";
-$_noderapay_secret_key_hint = "Lihim na API Key mula sa portal ng NODERA PAY (gateway.dgtlnetsolution.com).";
+$_noderapay_secret_key_hint = "Lihim na API Key mula sa portal ng NODERA PAY (" . $_p_gateway . ").";
 $_noderapay_settings = "Mga Setting ng NODERA Pay (Dynamic QRIS)";
 $_notif_login_logout = "Mga Abiso sa Pag-login at Pag-logout";
 $_official_paid = "Opisyal na Bayad";
@@ -458,7 +468,7 @@ $_wa_provider_hint = "Piliin ang provider ng WhatsApp Gateway na iyong ginagamit
 $_wa_sales_notif = "Mga Abiso sa Pagbebenta";
 $_wa_send_test = "Magpadala ng Mensahe sa Pagsubok";
 $_wa_session_id = "WhatsApp Device Session ID";
-$_wa_session_id_hint = "Session ID ng nagpapadalang WhatsApp device mula sa wa.dgtlnetsolution.com (hal: dgtl_m1_abc123). Iwanang blangko upang gamitin ang default na device.";
+$_wa_session_id_hint = "Session ID ng nagpapadalang WhatsApp device mula sa " . $_p_wa . " (hal: dgtl_m1_abc123). Iwanang blangko upang gamitin ang default na device.";
 $_wa_status = "Katayuan ng WhatsApp Gateway";
 $_wa_test_card = "Pagsubok sa WhatsApp Gateway";
 $_wa_test_phone = "Numero ng Telepono para sa Pagsubok";
@@ -555,7 +565,7 @@ $_wa_test_phone_placeholder = "Halimbawa: 081234567890 o 628xxx";
 $_wa_test_phone_hint = "Ilagay ang iyong aktibong numero ng WhatsApp upang matanggap ang pansubok na mensahe.";
 $_wa_send_test_btn = "Subukan ang Pagpapadala sa WhatsApp";
 $_wa_guide_step1 = "Piliin ang <b>NODERA WhatsApp Gateway</b> (Inirerekomenda) o ang iyong gustong provider.";
-$_wa_guide_step2 = "Ilagay ang API Key mula sa dashboard ng <a href=\"https://wa.dgtlnetsolution.com\" target=\"_blank\">wa.dgtlnetsolution.com</a> (menu ng Credentials / Dashboard).";
+$_wa_guide_step2 = "Ilagay ang API Key mula sa dashboard ng <a href=\"https://" . $_p_wa . "\" target=\"_blank\">" . $_p_wa . "</a> (menu ng Credentials / Dashboard).";
 $_wa_guide_step3 = "Ilagay ang <code>Session ID</code> ng iyong device (hal: <code>dgtl_m1_abc123</code> mula sa menu ng Mga Device).";
 $_wa_guide_step4 = "Ilagay ang numero ng WhatsApp ng admin upang makatanggap ng mga ulat at customer support button.";
 $_wa_guide_step5 = "Ilagay ang iyong numero sa kanang form at i-click ang <b>Subukan ang Pagpapadala sa WhatsApp</b>.";
@@ -590,8 +600,8 @@ $_tg_guide_step3 = "<b>Patutunguhan:</b> Maaari mong piliing ipadala ang mga abi
 $_tg_guide_step4 = "<b>Awtomatikong Webhook:</b> Kapag nag-click ka sa <b>I-save</b>, ang Telegram Webhook ay awtomatikong ikakabit ng system.";
 $_tg_guide_step5 = "<b>Real-time ACC / Tanggihan:</b> Kapag may nag-order ng voucher sa Online Store portal, magpapadala ang bot ng abiso sa Telegram na may mga pindutan ng <b>Tanggapin</b> at <b>Tanggihan</b>. I-click ang <b>Tanggapin</b> upang awtomatikong gumawa ng voucher sa MikroTik.";
 $_shop_official_badge = "Opisyal at Subok na Hardware";
-$_shop_hero_desc = "<b>shop.dgtlnetsolution.com</b> ay nagbibigay ng mga subok na kagamitan sa network para sa operasyon ng ISP at mga lokal na network. Mula sa mga handa-gamiting MikroTik router, mabilis na thermal voucher printer, thermal paper roll, wireless access point, hanggang sa fiber optic cable.";
-$_shop_open_online_store = "Buksan ang Online Store shop.dgtlnetsolution.com";
+$_shop_hero_desc = "<b>" . $_p_shop . "</b> ay nagbibigay ng mga subok na kagamitan sa network para sa operasyon ng ISP at mga lokal na network. Mula sa mga handa-gamiting MikroTik router, mabilis na thermal voucher printer, thermal paper roll, wireless access point, hanggang sa fiber optic cable.";
+$_shop_open_online_store = "Buksan ang Online Store " . $_p_shop;
 $_shop_contact_admin_wa = "Makipag-ugnayan sa Admin (WhatsApp)";
 $_shop_template_hotspot = "Mga Template ng MikroTik Hotspot";
 $_shop_template_hotspot_desc = "Koleksyon ng 30 premium na template ng Login Page sa MikroTik (Glass Dock, Bento Grid, Cyber Matrix, Anime Mecha, atbp.). 100% responsive na may 5 interactive modal.";
@@ -616,7 +626,7 @@ $_shop_quality_banner = "Lahat ng device ay sinusuri at sinusubukan ang paggana 
 $_shop_shop_now = "Mamili Ngayon";
 $_billing_integrated_badge = "Pinagsamang Platform";
 $_billing_hero_desc = "<b>Nodera Billing</b> ay isang pinagsamang SaaS billing platform na nagbibigay-daan sa mga negosyante ng ISP na madaling pamahalaan ang libu-libong subscriber, buwanang singil sa PPPoE, hotspot voucher, awtomatikong mga alerto sa WhatsApp, at agarang online na bayad.";
-$_billing_register_account = "Magrehistro ng Account sa panel.dgtlnetsolution.com";
+$_billing_register_account = "Magrehistro ng Account sa " . $_p_panel;
 $_billing_portal_btn = "Portal ng Pagsingil";
 $_billing_contact_admin_wa = "Makipag-ugnayan sa Admin (WhatsApp)";
 $_billing_feat_auto_isolir = "Awtomatikong Pagputol at Pagpapanumbalik";
@@ -633,7 +643,7 @@ $_billing_feat_reports = "Kumpletong Ulat Pananalapi";
 $_billing_feat_reports_desc = "Buod ng araw-araw/buwanang kita, daloy ng pera, mga pautang sa customer, at tsart ng paglago ng negosyo.";
 $_billing_steps_title = "Paano Magrehistro at Gamitin ang Nodera Billing";
 $_billing_step1_badge = "Hakbang 1";
-$_billing_step1_text = "<b>Magrehistro ng Account:</b> Buksan ang portal na <a href=\"https://panel.dgtlnetsolution.com/register\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary\"><b>panel.dgtlnetsolution.com</b></a> at gumawa ng account para sa iyong negosyo.";
+$_billing_step1_text = "<b>Magrehistro ng Account:</b> Buksan ang portal na <a href=\"https://" . $_p_panel . "/register\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary\"><b>" . $_p_panel . "</b></a> at gumawa ng account para sa iyong negosyo.";
 $_billing_step2_badge = "Hakbang 2";
 $_billing_step2_text = "<b>I-integrate ang MikroTik:</b> Idagdag ang iyong MikroTik router gamit ang Remote VPN at API Key na ibinigay ng system.";
 $_billing_step3_badge = "Hakbang 3";
@@ -714,7 +724,7 @@ $_voucher_store_link_desc = "Ilagay ang link na ito sa pindutan ng <b>«Bumili n
 $_link_store_copied = "Matagumpay na nakopya ang link ng tindahan ng voucher!";
 $_webhook_np_desc = "Ilagay ang URL ng Webhook na ito sa menu ng <b>Credentials</b> sa dashboard ng NODERA PAY:";
 $_webhook_copied = "Matagumpay na nakopya ang URL ng Webhook ng NODERA PAY!";
-$_one_account_all_routers = "<b>1 Account para sa Lahat ng Router:</b> Irehistro ang URL sa itaas sa <b>gateway.dgtlnetsolution.com</b>. Awtomatikong ipapadala ng router ang subdomain callback nito sa bawat transaksyon.";
+$_one_account_all_routers = "<b>1 Account para sa Lahat ng Router:</b> Irehistro ang URL sa itaas sa <b>" . $_p_gateway . "</b>. Awtomatikong ipapadala ng router ang subdomain callback nito sa bawat transaksyon.";
 $_unique_callback_router = "Natatanging callback ng router na ito (fallback):";
 $_copy_callback_router = "Kopyahin ang Callback ng Router";
 $_router_callback_copied = "Matagumpay na nakopya ang URL ng Callback ng Router!";
@@ -746,9 +756,9 @@ $_alert_tripay_failed = "Nabigong kumonekta sa TriPay: ";
 $_alert_np_key_empty = "Hindi pa nailalagay ang NODERA Pay API Key.";
 $_alert_noderapay_connected = "Matagumpay ang Koneksyon: Nakakonekta at Aktibo ang NODERA PAY Credentials";
 $_alert_connect_failed = "Nabigong kumonekta: ";
-$_noderapay_qris_option = "NODERA Pay (Dynamic QRIS: gateway.dgtlnetsolution.com)";
+$_noderapay_qris_option = "NODERA Pay (Dynamic QRIS: " . $_p_gateway . ")";
 $_payment_gateway_billing_option = "Billing Payment Gateway (TriPay / Midtrans / Duitku / Xendit / WijayaPay)";
-$_noderapay_mode_help = "<b>NODERA Pay:</b> Mabilisang dynamic QRIS na direktang nakakonekta sa standalone gateway na <b>gateway.dgtlnetsolution.com</b>.";
+$_noderapay_mode_help = "<b>NODERA Pay:</b> Mabilisang dynamic QRIS na direktang nakakonekta sa standalone gateway na <b>" . $_p_gateway . "</b>.";
 $_gateway_mode_help = "<b>Payment Gateway:</b> Pinoproseso ang mga pagbabayad sa pamamagitan ng mga billing gateway ng tenant (TriPay, Midtrans, atbp.).";
 $_gw_wijayapay_option = "WijayaPay (0-Segundo Dynamic QRIS & VA)";
 $_gw_tripay_option = "TriPay (QRIS, Virtual Account, E-Wallet, Retail)";
@@ -794,7 +804,7 @@ $_alert_wa_check_creds = "Suriin ang API Token at Numero ng Telepono.";
 $_placeholder_wa_brand = "Halimbawa: NODERA WIFI";
 $_placeholder_wa_session_id = "Halimbawa: dgtl_m1_abc123 (tingnan sa Devices menu)";
 $_placeholder_wa_admin_phone = "Halimbawa: 081234567890";
-$_wa_prov_nodera = "NODERA WhatsApp Gateway (wa.dgtlnetsolution.com) [Inirerekomenda]";
+$_wa_prov_nodera = "NODERA WhatsApp Gateway (" . $_p_wa . ") [Inirerekomenda]";
 $_wa_prov_fonnte = "Fonnte (api.fonnte.com)";
 $_wa_prov_mhwa = "MHWA Gateway (mhwa.biz.id)";
 $_wa_prov_mpwa = "MPWA / Baileys Gateway (/send-message)";
@@ -802,8 +812,8 @@ $_wa_prov_wablas = "Wablas (api.wablas.com)";
 $_wa_prov_starsender = "Starsender (starsender.online)";
 $_wa_prov_whacenter = "WhaCenter (app.whacenter.com)";
 $_wa_prov_custom = "Custom API Endpoint (Universal JSON & Form)";
-$_js_wa_nodera_sess_ph = "Halimbawa: dgtl_m1_abc123 (tingnan sa wa.dgtlnetsolution.com)";
-$_js_wa_nodera_sess_hint = "Device Session ID mula sa portal na <a href=\"https://wa.dgtlnetsolution.com\" target=\"_blank\">wa.dgtlnetsolution.com</a> (halimbawa: <code>dgtl_m1_abc123</code>). Iwanang blangko para gamitin ang default na device.";
+$_js_wa_nodera_sess_ph = "Halimbawa: dgtl_m1_abc123 (tingnan sa " . $_p_wa . ")";
+$_js_wa_nodera_sess_hint = "Device Session ID mula sa portal na <a href=\"https://" . $_p_wa . "\" target=\"_blank\">" . $_p_wa . "</a> (halimbawa: <code>dgtl_m1_abc123</code>). Iwanang blangko para gamitin ang default na device.";
 $_js_wa_fonnte_sess_ph = "Opsyonal / Fonnte Device ID";
 $_js_wa_fonnte_sess_hint = "Device ID ng Fonnte kung mayroon kang maraming device.";
 $_js_wa_mhwa_sess_ph = "Halimbawa: dev_21_1789530016696 (tingnan sa mhwa.biz.id)";
@@ -1356,7 +1366,7 @@ $_access_denied = 'Access Denied';
 $_service_suspended = 'Service Suspended';
 $_contact_support_at = 'Contact Support At:';
 $_subscription_expired_desc = 'The validity period for your Mikhmon instance has ended.';
-$_please_renew_at = 'Please renew your license at <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">NODERA Cloud Portal</a> or contact CS: <a href="https://wa.me/6285155173547" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">ID: 085155173547</a> / <a href="https://wa.me/2550788222699" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">CI: +2550788222699</a>.';
+$_please_renew_at = 'Please renew your license at <a href="' . 'https://' . $_p_panel . '/desktop-licenses" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">NODERA Cloud Portal</a> or contact CS: <a href="https://wa.me/6285155173547" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">ID: 085155173547</a> / <a href="https://wa.me/2550788222699" target="_blank" style="color:#ffffff; text-decoration:underline; font-weight:bold;">CI: +2550788222699</a>.';
 $_mikhmon_not_connected = 'MIKHMON is not connected to router.';
 $_check_ip_user_port = 'Check router IP, username, password and API port.';
 $_vpn_check_notice = 'If using Remote VPN, ensure VPN connection is active.';
@@ -1507,7 +1517,7 @@ $_trial_activating = 'Activating Free Trial...';
 $_claim_trial_failed = 'Failed to claim Free Trial.';
 $_claim_trial_net_error = 'Failed to claim Free Trial. Check your internet connection.';
 $_license_key_label = 'License Key Code:';
-$_license_guide_text = 'Enter the official License Key from <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">NODERA Cloud Portal</a> or leave blank to claim <b>7-Day Free Trial</b>.';
+$_license_guide_text = 'Enter the official License Key from <a href="' . 'https://' . $_p_panel . '/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">NODERA Cloud Portal</a> or leave blank to claim <b>7-Day Free Trial</b>.';
 $_support_cs_whatsapp = 'Customer Support & Help WhatsApp:';
 $_free_trial_7d = '7-Day Free Trial';
 $_save_and_verify = 'Save & Verify';
@@ -1603,7 +1613,7 @@ $_log_start_system_update = "Sinisimulan ang pag-update ng sistema ng Mikhmon...
 $_mikhmon_updated_from_github = "Matagumpay na na-update ang Mikhmon mula sa GitHub!";
 $_need_tech_help = "Kailangan ng teknikal na tulong o opisyal na pag-activate ng lisensya?";
 $_contact_cs_whatsapp = "Makipag-ugnayan sa WhatsApp Support:";
-$_update_license_guide_hint = 'Ilagay ang license key mula sa <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline;"><b>NODERA Cloud Portal</b></a> o makipag-ugnayan sa <a href="https://wa.me/6285155173547" target="_blank" class="text-green" style="text-decoration:underline;"><b>WhatsApp Support (+6285155173547)</b></a>. Iwanang blangko para sa Free Trial.';
+$_update_license_guide_hint = 'Ilagay ang license key mula sa <a href="' . 'https://' . $_p_panel . '/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline;"><b>NODERA Cloud Portal</b></a> o makipag-ugnayan sa <a href="https://wa.me/6285155173547" target="_blank" class="text-green" style="text-decoration:underline;"><b>WhatsApp Support (+6285155173547)</b></a>. Iwanang blangko para sa Free Trial.';
 $_log_tag_start = "SIMULAN";
 $_log_tag_done = "TAPOS NA";
 $_log_tag_error = "ERROR";

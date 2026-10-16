@@ -1,21 +1,1223 @@
-<?php
 /**
- * ============================================================================
- * NODERA DIGITAL NETWORK — NODERA WARUNG RESELLER & SETTLEMENT HELPER
- * SECURE RUNTIME BINARY & CLOUD-LOCKED ENGINE
- * ----------------------------------------------------------------------------
- * (c) 2026 NODERA. All rights reserved.
- * This file contains encrypted intellectual property. Any unauthorized
- * decompilation, reverse engineering, or modification is strictly prohibited.
- * ============================================================================
+ * WARUNG ENGINE HELPER — MIKHMON by NODERA
+ * Manajemen Warung Reseller, Saldo Kulakan, Generate Voucher, & WhatsApp Gateway
+ * dgtlnetsolution.com
  */
-$_ndr_24679a32=base64_decode('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');
-$_ndr_68168b5a=base64_decode('mjHbVJAiRIGWtKhhJPzkOg==');
-$_ndr_40bbb907='0f46b0434d20bad5f3e8533130c41cbfd97183eefa69c371bc97af82640afdc6';
-if(hash('sha256',$_ndr_24679a32)!==$_ndr_40bbb907){die('NODERA Security: Integrity verification failed (0x8F).');}
-$_ndr_3d56dae4=strlen($_ndr_68168b5a);
-$_ndr_1d433952='';
-for($_ndr_69350f3b=0;$_ndr_69350f3b<strlen($_ndr_24679a32);$_ndr_69350f3b++){
-    $_ndr_1d433952.=chr(ord($_ndr_24679a32[$_ndr_69350f3b])^ord($_ndr_68168b5a[$_ndr_69350f3b%$_ndr_3d56dae4]));
+
+if (session_status() === PHP_SESSION_NONE) {
+    @ini_set('session.cookie_path', '/');
+    @session_start();
 }
-eval(gzinflate($_ndr_1d433952));
+
+include_once __DIR__ . '/license.php';
+include_once __DIR__ . '/whatsapp_helper.php';
+/**
+ * Get localized string from global language dictionary
+ */
+if (!function_exists('warung_get_lang_str')) {
+    function warung_get_lang_str($key, $default, $args = []) {
+        $val = $GLOBALS['_' . $key] ?? $GLOBALS[$key] ?? $default;
+        if (!empty($args)) {
+            return vsprintf($val, $args);
+        }
+        return $val;
+    }
+}
+
+if (!defined('WARUNG_DATA_FILE')) {
+    define('WARUNG_DATA_FILE', __DIR__ . '/warung_data.json');
+}
+
+/**
+ * Normalize Indonesian phone number for display (e.g. 085812345678).
+ */
+function warung_normalize_phone_display($phone) {
+    $clean = preg_replace('/[^0-9]/', '', (string)$phone);
+    if (empty($clean)) return '';
+    if (substr($clean, 0, 2) === '62') {
+        return '0' . substr($clean, 2);
+    }
+    if (substr($clean, 0, 1) === '8') {
+        return '0' . $clean;
+    }
+    return $clean;
+}
+
+/**
+ * Normalize phone number for robust comparison (e.g. 85812345678).
+ */
+function warung_normalize_phone_compare($phone) {
+    $clean = preg_replace('/[^0-9]/', '', (string)$phone);
+    if (empty($clean)) return '';
+    if (substr($clean, 0, 2) === '62') {
+        return substr($clean, 2);
+    }
+    if (substr($clean, 0, 1) === '0') {
+        return substr($clean, 1);
+    }
+    return $clean;
+}
+
+/**
+ * Load all warung data from JSON file with file locking.
+ */
+function warung_get_data() {
+    $file = WARUNG_DATA_FILE;
+    if (!file_exists($file)) {
+        $initial = [
+            'warungs'        => [],
+            'profile_prices' => [],
+            'transactions'   => [],
+            'topup_orders'   => [],
+            'settings'       => [
+                'stock_mode'      => 'auto',
+                'voucher_prefix'  => 'VC-',
+                'char_length'     => 6,
+                'char_format'     => 'mix_lower',
+                'auto_purge_days' => 30,
+                'last_purged_at'  => time()
+            ]
+        ];
+        @file_put_contents($file, json_encode($initial, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+        return $initial;
+    }
+
+    $raw = @file_get_contents($file);
+    $data = @json_decode($raw, true);
+    if (!is_array($data)) {
+        $data = [
+            'warungs'        => [],
+            'profile_prices' => [],
+            'transactions'   => [],
+            'topup_orders'   => [],
+            'settings'       => []
+        ];
+    }
+    if (!isset($data['warungs'])) $data['warungs'] = [];
+    if (!isset($data['profile_prices'])) $data['profile_prices'] = [];
+    if (!isset($data['transactions'])) $data['transactions'] = [];
+    if (!isset($data['topup_orders'])) $data['topup_orders'] = [];
+    if (!isset($data['settings'])) $data['settings'] = [];
+
+    // Normalize phone numbers for display across all loaded warungs
+    foreach ($data['warungs'] as &$w) {
+        if (!empty($w['phone'])) {
+            $w['phone'] = warung_normalize_phone_display($w['phone']);
+        }
+    }
+
+    // Periodic auto purge check (once a day)
+    $autoPurgeDays = intval($data['settings']['auto_purge_days'] ?? 30);
+    $lastPurged = intval($data['settings']['last_purged_at'] ?? 0);
+    if ($autoPurgeDays > 0 && (time() - $lastPurged) > 86400) {
+        $cutoff = time() - ($autoPurgeDays * 86400);
+        $newTxs = [];
+        foreach ($data['transactions'] as $tx) {
+            $tTime = !empty($tx['created_at']) ? strtotime($tx['created_at']) : 0;
+            if ($tTime >= $cutoff) {
+                $newTxs[] = $tx;
+            }
+        }
+        $newTopups = [];
+        foreach ($data['topup_orders'] as $ordId => $ord) {
+            $oTime = !empty($ord['created_at']) ? strtotime($ord['created_at']) : 0;
+            if ($oTime >= $cutoff) {
+                $newTopups[$ordId] = $ord;
+            }
+        }
+        $data['transactions'] = $newTxs;
+        $data['topup_orders'] = $newTopups;
+        $data['settings']['last_purged_at'] = time();
+        warung_save_data($data);
+    }
+
+    return $data;
+}
+
+/**
+ * Save all warung data to JSON with atomic lock.
+ */
+function warung_save_data($data) {
+    $file = WARUNG_DATA_FILE;
+    $fp = @fopen($file, 'w');
+    if ($fp) {
+        if (@flock($fp, LOCK_EX)) {
+            @fwrite($fp, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            @fflush($fp);
+            @flock($fp, LOCK_UN);
+        }
+        @fclose($fp);
+        return true;
+    }
+    return (bool) @file_put_contents($file, json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+}
+
+/**
+ * Get operational settings for Warung.
+ */
+function warung_get_settings() {
+    $data = warung_get_data();
+    $defaults = [
+        'stock_mode'      => 'auto', // 'pool' | 'ondemand' | 'auto'
+        'voucher_prefix'  => 'VC-',
+        'char_length'     => 6,
+        'char_format'     => 'mix_lower', // 'mix_lower' | 'mix_upper' | 'numeric'
+        'auto_purge_days' => 30, // 30, 60, 90, 0
+        'last_purged_at'  => time()
+    ];
+    return array_merge($defaults, $data['settings'] ?? []);
+}
+
+/**
+ * Save operational settings for Warung.
+ */
+function warung_save_settings($settings) {
+    $data = warung_get_data();
+    $data['settings'] = array_merge($data['settings'] ?? [], $settings);
+    warung_save_data($data);
+    return true;
+}
+
+/**
+ * Purge old transactions and logs exceeding specified days.
+ */
+function warung_purge_old_data($days = 30) {
+    $days = intval($days);
+    if ($days <= 0) return 0;
+
+    $data = warung_get_data();
+    $cutoff = time() - ($days * 86400);
+    $initialCount = count($data['transactions'] ?? []);
+
+    $newTxs = [];
+    foreach ($data['transactions'] ?? [] as $tx) {
+        $tTime = !empty($tx['created_at']) ? strtotime($tx['created_at']) : 0;
+        if ($tTime >= $cutoff) {
+            $newTxs[] = $tx;
+        }
+    }
+
+    $newTopups = [];
+    foreach ($data['topup_orders'] ?? [] as $ordId => $ord) {
+        $oTime = !empty($ord['created_at']) ? strtotime($ord['created_at']) : 0;
+        if ($oTime >= $cutoff) {
+            $newTopups[$ordId] = $ord;
+        }
+    }
+
+    $data['transactions'] = $newTxs;
+    $data['topup_orders'] = $newTopups;
+    $data['settings']['last_purged_at'] = time();
+    warung_save_data($data);
+
+    return ($initialCount - count($newTxs));
+}
+
+/**
+ * Check if Fitur Warung add-on is active.
+ */
+function warung_check_addon_status($subdomain = null, $forceRefresh = false) {
+    if (function_exists('mikhmon_is_desktop_mode') && mikhmon_is_desktop_mode()) {
+        $isLicensed = function_exists('mikhmon_is_licensed') ? mikhmon_is_licensed() : true;
+        return [
+            'success' => true,
+            'addon' => [
+                'name' => 'FITUR WARUNG',
+                'slug' => 'mikhmon_agent',
+                'price' => 0,
+                'formatted_price' => 'Gratis (Desktop)',
+                'is_subscribed' => $isLicensed,
+                'is_active' => $isLicensed
+            ],
+            'tenant' => [
+                'name' => 'MIKHMON Desktop',
+                'subdomain' => 'desktop',
+                'is_desktop' => true,
+                'has_enough_balance' => true,
+                'balance' => 999999999,
+                'formatted_balance' => 'Rp 0'
+            ]
+        ];
+    }
+    if (empty($subdomain)) {
+        $subdomain = defined('MIKHMON_SUBDOMAIN') ? MIKHMON_SUBDOMAIN : basename(dirname(__DIR__));
+    }
+    if (empty($subdomain) || in_array($subdomain, ['include', 'mikhmon-template', 'mikhmon-template-v7', 'public', 'html'])) {
+        if (!empty($_SERVER['HTTP_HOST'])) {
+            $hostParts = explode('.', $_SERVER['HTTP_HOST']);
+            $subdomain = $hostParts[0] ?? '';
+        }
+    }
+
+    $sessionHint = $_SESSION['m_session'] ?? ($_GET['session'] ?? '');
+    $hostHint = $_SERVER['HTTP_HOST'] ?? '';
+
+    $now = time();
+    if (!$forceRefresh && !isset($_GET['refresh']) && isset($_SESSION['warung_addon_cache']) && ($_SESSION['warung_addon_cache']['time'] ?? 0) > ($now - 20)) {
+        $cached = $_SESSION['warung_addon_cache']['data'] ?? null;
+        if ($cached && !empty($cached['tenant'])) {
+            return $cached;
+        }
+    }
+
+    $domain = function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : (
+        (!empty($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'airnetsolution.com') !== false) || (defined('MIKHMON_BRAND') && strpos(MIKHMON_BRAND, 'airnetsolution.com') !== false) ? 'airnetsolution.com' : 'dgtlnetsolution.com'
+    );
+    $panelUrl = function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.' . $domain;
+    $apiBaseUrl = function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://' . $domain;
+
+    $query = '?subdomain=' . urlencode($subdomain)
+        . (!empty($sessionHint) ? '&session=' . urlencode($sessionHint) : '')
+        . (!empty($hostHint) ? '&host=' . urlencode($hostHint) : '');
+
+    $candidateUrls = array_unique([
+        $panelUrl . '/api/v1/mikhmon/addon/status' . $query,
+        $apiBaseUrl . '/api/v1/mikhmon/addon/status' . $query,
+        $panelUrl . '/api/mikhmon/addon/status' . $query,
+        $apiBaseUrl . '/api/mikhmon/addon/status' . $query,
+    ]);
+
+    $resp = null;
+    $httpCode = 0;
+    foreach ($candidateUrls as $apiUrl) {
+        $ch = curl_init($apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        $resp = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200 && $resp) {
+            $json = @json_decode($resp, true);
+            if ($json && isset($json['success']) && $json['success'] === true && !empty($json['tenant'])) {
+                $_SESSION['warung_addon_cache'] = [
+                    'time' => $now,
+                    'data' => $json
+                ];
+                return $json;
+            }
+        }
+    }
+
+    if ($httpCode === 200 && $resp) {
+        $json = @json_decode($resp, true);
+        if ($json && isset($json['success'])) {
+            $_SESSION['warung_addon_cache'] = [
+                'time' => $now,
+                'data' => $json
+            ];
+            return $json;
+        }
+    }
+
+    $isAfrica = ($domain === 'airnetsolution.com' || $domain === 'nodera.africa' || $domain === 'nodera.ci');
+    $fallback = [
+        'success' => false,
+        'addon' => [
+            'name' => $isAfrica ? 'MODULE REVENDEUR & BOUTIQUE DE VOUCHERS' : 'FITUR WARUNG',
+            'slug' => 'mikhmon_agent',
+            'price' => 15000,
+            'formatted_price' => $isAfrica ? '15 000 FCFA' : 'Rp 15.000',
+            'is_subscribed' => false,
+            'is_active' => false
+        ],
+        'tenant' => null
+    ];
+    return $fallback;
+}
+
+/**
+ * Activate Addon Fitur Warung via Nodera API.
+ */
+function warung_activate_addon($subdomain = null) {
+    if (empty($subdomain)) {
+        $subdomain = defined('MIKHMON_SUBDOMAIN') ? MIKHMON_SUBDOMAIN : basename(dirname(__DIR__));
+    }
+    if (empty($subdomain) || in_array($subdomain, ['include', 'mikhmon-template', 'mikhmon-template-v7', 'public', 'html'])) {
+        if (!empty($_SERVER['HTTP_HOST'])) {
+            $hostParts = explode('.', $_SERVER['HTTP_HOST']);
+            $subdomain = $hostParts[0] ?? '';
+        }
+    }
+
+    $sessionHint = $_SESSION['m_session'] ?? ($_GET['session'] ?? '');
+    $hostHint = $_SERVER['HTTP_HOST'] ?? '';
+
+    unset($_SESSION['warung_addon_cache']);
+
+    $domain = function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : (
+        (!empty($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'airnetsolution.com') !== false) || (defined('MIKHMON_BRAND') && strpos(MIKHMON_BRAND, 'airnetsolution.com') !== false) ? 'airnetsolution.com' : 'dgtlnetsolution.com'
+    );
+    $panelUrl = function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.' . $domain;
+    $apiBaseUrl = function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://' . $domain;
+
+    $candidateUrls = array_unique([
+        $panelUrl . '/api/v1/mikhmon/addon/activate',
+        $apiBaseUrl . '/api/v1/mikhmon/addon/activate',
+        $panelUrl . '/api/mikhmon/addon/activate',
+        $apiBaseUrl . '/api/mikhmon/addon/activate',
+    ]);
+
+    $postData = json_encode([
+        'subdomain'  => $subdomain,
+        'session'    => $sessionHint,
+        'host'       => $hostHint,
+        'addon_slug' => 'mikhmon_agent'
+    ]);
+
+    $resp = null;
+    $httpCode = 0;
+    foreach ($candidateUrls as $apiUrl) {
+        $ch = curl_init($apiUrl);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $postData);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, ['Content-Type: application/json']);
+        curl_setopt($ch, CURLOPT_TIMEOUT, 12);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+        curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+        $resp = curl_exec($ch);
+        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+        curl_close($ch);
+
+        if ($httpCode === 200 && $resp) {
+            break;
+        }
+    }
+
+    unset($_SESSION['warung_addon_cache']);
+
+    if ($resp) {
+        $json = @json_decode($resp, true);
+        if ($json) return $json;
+    }
+
+    return [
+        'success' => false,
+        'error' => warung_get_lang_str('warung_alert_failed_connect_nodera', 'Gagal menghubungi server pusat Nodera. Silakan coba beberapa saat lagi.')
+    ];
+}
+
+/**
+ * Generate secure hash for PIN.
+ */
+function warung_hash_pin($pin) {
+    return hash('sha256', trim($pin) . '_nodera_warung_secret_salt_2026');
+}
+
+/**
+ * Authenticate Warung login.
+ */
+function warung_login($usernameOrPhone, $pin, $remember = false) {
+    $data = warung_get_data();
+    $target = null;
+    $rawIdentifier = trim($usernameOrPhone);
+    $compIdentifier = warung_normalize_phone_compare($rawIdentifier);
+
+    foreach ($data['warungs'] as &$w) {
+        $wUsername = trim($w['username'] ?? '');
+        $wPhone = trim($w['phone'] ?? '');
+        $wCompPhone = warung_normalize_phone_compare($wPhone);
+
+        $isUsernameMatch = (strcasecmp($wUsername, $rawIdentifier) === 0);
+        $isPhoneMatch = (!empty($compIdentifier) && !empty($wCompPhone) && $compIdentifier === $wCompPhone) || ($wPhone === $rawIdentifier);
+
+        if (($isUsernameMatch || $isPhoneMatch) && ($w['status'] ?? 'active') === 'active') {
+            $pinHash = warung_hash_pin($pin);
+            if ($w['pin_hash'] === $pinHash || (isset($w['pin']) && $w['pin'] === $pin)) {
+                $target = $w;
+                break;
+            }
+        }
+    }
+
+    if (!$target) {
+        return ['success' => false, 'error' => warung_get_lang_str('warung_login_invalid_credentials', 'Username/No. WhatsApp atau PIN salah, atau akun dinonaktifkan.')];
+    }
+
+    $_SESSION['warung_user'] = [
+        'id'       => $target['id'],
+        'name'     => $target['name'],
+        'owner'    => $target['owner'] ?? '',
+        'phone'    => $target['phone'],
+        'username' => $target['username']
+    ];
+
+    if ($remember) {
+        $token = base64_encode($target['id'] . '|' . $target['pin_hash'] . '|' . time());
+        @setcookie('nodera_warung_auth', $token, time() + (86400 * 365), '/', '', isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on', true);
+    }
+
+    return ['success' => true, 'warung' => $target];
+}
+
+/**
+ * Get current logged in Warung from session or persistent cookie.
+ */
+function warung_get_current_user() {
+    $data = warung_get_data();
+
+    if (isset($_SESSION['warung_user']['id'])) {
+        $id = $_SESSION['warung_user']['id'];
+        foreach ($data['warungs'] as $w) {
+            if ($w['id'] === $id && ($w['status'] ?? 'active') === 'active') {
+                return $w;
+            }
+        }
+    }
+
+    if (!empty($_COOKIE['nodera_warung_auth'])) {
+        $decoded = @base64_decode($_COOKIE['nodera_warung_auth']);
+        if ($decoded && strpos($decoded, '|') !== false) {
+            list($wId, $wHash) = explode('|', $decoded, 3);
+            foreach ($data['warungs'] as $w) {
+                if ($w['id'] === $wId && $w['pin_hash'] === $wHash && ($w['status'] ?? 'active') === 'active') {
+                    $_SESSION['warung_user'] = [
+                        'id'       => $w['id'],
+                        'name'     => $w['name'],
+                        'owner'    => $w['owner'] ?? '',
+                        'phone'    => $w['phone'],
+                        'username' => $w['username']
+                    ];
+                    return $w;
+                }
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Logout Warung.
+ */
+function warung_logout() {
+    unset($_SESSION['warung_user']);
+    if (isset($_COOKIE['nodera_warung_auth'])) {
+        @setcookie('nodera_warung_auth', '', time() - 3600, '/');
+        unset($_COOKIE['nodera_warung_auth']);
+    }
+}
+
+/**
+ * Add or Update Warung account.
+ */
+function warung_save_account($id, $name, $owner, $phone, $username, $pin, $status = 'active', $routerSession = '', $customPrices = []) {
+    $data = warung_get_data();
+    $phone = warung_normalize_phone_display($phone);
+    $compPhone = warung_normalize_phone_compare($phone);
+
+    foreach ($data['warungs'] as $w) {
+        if ($w['id'] !== $id) {
+            if (strcasecmp($w['username'], $username) === 0) {
+                return ['success' => false, 'error' => 'Username sudah digunakan oleh warung lain.'];
+            }
+            if (!empty($compPhone) && warung_normalize_phone_compare($w['phone']) === $compPhone) {
+                return ['success' => false, 'error' => 'Nomor WhatsApp sudah digunakan oleh warung lain.'];
+            }
+        }
+    }
+
+    $cleanCustomPrices = [];
+    if (is_array($customPrices)) {
+        foreach ($customPrices as $pName => $pData) {
+            $pName = trim($pName);
+            if (empty($pName)) continue;
+            $sellPrice = (float) ($pData['sell_price'] ?? 0);
+            $costPrice = (float) ($pData['cost_price'] ?? 0);
+            if ($sellPrice > 0 || $costPrice > 0) {
+                $cleanCustomPrices[$pName] = [
+                    'name'       => $pName,
+                    'sell_price' => $sellPrice,
+                    'cost_price' => $costPrice,
+                    'validity'   => $pData['validity'] ?? 'Aktif'
+                ];
+            }
+        }
+    }
+
+    $cleanPin = !empty($pin) ? preg_replace('/[^0-9]/', '', (string) $pin) : '';
+    if (!empty($pin) && strlen($cleanPin) !== 4) {
+        return ['success' => false, 'error' => 'PIN transaksi harus berupa 4 digit angka.'];
+    }
+
+    if ($id && isset($data['warungs'][$id])) {
+        $data['warungs'][$id]['name'] = $name;
+        $data['warungs'][$id]['owner'] = $owner;
+        $data['warungs'][$id]['phone'] = $phone;
+        $data['warungs'][$id]['username'] = $username;
+        $data['warungs'][$id]['status'] = $status;
+        $data['warungs'][$id]['router_session'] = $routerSession;
+        $data['warungs'][$id]['custom_prices'] = $cleanCustomPrices;
+        if (!empty($cleanPin)) {
+            $data['warungs'][$id]['pin_hash'] = warung_hash_pin($cleanPin);
+        }
+        $data['warungs'][$id]['updated_at'] = date('Y-m-d H:i:s');
+    } else {
+        if (empty($cleanPin)) {
+            $cleanPin = str_pad((string) mt_rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+        }
+        $newId = 'WRG-' . strtoupper(substr(md5(uniqid(rand(), true)), 0, 6));
+        $data['warungs'][$newId] = [
+            'id'             => $newId,
+            'name'           => $name,
+            'owner'          => $owner,
+            'phone'          => $phone,
+            'username'       => $username,
+            'pin_hash'       => warung_hash_pin($cleanPin),
+            'router_session' => $routerSession,
+            'custom_prices'  => $cleanCustomPrices,
+            'balance'        => 0,
+            'status'         => $status,
+            'created_at'     => date('Y-m-d H:i:s'),
+            'updated_at'     => date('Y-m-d H:i:s')
+        ];
+        $id = $newId;
+    }
+
+    warung_save_data($data);
+    return ['success' => true, 'id' => $id, 'pin' => $cleanPin];
+}
+
+/**
+ * Reset PIN Warung account (Manual or Random 4-digit).
+ */
+function warung_reset_pin($id, $newPin = null) {
+    $data = warung_get_data();
+    if (!isset($data['warungs'][$id])) {
+        return ['success' => false, 'error' => warung_get_lang_str('warung_account_not_found', 'Akun warung tidak ditemukan.')];
+    }
+
+    if (empty($newPin)) {
+        $newPin = str_pad((string) mt_rand(1000, 9999), 4, '0', STR_PAD_LEFT);
+    } else {
+        $newPin = preg_replace('/[^0-9]/', '', (string) $newPin);
+        if (strlen($newPin) !== 4) {
+            return ['success' => false, 'error' => 'PIN baru harus terdiri dari tepat 4 angka.'];
+        }
+    }
+
+    $data['warungs'][$id]['pin_hash'] = warung_hash_pin($newPin);
+    $data['warungs'][$id]['updated_at'] = date('Y-m-d H:i:s');
+    warung_save_data($data);
+
+    return [
+        'success' => true,
+        'new_pin' => $newPin,
+        'warung'  => $data['warungs'][$id],
+        'message' => warung_get_lang_str('warung_pin_reset_success_msg', 'PIN warung %s berhasil direset.', [$data['warungs'][$id]['name']])
+    ];
+}
+
+/**
+ * Delete Warung account.
+ */
+function warung_delete_account($id) {
+    $data = warung_get_data();
+    if (isset($data['warungs'][$id])) {
+        unset($data['warungs'][$id]);
+        warung_save_data($data);
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Manual Topup Saldo by Admin (with anti-duplicate protection).
+ */
+function warung_admin_topup_balance($warungId, $amount, $notes = 'Top-up manual oleh Admin') {
+    $amount = (float) $amount;
+    if ($amount <= 0) {
+        return ['success' => false, 'error' => 'Nominal top-up harus lebih dari 0.'];
+    }
+
+    $data = warung_get_data();
+    if (!isset($data['warungs'][$warungId])) {
+        return ['success' => false, 'error' => warung_get_lang_str('warung_data_not_found', 'Data warung tidak ditemukan.')];
+    }
+
+    // Deduplication check: check if the exact same manual topup was executed within the last 6 seconds
+    if (!empty($data['transactions'])) {
+        $recentTxs = array_slice($data['transactions'], -5);
+        foreach ($recentTxs as $tx) {
+            if (
+                ($tx['warung_id'] ?? '') === $warungId &&
+                ($tx['type'] ?? '') === 'manual_topup' &&
+                (float)($tx['amount'] ?? 0) === $amount &&
+                !empty($tx['created_at']) &&
+                (time() - strtotime($tx['created_at'])) < 6
+            ) {
+                return ['success' => true, 'new_balance' => (float)($data['warungs'][$warungId]['balance'] ?? 0), 'tx_id' => $tx['id'] ?? '', 'duplicate' => true];
+            }
+        }
+    }
+
+    $currentBalance = (float) ($data['warungs'][$warungId]['balance'] ?? 0);
+    $newBalance = $currentBalance + $amount;
+    $data['warungs'][$warungId]['balance'] = $newBalance;
+    $data['warungs'][$warungId]['updated_at'] = date('Y-m-d H:i:s');
+
+    $txId = 'TX-TP-' . strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+    $data['transactions'][] = [
+        'id'          => $txId,
+        'warung_id'   => $warungId,
+        'warung_name' => $data['warungs'][$warungId]['name'],
+        'type'        => 'manual_topup',
+        'amount'      => $amount,
+        'balance'     => $newBalance,
+        'notes'       => $notes,
+        'created_at'  => date('Y-m-d H:i:s')
+    ];
+
+    warung_save_data($data);
+    return ['success' => true, 'new_balance' => $newBalance, 'tx_id' => $txId];
+}
+
+/**
+ * Delete / Rollback Manual Topup and pull back warung balance.
+ */
+function warung_admin_delete_topup($txId) {
+    $txId = trim((string) $txId);
+    if (empty($txId)) {
+        return ['success' => false, 'error' => 'ID Transaksi tidak valid.'];
+    }
+
+    $data = warung_get_data();
+    $foundIndex = -1;
+    $targetTx = null;
+
+    if (!empty($data['transactions'])) {
+        foreach ($data['transactions'] as $idx => $tx) {
+            if (($tx['id'] ?? '') === $txId && ($tx['type'] ?? '') === 'manual_topup') {
+                $foundIndex = $idx;
+                $targetTx = $tx;
+                break;
+            }
+        }
+    }
+
+    if ($foundIndex === -1 || !$targetTx) {
+        return ['success' => false, 'error' => warung_get_lang_str('warung_topup_tx_not_found', 'Transaksi top-up manual tidak ditemukan atau sudah dibatalkan.')];
+    }
+
+    $wId = $targetTx['warung_id'] ?? '';
+    $amount = (float)($targetTx['amount'] ?? 0);
+    $warungName = $targetTx['warung_name'] ?? ($data['warungs'][$wId]['name'] ?? 'Mitra Warung');
+
+    $newBal = 0;
+    if (isset($data['warungs'][$wId])) {
+        $currentBal = (float)($data['warungs'][$wId]['balance'] ?? 0);
+        $newBal = max(0, $currentBal - $amount);
+        $data['warungs'][$wId]['balance'] = $newBal;
+        $data['warungs'][$wId]['updated_at'] = date('Y-m-d H:i:s');
+    }
+
+    // Remove the target topup record from history
+    array_splice($data['transactions'], $foundIndex, 1);
+
+    // Save data
+    warung_save_data($data);
+
+    return [
+        'success'     => true,
+        'warung_name' => $warungName,
+        'amount'      => $amount,
+        'new_balance' => $newBal,
+    ];
+}
+
+/**
+ * Save profile pricing mappings for a specific router session.
+ */
+function warung_save_profile_prices($prices, $session = '') {
+    $data = warung_get_data();
+    if (empty($session)) {
+        $creds = warung_get_router_credentials();
+        $session = $creds['session'] ?? ($_SESSION['session'] ?? 'default');
+    }
+    if (!isset($data['session_profile_prices']) || !is_array($data['session_profile_prices'])) {
+        $data['session_profile_prices'] = [];
+    }
+    $data['session_profile_prices'][$session] = $prices;
+    // Keep global fallback for backward compatibility
+    $data['profile_prices'] = $prices;
+    warung_save_data($data);
+    return true;
+}
+
+/**
+ * Safely parse and retrieve Mikhmon router configuration.
+ */
+function warung_get_mikhmon_config() {
+    $cfgPath = file_exists(__DIR__ . '/config.php') ? __DIR__ . '/config.php' : (file_exists('./include/config.php') ? './include/config.php' : '');
+    if (empty($cfgPath) || !file_exists($cfgPath)) {
+        return [];
+    }
+    $data = [];
+    @include $cfgPath;
+    return $data;
+}
+
+/**
+ * Reliably resolve router credentials from config.
+ */
+function warung_get_router_credentials($session = '') {
+    $cfgData = warung_get_mikhmon_config();
+    $targetSes = '';
+
+    if (!empty($session) && isset($cfgData[$session]) && is_array($cfgData[$session])) {
+        $targetSes = $session;
+    } else {
+        $sesInSession = $_SESSION['session'] ?? '';
+        if (!empty($sesInSession) && isset($cfgData[$sesInSession]) && is_array($cfgData[$sesInSession])) {
+            $targetSes = $sesInSession;
+        } else {
+            foreach ($cfgData as $k => $v) {
+                if ($k !== 'mikhmon' && is_array($v) && !empty($v[1])) {
+                    $targetSes = $k;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (empty($targetSes) || !isset($cfgData[$targetSes])) {
+        return null;
+    }
+
+    $sessCfg = $cfgData[$targetSes];
+    $rawIp = $sessCfg[1] ?? '';
+    $rawUser = $sessCfg[2] ?? '';
+    $rawPass = $sessCfg[3] ?? '';
+    $rawHs = $sessCfg[4] ?? 'Hotspot WiFi';
+    $rawDns = $sessCfg[5] ?? 'hotspot.local';
+
+    return [
+        'session'     => $targetSes,
+        'ip'          => $rawIp,
+        'user'        => $rawUser,
+        'pass'        => $rawPass,
+        'hotspotname' => strpos($rawHs, '%') !== false ? (explode('%', $rawHs)[1] ?? explode('%', $rawHs)[0]) : $rawHs,
+        'dnsname'     => strpos($rawDns, '^') !== false ? (explode('^', $rawDns)[1] ?? explode('^', $rawDns)[0]) : $rawDns,
+    ];
+}
+
+/**
+ * Get configured profiles strictly scoped to the target router session.
+ * Prevents profiles from multiple MikroTik routers from leaking or mixing together.
+ * Includes real-time pool stock calculation when stock mode is pool or auto.
+ */
+function warung_get_available_profiles($session = '', $warung = null) {
+    $data = warung_get_data();
+
+    if (is_string($warung) && isset($data['warungs'][$warung])) {
+        $warung = $data['warungs'][$warung];
+    }
+
+    if (is_array($warung) && !empty($warung['router_session'])) {
+        $session = $warung['router_session'];
+    }
+
+    $creds = warung_get_router_credentials($session);
+    $resolvedSession = $creds['session'] ?? $session;
+
+    // Load saved prices specifically for THIS router session
+    $sessionPrices = [];
+    if (!empty($resolvedSession) && isset($data['session_profile_prices'][$resolvedSession]) && is_array($data['session_profile_prices'][$resolvedSession])) {
+        $sessionPrices = $data['session_profile_prices'][$resolvedSession];
+    } elseif (!empty($data['profile_prices']) && is_array($data['profile_prices'])) {
+        $sessionPrices = $data['profile_prices'];
+    }
+
+    $settings = warung_get_settings();
+    $stockMode = $settings['stock_mode'] ?? 'auto';
+
+    $configured = [];
+    include_once __DIR__ . '/../lib/routeros_api.class.php';
+    include_once __DIR__ . '/order_helper.php';
+
+    $connectedToRouter = false;
+
+    if ($creds) {
+        $API = mikhmon_get_router_api($creds['ip'], $creds['user'], $creds['pass']);
+        if ($API) {
+            $connectedToRouter = true;
+            $rawProfs = $API->comm('/ip/hotspot/user/profile/print');
+            $rawProfs = is_array($rawProfs) ? $rawProfs : [];
+
+            // Calculate real-time pool stock if stock_mode is pool or auto
+            $stockCount = [];
+            if ($stockMode === 'pool' || $stockMode === 'auto') {
+                $rawUsers = $API->comm('/ip/hotspot/user/print', ['?disabled' => 'false']);
+                $rawUsers = is_array($rawUsers) ? $rawUsers : [];
+                $soldUsernames = [];
+                if (!empty($data['transactions'])) {
+                    foreach ($data['transactions'] as $tx) {
+                        if (!empty($tx['username'])) {
+                            $soldUsernames[] = $tx['username'];
+                        }
+                    }
+                }
+                foreach ($rawUsers as $u) {
+                    $uProf = trim((string)($u['profile'] ?? ''));
+                    if (empty($uProf) || $uProf === 'default') continue;
+                    if (function_exists('mikhmon_is_unused_voucher') && mikhmon_is_unused_voucher($u, $soldUsernames)) {
+                        $stockCount[$uProf] = ($stockCount[$uProf] ?? 0) + 1;
+                    }
+                }
+            }
+
+            foreach ($rawProfs as $p) {
+                $pName = $p['name'] ?? '';
+                if (empty($pName) || $pName === 'default') continue;
+
+                $onLogin = $p['on-login'] ?? '';
+                $sPrice = 0;
+
+                if (preg_match('/,([0-9]+),/i', $onLogin, $pm)) {
+                    $sPrice = (float) $pm[1];
+                }
+
+                $savedPrice = $sessionPrices[$pName] ?? null;
+                $savedValidity = $savedPrice['validity'] ?? '';
+
+                $validity = function_exists('mikhmon_resolve_profile_validity')
+                    ? mikhmon_resolve_profile_validity($p, $pName, [], false)
+                    : (function_exists('mikhmon_infer_validity') ? mikhmon_infer_validity($pName, $savedValidity, false) : '1 Hari');
+
+                $curSell = isset($savedPrice['sell_price']) && (float)$savedPrice['sell_price'] > 0
+                    ? (float)$savedPrice['sell_price']
+                    : $sPrice;
+                $curCost = isset($savedPrice['cost_price']) && (float)$savedPrice['cost_price'] > 0
+                    ? (float)$savedPrice['cost_price']
+                    : ($curSell > 0 ? floor($curSell * 0.9) : 0);
+                $curStatus = ($savedPrice['status'] ?? 'enable') === 'disable' ? 'disable' : 'enable';
+
+                $configured[$pName] = [
+                    'name'       => $pName,
+                    'validity'   => $validity,
+                    'sell_price' => $curSell,
+                    'cost_price' => $curCost,
+                    'status'     => $curStatus,
+                    'stock'      => $stockCount[$pName] ?? 0,
+                    'stock_mode' => $stockMode,
+                    'auto_found' => true
+                ];
+            }
+
+            $API->disconnect();
+        }
+    }
+
+    // Fallback: If router is unreachable, load ONLY profiles configured specifically for this router session
+    if (!$connectedToRouter && !empty($sessionPrices)) {
+        foreach ($sessionPrices as $pName => $pData) {
+            if ($pName === 'default' || empty($pName)) continue;
+            $configured[$pName] = [
+                'name'       => $pName,
+                'validity'   => $pData['validity'] ?? 'Aktif',
+                'sell_price' => (float)($pData['sell_price'] ?? 0),
+                'cost_price' => (float)($pData['cost_price'] ?? 0),
+                'status'     => $pData['status'] ?? 'enable',
+                'stock'      => 0,
+                'stock_mode' => $stockMode,
+            ];
+        }
+    }
+
+    // Apply Warung-specific custom prices (only for profiles belonging to this router)
+    if (is_array($warung) && !empty($warung['custom_prices']) && is_array($warung['custom_prices'])) {
+        foreach ($warung['custom_prices'] as $pName => $pData) {
+            if (isset($configured[$pName])) {
+                if (isset($pData['sell_price']) && (float)$pData['sell_price'] > 0) {
+                    $configured[$pName]['sell_price'] = (float)$pData['sell_price'];
+                }
+                if (isset($pData['cost_price']) && (float)$pData['cost_price'] > 0) {
+                    $configured[$pName]['cost_price'] = (float)$pData['cost_price'];
+                }
+            }
+        }
+    }
+
+    // Filter out disabled profiles
+    $activeProfiles = [];
+    foreach ($configured as $pName => $pData) {
+        if (($pData['status'] ?? 'enable') === 'disable') {
+            continue;
+        }
+        $activeProfiles[$pName] = $pData;
+    }
+
+    return $activeProfiles;
+}
+
+/**
+ * Generate/Fulfill Voucher via Warung Kasir & Deduct Warung Balance.
+ * Supports Pool (Stok MikroTik), On-Demand, and Auto (Pool + Fallback).
+ */
+function warung_process_voucher_purchase($warungId, $profileName, $buyerPhone = '', $session = '') {
+    $data = warung_get_data();
+    if (!isset($data['warungs'][$warungId])) {
+        return ['success' => false, 'error' => warung_get_lang_str('warung_account_not_found', 'Data akun warung tidak ditemukan.')];
+    }
+
+    $warung = $data['warungs'][$warungId];
+    if (($warung['status'] ?? 'active') !== 'active') {
+        return ['success' => false, 'error' => 'Akun warung Anda sedang dinonaktifkan. Hubungi Admin.'];
+    }
+
+    if (!empty($warung['router_session'])) {
+        $session = $warung['router_session'];
+    }
+
+    $sellPrice = 0;
+    $costPrice = 0;
+    if (!empty($warung['custom_prices'][$profileName])) {
+        $sellPrice = (float) ($warung['custom_prices'][$profileName]['sell_price'] ?? 0);
+        $costPrice = (float) ($warung['custom_prices'][$profileName]['cost_price'] ?? 0);
+    }
+
+    if ($sellPrice <= 0 && $costPrice <= 0) {
+        $credsForPricing = warung_get_router_credentials($session);
+        $resolvedSession = $credsForPricing['session'] ?? $session;
+        $profilePrice = (!empty($resolvedSession) && isset($data['session_profile_prices'][$resolvedSession][$profileName]))
+            ? $data['session_profile_prices'][$resolvedSession][$profileName]
+            : ($data['profile_prices'][$profileName] ?? null);
+        $sellPrice = (float) ($profilePrice['sell_price'] ?? 0);
+        $costPrice = (float) ($profilePrice['cost_price'] ?? 0);
+    }
+
+    if ($costPrice <= 0 && $sellPrice > 0) {
+        $costPrice = floor($sellPrice * 0.9);
+    }
+    if ($sellPrice <= 0 && $costPrice > 0) {
+        $sellPrice = floor($costPrice / 0.9);
+    }
+    if ($costPrice <= 0 && $sellPrice <= 0) {
+        $sellPrice = 5000;
+        $costPrice = 4500;
+    }
+
+    $currentBalance = (float) ($warung['balance'] ?? 0);
+    if ($currentBalance < $costPrice) {
+        $kurang = $costPrice - $currentBalance;
+        return [
+            'success' => false,
+            'error'   => warung_get_lang_str('warung_insufficient_deposit_balance', 'Saldo deposit warung tidak mencukupi. Sisa saldo: Rp %s (Kurang Rp %s). Silakan lakukan Top-Up Saldo terlebih dahulu.', [number_format($currentBalance, 0, ',', '.'), number_format($kurang, 0, ',', '.')])
+        ];
+    }
+
+    include_once __DIR__ . '/../lib/routeros_api.class.php';
+    include_once __DIR__ . '/order_helper.php';
+
+    $creds = warung_get_router_credentials($session);
+    if (!$creds) {
+        return ['success' => false, 'error' => warung_get_lang_str('warung_router_session_not_active', 'Sesi router MikroTik belum aktif atau tidak ditemukan di config Mikhmon. Hubungi Admin.')];
+    }
+
+    $hotspotname = $creds['hotspotname'];
+    $dnsname = $creds['dnsname'];
+
+    $API = mikhmon_get_router_api($creds['ip'], $creds['user'], $creds['pass']);
+    if (!$API) {
+        return ['success' => false, 'error' => warung_get_lang_str('warung_failed_connect_mikrotik', 'Gagal menghubungkan ke router MikroTik (%s). Periksa koneksi API/VPN router.', [$creds['ip']])];
+    }
+
+    $settings = warung_get_settings();
+    $stockMode = $settings['stock_mode'] ?? 'auto';
+
+    $soldUsernames = [];
+    if (!empty($data['transactions'])) {
+        foreach ($data['transactions'] as $tx) {
+            if (!empty($tx['username'])) {
+                $soldUsernames[] = $tx['username'];
+            }
+        }
+    }
+
+    $allocatedUser = null;
+
+    // 1. If stock_mode == 'pool' or 'auto': search for available unused voucher in MikroTik pool
+    if ($stockMode === 'pool' || $stockMode === 'auto') {
+        $users = $API->comm('/ip/hotspot/user/print', [
+            '?disabled' => 'false'
+        ]);
+        $users = is_array($users) ? $users : [];
+
+        foreach ($users as $u) {
+            $uProf = trim((string)($u['profile'] ?? ''));
+            if (strcasecmp($uProf, $profileName) !== 0) {
+                continue;
+            }
+            if (function_exists('mikhmon_is_unused_voucher') && mikhmon_is_unused_voucher($u, $soldUsernames)) {
+                $allocatedUser = [
+                    'username' => $u['name'],
+                    'password' => $u['password'] ?? $u['name'],
+                ];
+                break;
+            }
+        }
+    }
+
+    // 2. If Pool mode is STRICT and no stock available in MikroTik
+    if ($stockMode === 'pool' && !$allocatedUser) {
+        $API->disconnect();
+        return [
+            'success' => false,
+            'error'   => 'Stok voucher untuk profil "' . $profileName . '" sedang habis di MikroTik router. Hubungi Admin untuk generate stok voucher baru.'
+        ];
+    }
+
+    // 3. If ondemand or auto (fallback): Generate voucher on-demand
+    if (!$allocatedUser) {
+        $prefix = $settings['voucher_prefix'] ?? 'VC-';
+        $charLen = max(3, min(8, intval($settings['char_length'] ?? 6)));
+        $charFmt = $settings['char_format'] ?? 'mix1';
+
+        include_once __DIR__ . '/../lib/routeros_api.class.php';
+
+        if ($charFmt === 'mix1' || $charFmt === 'mix_upper') {
+            $vCode = function_exists('randNUC') ? randNUC($charLen) : substr(md5(uniqid()), 0, $charLen);
+        } elseif ($charFmt === 'mix' || $charFmt === 'mix_lower') {
+            $vCode = function_exists('randNLC') ? randNLC($charLen) : substr(md5(uniqid()), 0, $charLen);
+        } elseif ($charFmt === 'mix2') {
+            $vCode = function_exists('randNULC') ? randNULC($charLen) : substr(md5(uniqid()), 0, $charLen);
+        } elseif ($charFmt === 'lower') {
+            $vCode = function_exists('randLC') ? randLC($charLen) : substr(md5(uniqid()), 0, $charLen);
+        } elseif ($charFmt === 'upper') {
+            $vCode = function_exists('randUC') ? randUC($charLen) : substr(md5(uniqid()), 0, $charLen);
+        } elseif ($charFmt === 'upplow') {
+            $vCode = function_exists('randULC') ? randULC($charLen) : substr(md5(uniqid()), 0, $charLen);
+        } elseif ($charFmt === 'num' || $charFmt === 'numeric') {
+            $vCode = function_exists('randN') ? randN($charLen) : substr(str_shuffle('01234567890123456789'), 0, $charLen);
+        } else {
+            $vCode = function_exists('randNUC') ? randNUC($charLen) : substr(md5(uniqid()), 0, $charLen);
+        }
+
+        $vUser = $prefix . $vCode;
+        $vPass = $vUser;
+
+        $comment = 'vc-' . $warung['id'] . '-' . date('d.m.y') . '-wrg';
+        $addUserRes = $API->comm('/ip/hotspot/user/add', [
+            'server'   => 'all',
+            'name'     => $vUser,
+            'password' => $vPass,
+            'profile'  => $profileName,
+            'comment'  => $comment
+        ]);
+
+        $allocatedUser = [
+            'username' => $vUser,
+            'password' => $vPass,
+        ];
+    }
+
+    $API->disconnect();
+
+    $vUser = $allocatedUser['username'];
+    $vPass = $allocatedUser['password'];
+
+    // Resolve validity for this profile
+    $validity = '';
+    $savedPrice = (!empty($resolvedSession) && isset($data['session_profile_prices'][$resolvedSession][$profileName]))
+        ? $data['session_profile_prices'][$resolvedSession][$profileName]
+        : ($data['profile_prices'][$profileName] ?? null);
+    $savedValidity = $savedPrice['validity'] ?? '';
+
+    if (function_exists('mikhmon_infer_validity')) {
+        $validity = mikhmon_infer_validity($profileName, $savedValidity, false);
+    } else {
+        $validity = !empty($savedValidity) ? $savedValidity : '1 Hari';
+    }
+
+    // Deduct Warung Balance
+    $newBalance = $currentBalance - $costPrice;
+    $data['warungs'][$warungId]['balance'] = $newBalance;
+    $data['warungs'][$warungId]['updated_at'] = date('Y-m-d H:i:s');
+
+    // Record Transaction
+    $txId = 'TX-VC-' . strtoupper(substr(md5(uniqid(rand(), true)), 0, 8));
+    $txRecord = [
+        'id'          => $txId,
+        'warung_id'   => $warungId,
+        'warung_name' => $warung['name'],
+        'type'        => 'voucher',
+        'profile'     => $profileName,
+        'validity'    => $validity,
+        'username'    => $vUser,
+        'password'    => $vPass,
+        'sell_price'  => $sellPrice,
+        'cost_price'  => $costPrice,
+        'margin'      => ($sellPrice - $costPrice),
+        'buyer_phone' => $buyerPhone,
+        'balance'     => $newBalance,
+        'created_at'  => date('Y-m-d H:i:s')
+    ];
+    $data['transactions'][] = $txRecord;
+    warung_save_data($data);
+
+    // Send WhatsApp to buyer if phone is provided
+    $waSent = false;
+    $waError = null;
+    if (!empty($buyerPhone)) {
+        include_once __DIR__ . '/whatsapp_helper.php';
+
+        $cleanPhone = preg_replace('/[^0-9]/', '', $buyerPhone);
+        if (substr($cleanPhone, 0, 1) === '0') $cleanPhone = '62' . substr($cleanPhone, 1);
+        if (substr($cleanPhone, 0, 1) === '8') $cleanPhone = '62' . $cleanPhone;
+
+        $waParams = [
+            'order_id'      => $txId,
+            'brand'         => $warung['name'] ?? $hotspotname,
+            'location_name' => $hotspotname,
+            'package'       => $profileName,
+            'price'         => $sellPrice,
+            'validity'      => $validity,
+            'username'      => $vUser,
+            'password'      => $vPass,
+            'dnsname'       => $dnsname,
+        ];
+
+        if (function_exists('mikhmon_send_voucher_wa')) {
+            $waRes = mikhmon_send_voucher_wa($session, $cleanPhone, $waParams);
+            $waSent = $waRes['ok'] ?? false;
+            if (!$waSent) $waError = $waRes['description'] ?? warung_get_lang_str('warung_failed_send_wa', 'Gagal kirim WA');
+        }
+    }
+
+    // Send Telegram Notification to Admin
+    include_once __DIR__ . '/telegram_helper.php';
+    if (function_exists('mikhmon_send_warung_voucher_telegram')) {
+        $txRecord['hotspot_name'] = $hotspotname;
+        $txRecord['dns_name'] = $dnsname;
+        $txRecord['validity'] = $validity;
+        @mikhmon_send_warung_voucher_telegram($session, $txRecord, 'Rp', null);
+    }
+
+    // Check and alert admin if remaining unused voucher stock is low
+    if (!empty($profileName)) {
+        include_once __DIR__ . '/order_helper.php';
+        if (function_exists('mikhmon_check_and_alert_low_stock') && !empty($creds['ip'])) {
+            @mikhmon_check_and_alert_low_stock($session, $profileName, $creds['ip'], $creds['user'], $creds['pass'], '', $hotspotname);
+        }
+    }
+
+    return [
+        'success'      => true,
+        'tx_id'        => $txId,
+        'username'     => $vUser,
+        'password'     => $vPass,
+        'profile'      => $profileName,
+        'validity'     => $validity,
+        'sell_price'   => $sellPrice,
+        'cost_price'   => $costPrice,
+        'buyer_phone'  => $buyerPhone,
+        'hotspot_name' => $hotspotname,
+        'dns_name'     => $dnsname,
+        'new_balance'  => $newBalance,
+        'wa_sent'      => $waSent,
+        'wa_error'     => $waError
+    ];
+}

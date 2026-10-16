@@ -115,7 +115,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                 . "define('MIKHMON_LICENSE_KEY', " . var_export($newKey, true) . ");\n"
                 . "define('MIKHMON_HWID', " . var_export($hwid, true) . ");\n"
                 . "define('MIKHMON_EXPIRY', '2030-12-31 23:59:59');\n"
-                . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
+                . "define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'airnetsolution.com'));\n"
                 . "define('MIKHMON_PRODUCT_NAME', 'Mikhmon Desktop Pro');\n"
                 . "define('MIKHMON_ACTIVATED_AT', " . var_export(date('Y-m-d H:i:s'), true) . ");\n"
                 . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
@@ -279,7 +279,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
 
               <div style="margin-top: 10px; padding-top: 6px; border-top: 1px solid rgba(128,128,128,0.15); display: flex; justify-content: space-between; align-items: center;">
                 <span style="font-size: 10.5px; opacity: 0.7; font-family: monospace;">HWID: <?= htmlspecialchars($hwid ?: 'STANDALONE') ?></span>
-                <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="font-size: 11.5px; font-weight: bold; text-decoration: underline;">
+                <a href="<?= function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() . '/desktop-licenses' : 'https://panel.airnetsolution.com/desktop-licenses' ?>" target="_blank" class="text-primary" style="font-size: 11.5px; font-weight: bold; text-decoration: underline;">
                   <i class="fa fa-external-link"></i> <?= !empty($_update_license_portal) ? $_update_license_portal : 'Portal Lisensi'; ?> &rarr;
                 </a>
               </div>

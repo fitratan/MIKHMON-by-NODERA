@@ -1,4 +1,14 @@
 <?php
+$_p_domain = function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : (
+    (defined('MIKHMON_BRAND') && strpos(MIKHMON_BRAND, 'airnetsolution.com') !== false) ||
+    (!empty($_SERVER['HTTP_HOST']) && strpos($_SERVER['HTTP_HOST'], 'airnetsolution.com') !== false) ||
+    (strpos(__DIR__, 'nodera-africa') !== false || strpos(__DIR__, 'africa') !== false) ? 'airnetsolution.com' : '" . $_p_domain . "'
+);
+$_p_panel = 'panel.' . $_p_domain;
+$_p_gateway = 'gateway.' . $_p_domain;
+$_p_wa = 'wa.' . $_p_domain;
+$_p_shop = 'shop.' . $_p_domain;
+
 // MIKHMON Language Dictionary
 $_about = "À Propos";
 $_action = "Action";
@@ -227,7 +237,7 @@ $_nodera_pay_connected = "Identifiants NODERA PAY Connectés";
 $_noderapay_merchant_code = "Code Marchand NODERA Pay";
 $_noderapay_merchant_code_hint = "Code marchand de votre portail NODERA PAY (ex : NP-MCH-0001).";
 $_noderapay_secret_key = "Clé Secrète API NODERA Pay";
-$_noderapay_secret_key_hint = "Clé API secrète du portail NODERA PAY (gateway.dgtlnetsolution.com).";
+$_noderapay_secret_key_hint = "Clé API secrète du portail NODERA PAY (" . $_p_gateway . ").";
 $_noderapay_settings = "Paramètres NODERA Pay (QRIS Dynamique)";
 $_notif_login_logout = "Notifications Connexion & Déconnexion";
 $_official_paid = "Officiel Payant";
@@ -458,7 +468,7 @@ $_wa_provider_hint = "Sélectionnez le fournisseur WhatsApp Gateway que vous uti
 $_wa_sales_notif = "Notifications de Ventes";
 $_wa_send_test = "Envoyer un Message de Test";
 $_wa_session_id = "ID de Session Appareil WhatsApp";
-$_wa_session_id_hint = "ID de session de l'appareil WhatsApp expéditeur depuis wa.dgtlnetsolution.com (ex: dgtl_m1_abc123). Laissez vide pour utiliser l'appareil par défaut.";
+$_wa_session_id_hint = "ID de session de l'appareil WhatsApp expéditeur depuis " . $_p_wa . " (ex: dgtl_m1_abc123). Laissez vide pour utiliser l'appareil par défaut.";
 $_wa_status = "Statut Passerelle WhatsApp";
 $_wa_test_card = "Test Passerelle WhatsApp";
 $_wa_test_phone = "Numéro de Téléphone de Test";
@@ -555,7 +565,7 @@ $_wa_test_phone_placeholder = "Exemple: 081234567890 ou 628xxx";
 $_wa_test_phone_hint = "Entrez votre numéro WhatsApp actif pour recevoir le message de test.";
 $_wa_send_test_btn = "Tester l'Envoi WhatsApp";
 $_wa_guide_step1 = "Sélectionnez <b>NODERA WhatsApp Gateway</b> (Recommandé) ou votre fournisseur préféré.";
-$_wa_guide_step2 = "Entrez la clé API depuis <a href=\"https://wa.dgtlnetsolution.com\" target=\"_blank\">wa.dgtlnetsolution.com</a> (menu Identifiants / Tableau de Bord).";
+$_wa_guide_step2 = "Entrez la clé API depuis <a href=\"https://" . $_p_wa . "\" target=\"_blank\">" . $_p_wa . "</a> (menu Identifiants / Tableau de Bord).";
 $_wa_guide_step3 = "Entrez l'<code>ID de Session</code> de votre appareil (ex: <code>dgtl_m1_abc123</code> depuis le menu Appareils).";
 $_wa_guide_step4 = "Entrez votre numéro WhatsApp admin pour recevoir les rapports et activer le bouton d'assistance client.";
 $_wa_guide_step5 = "Entrez votre numéro de test dans le formulaire de droite puis cliquez sur <b>Tester l'Envoi WhatsApp</b>.";
@@ -590,8 +600,8 @@ $_tg_guide_step3 = "<b>Destination :</b> Vous pouvez choisir d'envoyer les notif
 $_tg_guide_step4 = "<b>Webhook Automatique :</b> Lorsque vous cliquez sur <b>Enregistrer</b>, le Webhook Telegram sera automatiquement configuré par le système.";
 $_tg_guide_step5 = "<b>ACC / Rejet Temps Réel :</b> Lorsqu'un client commande un coupon sur la Boutique en Ligne, le bot envoie une notification avec boutons <b>Accepter</b> &amp; <b>Rejeter</b>. Cliquez sur <b>Accepter</b> pour générer instantanément le coupon sur MikroTik.";
 $_shop_official_badge = "Matériel Officiel &amp; Testé";
-$_shop_hero_desc = "<b>shop.dgtlnetsolution.com</b> fournit du matériel réseau éprouvé pour les opérations FAI et réseaux locaux. Routeurs MikroTik pré-configurés, imprimantes thermiques haute vitesse, papier thermique, points d'accès sans fil et fibre optique.";
-$_shop_open_online_store = "Ouvrir la Boutique shop.dgtlnetsolution.com";
+$_shop_hero_desc = "<b>" . $_p_shop . "</b> fournit du matériel réseau éprouvé pour les opérations FAI et réseaux locaux. Routeurs MikroTik pré-configurés, imprimantes thermiques haute vitesse, papier thermique, points d'accès sans fil et fibre optique.";
+$_shop_open_online_store = "Ouvrir la Boutique " . $_p_shop;
 $_shop_contact_admin_wa = "Contacter l'Admin (WhatsApp)";
 $_shop_template_hotspot = "Modèles Hotspot MikroTik";
 $_shop_template_hotspot_desc = "Suite de 30 modèles premium de page de connexion MikroTik (Glass Dock, Bento Grid, Cyber Matrix, Anime Mecha, etc.). 100% responsive avec 5 modales interactives.";
@@ -616,7 +626,7 @@ $_shop_quality_banner = "Tous les appareils sont testés et vérifiés avant exp
 $_shop_shop_now = "Acheter Maintenant";
 $_billing_integrated_badge = "Plateforme Intégrée";
 $_billing_hero_desc = "<b>Nodera Billing</b> est une plateforme SaaS de facturation intégrée permettant aux gestionnaires FAI de gérer des milliers d'abonnés, factures PPPoE, coupons hotspot, alertes WhatsApp automatiques et paiements en ligne instantanés.";
-$_billing_register_account = "Créer un Compte sur panel.dgtlnetsolution.com";
+$_billing_register_account = "Créer un Compte sur " . $_p_panel;
 $_billing_portal_btn = "Portail Facturation";
 $_billing_contact_admin_wa = "Contacter l'Admin (WhatsApp)";
 $_billing_feat_auto_isolir = "Auto-Isolement &amp; Auto-Rétablissement";
@@ -633,7 +643,7 @@ $_billing_feat_reports = "Rapports Financiers Complets";
 $_billing_feat_reports_desc = "Synthèse des revenus quotidiens/mensuels, flux de trésorerie, créances clients et graphiques d'évolution.";
 $_billing_steps_title = "Comment s'Inscrire &amp; Utiliser Nodera Billing";
 $_billing_step1_badge = "Étape 1";
-$_billing_step1_text = "<b>Créer un Compte :</b> Rendez-vous sur <a href=\"https://panel.dgtlnetsolution.com/register\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary\"><b>panel.dgtlnetsolution.com</b></a> et créez votre compte professionnel.";
+$_billing_step1_text = "<b>Créer un Compte :</b> Rendez-vous sur <a href=\"https://" . $_p_panel . "/register\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"text-primary\"><b>" . $_p_panel . "</b></a> et créez votre compte professionnel.";
 $_billing_step2_badge = "Étape 2";
 $_billing_step2_text = "<b>Intégrer MikroTik :</b> Ajoutez votre routeur MikroTik à l'aide du VPN Distant &amp; de la Clé API fournie.";
 $_billing_step3_badge = "Étape 3";
@@ -714,7 +724,7 @@ $_voucher_store_link_desc = "Insérez ce lien sur le bouton <b>« Acheter un Cou
 $_link_store_copied = "Lien de la boutique copié avec succès !";
 $_webhook_np_desc = "Configurez cette URL Webhook dans le menu <b>Identifiants</b> du tableau de bord NODERA PAY :";
 $_webhook_copied = "URL Webhook NODERA PAY copiée avec succès !";
-$_one_account_all_routers = "<b>1 Compte pour Tous les Routeurs :</b> Enregistrez l'URL ci-dessus sur <b>gateway.dgtlnetsolution.com</b>. Ce routeur enverra dynamiquement son sous-domaine à chaque transaction.";
+$_one_account_all_routers = "<b>1 Compte pour Tous les Routeurs :</b> Enregistrez l'URL ci-dessus sur <b>" . $_p_gateway . "</b>. Ce routeur enverra dynamiquement son sous-domaine à chaque transaction.";
 $_unique_callback_router = "Callback unique du routeur (secours) :";
 $_copy_callback_router = "Copier Callback Routeur";
 $_router_callback_copied = "URL Callback Routeur copiée avec succès !";
@@ -746,9 +756,9 @@ $_alert_tripay_failed = "Échec de connexion à TriPay : ";
 $_alert_np_key_empty = "La clé API NODERA Pay n'a pas été renseignée.";
 $_alert_noderapay_connected = "Connexion réussie : Identifiants NODERA PAY connectés & actifs";
 $_alert_connect_failed = "Échec de connexion : ";
-$_noderapay_qris_option = "NODERA Pay (QRIS Dynamique : gateway.dgtlnetsolution.com)";
+$_noderapay_qris_option = "NODERA Pay (QRIS Dynamique : " . $_p_gateway . ")";
 $_payment_gateway_billing_option = "Passerelle de Paiement Facturation (TriPay / Midtrans / Duitku / Xendit / WijayaPay)";
-$_noderapay_mode_help = "<b>NODERA Pay :</b> QRIS dynamique instantané directement connecté à la passerelle autonome <b>gateway.dgtlnetsolution.com</b>.";
+$_noderapay_mode_help = "<b>NODERA Pay :</b> QRIS dynamique instantané directement connecté à la passerelle autonome <b>" . $_p_gateway . "</b>.";
 $_gateway_mode_help = "<b>Passerelle de Paiement :</b> Les paiements sont traités via les passerelles de facturation du locataire (TriPay, Midtrans, etc.).";
 $_gw_wijayapay_option = "WijayaPay (QRIS Dynamique 0-Seconde & VA)";
 $_gw_tripay_option = "TriPay (QRIS, Compte Virtuel, E-Wallet, Commerce)";
@@ -794,7 +804,7 @@ $_alert_wa_check_creds = "Vérifiez le Jeton API et le Numéro de Téléphone.";
 $_placeholder_wa_brand = "Exemple : NODERA WIFI";
 $_placeholder_wa_session_id = "Exemple : dgtl_m1_abc123 (voir dans le menu Appareils)";
 $_placeholder_wa_admin_phone = "Exemple : 081234567890";
-$_wa_prov_nodera = "Passerelle WhatsApp NODERA (wa.dgtlnetsolution.com) [Recommandé]";
+$_wa_prov_nodera = "Passerelle WhatsApp NODERA (" . $_p_wa . ") [Recommandé]";
 $_wa_prov_fonnte = "Fonnte (api.fonnte.com)";
 $_wa_prov_mhwa = "Passerelle MHWA (mhwa.biz.id)";
 $_wa_prov_mpwa = "Passerelle MPWA / Baileys (/send-message)";
@@ -802,8 +812,8 @@ $_wa_prov_wablas = "Wablas (api.wablas.com)";
 $_wa_prov_starsender = "Starsender (starsender.online)";
 $_wa_prov_whacenter = "WhaCenter (app.whacenter.com)";
 $_wa_prov_custom = "Point de Terminaison API Personnalisé (JSON & Formulaire Universel)";
-$_js_wa_nodera_sess_ph = "Exemple : dgtl_m1_abc123 (voir sur wa.dgtlnetsolution.com)";
-$_js_wa_nodera_sess_hint = "ID de Session d'appareil du portail <a href=\"https://wa.dgtlnetsolution.com\" target=\"_blank\">wa.dgtlnetsolution.com</a> (exemple : <code>dgtl_m1_abc123</code>). Laissez vide pour utiliser l'appareil par défaut.";
+$_js_wa_nodera_sess_ph = "Exemple : dgtl_m1_abc123 (voir sur " . $_p_wa . ")";
+$_js_wa_nodera_sess_hint = "ID de Session d'appareil du portail <a href=\"https://" . $_p_wa . "\" target=\"_blank\">" . $_p_wa . "</a> (exemple : <code>dgtl_m1_abc123</code>). Laissez vide pour utiliser l'appareil par défaut.";
 $_js_wa_fonnte_sess_ph = "Optionnel / ID d'Appareil Fonnte";
 $_js_wa_fonnte_sess_hint = "ID d'Appareil Fonnte si vous possédez plusieurs appareils.";
 $_js_wa_mhwa_sess_ph = "Exemple : dev_21_1789530016696 (voir sur mhwa.biz.id)";
@@ -1256,7 +1266,7 @@ $_access_denied = "Accès Refusé";
 $_service_suspended = "Service Suspendu";
 $_contact_support_at = "Contactez l'Assistance sur :";
 $_subscription_expired_desc = "La période de validité de votre instance Mikhmon a pris fin.";
-$_please_renew_at = "Veuillez renouveler votre licence sur le <a href=\"https://panel.dgtlnetsolution.com/desktop-licenses\" target=\"_blank\" style=\"color:#ffffff; text-decoration:underline; font-weight:bold;\">Portail Cloud NODERA</a> ou contacter le support CS : <a href=\"https://wa.me/6285155173547\" target=\"_blank\" style=\"color:#ffffff; text-decoration:underline; font-weight:bold;\">ID: 085155173547</a> / <a href=\"https://wa.me/2550788222699\" target=\"_blank\" style=\"color:#ffffff; text-decoration:underline; font-weight:bold;\">CI: +2550788222699</a>.";
+$_please_renew_at = "Veuillez renouveler votre licence sur le <a href=\"https://" . $_p_panel . "/desktop-licenses\" target=\"_blank\" style=\"color:#ffffff; text-decoration:underline; font-weight:bold;\">Portail Cloud NODERA</a> ou contacter le support CS : <a href=\"https://wa.me/6285155173547\" target=\"_blank\" style=\"color:#ffffff; text-decoration:underline; font-weight:bold;\">ID: 085155173547</a> / <a href=\"https://wa.me/2550788222699\" target=\"_blank\" style=\"color:#ffffff; text-decoration:underline; font-weight:bold;\">CI: +2550788222699</a>.";
 $_mikhmon_not_connected = "MIKHMON n'est pas connecté au routeur.";
 $_check_ip_user_port = "Vérifiez l'adresse IP, l'identifiant, le mot de passe et le port API du routeur.";
 $_vpn_check_notice = "Si vous utilisez un VPN Distant, assurez-vous que la connexion VPN est active.";
@@ -1412,7 +1422,7 @@ $_trial_activating = "Activation de l'essai gratuit...";
 $_claim_trial_failed = "Échec de l'activation de l'essai gratuit.";
 $_claim_trial_net_error = "Échec de l'activation de l'essai gratuit. Vérifiez votre connexion Internet.";
 $_license_key_label = "Code de Clé de Licence (License Key) :";
-$_license_guide_text = 'Entrez votre clé de licence officielle depuis le <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">Portail Cloud NODERA</a> ou laissez vide pour réclamer <b>7 Jours d\'Essai Gratuit</b>.';
+$_license_guide_text = 'Entrez votre clé de licence officielle depuis le <a href="' . 'https://' . $_p_panel . '/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline; font-weight:bold;">Portail Cloud NODERA</a> ou laissez vide pour réclamer <b>7 Jours d\'Essai Gratuit</b>.';
 $_support_cs_whatsapp = "Support Client & SAV WhatsApp :";
 $_free_trial_7d = "Essai Gratuit 7 Jours (Free Trial)";
 $_save_and_verify = "Enregistrer & Vérifier";
@@ -1603,7 +1613,7 @@ $_log_start_system_update = "Démarrage de la mise à jour du système Mikhmon..
 $_mikhmon_updated_from_github = "Mikhmon a été mis à jour avec succès depuis GitHub !";
 $_need_tech_help = "Besoin d'assistance technique ou d'activer une licence officielle ?";
 $_contact_cs_whatsapp = "Contacter le support WhatsApp :";
-$_update_license_guide_hint = 'Entrez votre clé de licence depuis le <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline;"><b>Portail Cloud NODERA</b></a> ou contactez le support <a href="https://wa.me/6285155173547" target="_blank" class="text-green" style="text-decoration:underline;"><b>WhatsApp (+6285155173547)</b></a>. Laissez vide pour l\'essai gratuit.';
+$_update_license_guide_hint = 'Entrez votre clé de licence depuis le <a href="' . 'https://' . $_p_panel . '/desktop-licenses" target="_blank" class="text-primary" style="text-decoration:underline;"><b>Portail Cloud NODERA</b></a> ou contactez le support <a href="https://wa.me/6285155173547" target="_blank" class="text-green" style="text-decoration:underline;"><b>WhatsApp (+6285155173547)</b></a>. Laissez vide pour l\'essai gratuit.';
 $_log_tag_start = "DEMARRER";
 $_log_tag_done = "TERMINE";
 $_log_tag_error = "ERREUR";

@@ -26,10 +26,14 @@ include_once __DIR__ . '/../lang/' . $langid . '.php';
 
 include_once __DIR__ . '/license.php';
 
+$pDomain = function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'airnetsolution.com';
+$panelUrl = function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.' . $pDomain;
+$panelDomain = 'panel.' . $pDomain;
+
 $expiryText = function_exists('mikhmon_get_license_expiry_text') ? mikhmon_get_license_expiry_text($langid) : 'Aktif';
 $isExpired = function_exists('mikhmon_is_expired') ? mikhmon_is_expired() : false;
 $subdomain = defined('MIKHMON_SUBDOMAIN') ? MIKHMON_SUBDOMAIN : basename(dirname(__DIR__));
-$brandName = defined('MIKHMON_BRAND') ? MIKHMON_BRAND : 'by panel.dgtlnetsolution.com';
+$brandName = defined('MIKHMON_BRAND') ? MIKHMON_BRAND : ('by ' . $panelDomain);
 $isDesktop = function_exists('mikhmon_is_desktop_mode') ? mikhmon_is_desktop_mode() : false;
 $licenseKey = defined('MIKHMON_LICENSE_KEY') ? MIKHMON_LICENSE_KEY : '';
 $isTrial = (defined('MIKHMON_PRODUCT_NAME') && stripos(MIKHMON_PRODUCT_NAME, 'Trial') !== false) || (strpos($licenseKey, 'NDR-TRL') === 0);
@@ -37,7 +41,7 @@ $isTrial = (defined('MIKHMON_PRODUCT_NAME') && stripos(MIKHMON_PRODUCT_NAME, 'Tr
 $aboutLang = [
     "id" => [
         "hero_title" => "MIKHMON by NODERA Engine",
-        "hero_sub" => "Edisi Khusus Terintegrasi Platform Billing ISP & Manajemen Hotspot MikroTik <b>panel.dgtlnetsolution.com</b>.",
+        "hero_sub" => "Edisi Khusus Terintegrasi Platform Billing ISP & Manajemen Hotspot MikroTik <b>" . $panelDomain . "</b>.",
         "f1_title" => "Dual Core ROS 6 & ROS 7",
         "f1_desc" => "Dukungan penuh MikroTik RouterOS v6 dan v7 API secara simultan tanpa kendala enkripsi.",
         "f2_title" => "Cetak Cepat & QR Code",
@@ -63,7 +67,7 @@ $aboutLang = [
     ],
     "en" => [
         "hero_title" => "MIKHMON by NODERA Engine",
-        "hero_sub" => "Special Edition Integrated ISP Billing Platform & MikroTik Hotspot Management <b>panel.dgtlnetsolution.com</b>.",
+        "hero_sub" => "Special Edition Integrated ISP Billing Platform & MikroTik Hotspot Management <b>" . $panelDomain . "</b>.",
         "f1_title" => "Dual Core ROS 6 & ROS 7",
         "f1_desc" => "Full simultaneous support for MikroTik RouterOS v6 & v7 API with modern TLS encryption.",
         "f2_title" => "Quick Print & QR Code",
@@ -89,7 +93,7 @@ $aboutLang = [
     ],
     "fr" => [
         "hero_title" => "Moteur MIKHMON par NODERA",
-        "hero_sub" => "Édition Spéciale Intégrée Plateforme de Facturation FAI & Gestion Hotspot MikroTik <b>panel.dgtlnetsolution.com</b>.",
+        "hero_sub" => "Édition Spéciale Intégrée Plateforme de Facturation FAI & Gestion Hotspot MikroTik <b>" . $panelDomain . "</b>.",
         "f1_title" => "Dual Core ROS 6 & ROS 7",
         "f1_desc" => "Prise en charge simultanée complète de l'API MikroTik RouterOS v6 et v7 avec chiffrement TLS.",
         "f2_title" => "Impression Rapide & Code QR",
@@ -115,7 +119,7 @@ $aboutLang = [
     ],
     "es" => [
         "hero_title" => "Motor MIKHMON por NODERA",
-        "hero_sub" => "Edición Especial Integrada Plataforma de Facturación ISP y Gestión Hotspot MikroTik <b>panel.dgtlnetsolution.com</b>.",
+        "hero_sub" => "Edición Especial Integrada Plataforma de Facturación ISP y Gestión Hotspot MikroTik <b>" . $panelDomain . "</b>.",
         "f1_title" => "Dual Core ROS 6 y ROS 7",
         "f1_desc" => "Soporte simultáneo completo para la API de MikroTik RouterOS v6 y v7 con cifrado moderno.",
         "f2_title" => "Impresión Rápida y Código QR",
@@ -141,7 +145,7 @@ $aboutLang = [
     ],
     "tl" => [
         "hero_title" => "MIKHMON ng NODERA Engine",
-        "hero_sub" => "Espesyal na Edisyon Pinagsamang ISP Billing Platform at MikroTik Hotspot Management <b>panel.dgtlnetsolution.com</b>.",
+        "hero_sub" => "Espesyal na Edisyon Pinagsamang ISP Billing Platform at MikroTik Hotspot Management <b>" . $panelDomain . "</b>.",
         "f1_title" => "Dual Core ROS 6 & ROS 7",
         "f1_desc" => "Buong sabay-sabay na suporta para sa MikroTik RouterOS v6 at v7 API na may modernong TLS.",
         "f2_title" => "Mabilisang Pag-print & QR Code",
@@ -287,8 +291,8 @@ $aTxt = $aboutLang[$langid] ?? $aboutLang['id'];
               <?php endif; ?>
             </div>
             <div>
-              <a href="https://panel.dgtlnetsolution.com" target="_blank" rel="noopener noreferrer" class="btn bg-primary btn-sm">
-                <i class="fa fa-external-link"></i> Portal panel.dgtlnetsolution.com
+              <a href="<?= $panelUrl; ?>" target="_blank" rel="noopener noreferrer" class="btn bg-primary btn-sm">
+                <i class="fa fa-external-link"></i> Portal <?= htmlspecialchars($panelDomain); ?>
               </a>
             </div>
           </div>
@@ -388,7 +392,7 @@ $aTxt = $aboutLang[$langid] ?? $aboutLang['id'];
                 </tr>
                 <tr>
                   <td><strong><?= $aTxt['mod_maintainer']; ?></strong></td>
-                  <td>NODERA Developer Team (panel.dgtlnetsolution.com)</td>
+                  <td>NODERA Developer Team (<?= htmlspecialchars($panelDomain); ?>)</td>
                 </tr>
                 <tr>
                   <td><strong>RouterOS API Engine</strong></td>

@@ -130,7 +130,7 @@ if (!function_exists('mikhmon_save_desktop_license_data')) {
         $licensePhp = "<?php\n"
             . "/**\n"
             . " * LICENSE MIKHMON DESKTOP STANDALONE — NODERA\n"
-            . " * Teraktivasi resmi via Cloud Panel NODERA (panel.dgtlnetsolution.com).\n"
+            . " * Teraktivasi resmi via Cloud Panel NODERA.\n"
             . " */\n"
             . "define('MIKHMON_MODE', 'DESKTOP');\n"
             . "define('MIKHMON_STATUS', 'ACTIVE');\n"
@@ -139,7 +139,7 @@ if (!function_exists('mikhmon_save_desktop_license_data')) {
             . "define('MIKHMON_EXPIRY', " . var_export($expFormatted, true) . ");\n"
             . "define('MIKHMON_EXPIRY_RAW', " . var_export($rawExp, true) . ");\n"
             . "define('MIKHMON_SIGNATURE', " . var_export($signature, true) . ");\n"
-            . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
+            . "define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'airnetsolution.com'));\n"
             . "define('MIKHMON_PRODUCT_NAME', " . var_export($prodName, true) . ");\n"
             . "define('MIKHMON_ACTIVATED_AT', " . var_export($nowStr, true) . ");\n"
             . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
@@ -232,14 +232,78 @@ if (!empty($envLicKey) && (!defined('MIKHMON_LICENSE_KEY') || empty(MIKHMON_LICE
     if (!defined('MIKHMON_EXPIRY')) define('MIKHMON_EXPIRY', $expFormatted);
     if (!defined('MIKHMON_EXPIRY_RAW')) define('MIKHMON_EXPIRY_RAW', $envLicExp);
     if (!defined('MIKHMON_SIGNATURE')) define('MIKHMON_SIGNATURE', $envLicSig);
-    if (!defined('MIKHMON_BRAND')) define('MIKHMON_BRAND', 'by dgtlnetsolution.com');
+    if (!defined('MIKHMON_BRAND')) define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'airnetsolution.com'));
     if (!defined('MIKHMON_PRODUCT_NAME')) define('MIKHMON_PRODUCT_NAME', $envLicProd);
     if (!defined('MIKHMON_ACTIVATED_AT')) define('MIKHMON_ACTIVATED_AT', date('Y-m-d H:i:s'));
     if (!defined('MIKHMON_SUBDOMAIN')) define('MIKHMON_SUBDOMAIN', 'desktop');
 }
 
+if (!function_exists('mikhmon_get_platform_domain')) {
+    function mikhmon_get_platform_domain(): string {
+        $host = !empty($_SERVER['HTTP_HOST']) ? strtolower($_SERVER['HTTP_HOST']) : '';
+        if (strpos($host, 'airnetsolution.com') !== false) {
+            return 'airnetsolution.com';
+        }
+        if (strpos($host, 'dgtlnetsolution.com') !== false) {
+            return 'dgtlnetsolution.com';
+        }
+        if (strpos($host, 'nodera.africa') !== false) {
+            return 'nodera.africa';
+        }
+        if (strpos($host, 'nodera.ci') !== false) {
+            return 'nodera.ci';
+        }
+        if (defined('MIKHMON_BRAND')) {
+            if (strpos(MIKHMON_BRAND, 'airnetsolution.com') !== false) {
+                return 'airnetsolution.com';
+            }
+            if (strpos(MIKHMON_BRAND, 'dgtlnetsolution.com') !== false) {
+                return 'dgtlnetsolution.com';
+            }
+            if (strpos(MIKHMON_BRAND, 'nodera.africa') !== false) {
+                return 'nodera.africa';
+            }
+        }
+        $basePath = realpath(dirname(dirname(__DIR__)));
+        if ($basePath && (strpos($basePath, 'nodera-africa') !== false || strpos($basePath, 'africa') !== false)) {
+            return 'airnetsolution.com';
+        }
+        return 'dgtlnetsolution.com';
+    }
+}
+
+if (!function_exists('mikhmon_get_panel_url')) {
+    function mikhmon_get_panel_url(): string {
+        return 'https://panel.' . mikhmon_get_platform_domain();
+    }
+}
+
+if (!function_exists('mikhmon_get_api_url')) {
+    function mikhmon_get_api_url(): string {
+        return 'https://' . mikhmon_get_platform_domain();
+    }
+}
+
+if (!function_exists('mikhmon_get_gateway_url')) {
+    function mikhmon_get_gateway_url(): string {
+        return 'https://gateway.' . mikhmon_get_platform_domain();
+    }
+}
+
+if (!function_exists('mikhmon_get_wa_url')) {
+    function mikhmon_get_wa_url(): string {
+        return 'https://wa.' . mikhmon_get_platform_domain();
+    }
+}
+
+if (!function_exists('mikhmon_get_shop_url')) {
+    function mikhmon_get_shop_url(): string {
+        return 'https://shop.' . mikhmon_get_platform_domain();
+    }
+}
+
 if (!defined('MIKHMON_BRAND')) {
-    define('MIKHMON_BRAND', 'by dgtlnetsolution.com');
+    define('MIKHMON_BRAND', 'by ' . mikhmon_get_platform_domain());
 }
 if (!defined('MIKHMON_SUBDOMAIN')) {
     $folder = basename(dirname(__DIR__));
@@ -455,11 +519,14 @@ if (!function_exists('mikhmon_verify_desktop_license')) {
             'os_info'     => php_uname('s') . ' ' . php_uname('r') . ' (' . php_uname('m') . ')',
         ];
 
-        $endpoints = [
+        $endpoints = array_unique(array_filter([
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/desktop-license/verify',
+            (function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://airnetsolution.com') . '/api/desktop-license/verify',
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/v1/desktop-license/verify',
+            'https://panel.airnetsolution.com/api/desktop-license/verify',
             'https://panel.dgtlnetsolution.com/api/desktop-license/verify',
             'https://digitalnet.dgtlnetsolution.com/api/desktop-license/verify',
-            'https://panel.dgtlnetsolution.com/api/v1/desktop-license/verify',
-        ];
+        ]));
 
         $response = null;
         foreach ($endpoints as $url) {
@@ -542,7 +609,7 @@ if (!function_exists('mikhmon_reset_local_license')) {
             . "define('MIKHMON_EXPIRY', '0000-00-00');\n"
             . "define('MIKHMON_EXPIRY_RAW', '0000-00-00');\n"
             . "define('MIKHMON_SIGNATURE', '');\n"
-            . "define('MIKHMON_BRAND', 'by dgtlnetsolution.com');\n"
+            . "define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'airnetsolution.com'));\n"
             . "define('MIKHMON_PRODUCT_NAME', 'Mikhmon Desktop Standalone');\n"
             . "define('MIKHMON_ACTIVATED_AT', '');\n"
             . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
@@ -573,11 +640,14 @@ if (!function_exists('mikhmon_activate_desktop_license')) {
             'os_info'     => $osInfo,
         ];
 
-        $endpoints = [
+        $endpoints = array_unique(array_filter([
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/desktop-license/activate',
+            (function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://airnetsolution.com') . '/api/desktop-license/activate',
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/v1/desktop-license/activate',
+            'https://panel.airnetsolution.com/api/desktop-license/activate',
             'https://panel.dgtlnetsolution.com/api/desktop-license/activate',
             'https://digitalnet.dgtlnetsolution.com/api/desktop-license/activate',
-            'https://panel.dgtlnetsolution.com/api/v1/desktop-license/activate',
-        ];
+        ]));
 
         $response = null;
         $lastErr = '';
@@ -655,11 +725,14 @@ if (!function_exists('mikhmon_activate_trial_license')) {
             'os_info'     => $osInfo,
         ];
 
-        $endpoints = [
+        $endpoints = array_unique(array_filter([
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/desktop-license/trial',
+            (function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://airnetsolution.com') . '/api/desktop-license/trial',
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/v1/desktop-license/trial',
+            'https://panel.airnetsolution.com/api/desktop-license/trial',
             'https://panel.dgtlnetsolution.com/api/desktop-license/trial',
             'https://digitalnet.dgtlnetsolution.com/api/desktop-license/trial',
-            'https://panel.dgtlnetsolution.com/api/v1/desktop-license/trial',
-        ];
+        ]));
 
         $response = null;
         $lastErr = '';
@@ -745,9 +818,10 @@ if (!function_exists('mikhmon_render_desktop_heartbeat_script')) {
 
           function _ndrCheckLicenseHeartbeat() {
             var apis = [
-              'https://panel.dgtlnetsolution.com/api/desktop-license/verify',
-              'https://digitalnet.dgtlnetsolution.com/api/desktop-license/verify',
-              'https://panel.dgtlnetsolution.com/api/v1/desktop-license/verify'
+              <?= json_encode(mikhmon_get_panel_url() . '/api/desktop-license/verify') ?>,
+              <?= json_encode(mikhmon_get_api_url() . '/api/desktop-license/verify') ?>,
+              'https://panel.airnetsolution.com/api/desktop-license/verify',
+              'https://panel.dgtlnetsolution.com/api/desktop-license/verify'
             ];
             
             function tryApi(idx) {
