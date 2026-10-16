@@ -37,6 +37,8 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.nodera.mikhmon.admin.bluetooth.ThermalPrinterManager
 import com.nodera.mikhmon.admin.theme.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 class MikhmonWebBridge(
@@ -96,6 +98,22 @@ class MikhmonWebBridge(
     }
 
     @JavascriptInterface
+    fun isPrinterConnected(): Boolean {
+        return printerManager.isPrinterConnected()
+    }
+
+    @JavascriptInterface
+    fun connectPrinter(address: String?): Boolean {
+        return printerManager.connectPrinter(address)
+    }
+
+    @JavascriptInterface
+    fun disconnectPrinter(): Boolean {
+        printerManager.disconnectPrinter()
+        return true
+    }
+
+    @JavascriptInterface
     fun printPage() {
         val webView = getWebView() ?: return
         webView.post {
@@ -147,6 +165,15 @@ fun MikhmonWebViewScreen(
     var isLoading by remember { mutableStateOf(true) }
     var canGoBack by remember { mutableStateOf(false) }
     var showTopBar by remember { mutableStateOf(false) }
+
+    // Auto-connect to saved printer when Mikhmon WebView launches to keep LED ON solid
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.IO) {
+            try {
+                printerManager.connectPrinter()
+            } catch (_: Exception) {}
+        }
+    }
 
     val isVoucherPrintPage = currentUrl.contains("voucher/print.php")
 

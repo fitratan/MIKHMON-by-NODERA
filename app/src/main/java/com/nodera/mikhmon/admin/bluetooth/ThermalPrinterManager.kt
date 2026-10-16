@@ -6,6 +6,7 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothSocket
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
 import com.nodera.mikhmon.admin.router.GeneratedVoucher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -23,6 +24,8 @@ data class PairedPrinter(
 class ThermalPrinterManager(private val context: Context) {
 
     companion object {
+        private const val TAG = "ThermalPrinterManager"
+
         // Standard Bluetooth Serial Port Profile (SPP) UUID
         private val SPP_UUID: UUID = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB")
         private const val PREFS_NAME = "mikhmon_printer_prefs"
@@ -39,6 +42,15 @@ class ThermalPrinterManager(private val context: Context) {
         private val CMD_FONT_LARGE = byteArrayOf(0x1D, 0x21, 0x11) // GS ! 0x11 (2x width + 2x height)
         private val CMD_FONT_NORMAL = byteArrayOf(0x1D, 0x21, 0x00)
         private val CMD_FEED_3 = byteArrayOf(0x0A, 0x0A, 0x0A)
+
+        // Shared Persistent Bluetooth Socket & Stream (keeps printer LED ON)
+        @Volatile
+        private var sharedSocket: BluetoothSocket? = null
+        @Volatile
+        private var sharedOutputStream: OutputStream? = null
+        @Volatile
+        private var sharedConnectedAddress: String? = null
+        private val socketLock = Any()
     }
 
     private val prefs: SharedPreferences by lazy {
@@ -74,7 +86,19 @@ class ThermalPrinterManager(private val context: Context) {
     }
 
     fun setSelectedPrinter(address: String, name: String) {
+        val prevAddr = prefs.getString(KEY_PRINTER_ADDR, "") ?: ""
         prefs.edit().putString(KEY_PRINTER_ADDR, address).putString(KEY_PRINTER_NAME, name).apply()
+
+        // If target printer changed, cycle connection to the new printer
+        if (prevAddr != address && isPrinterConnected()) {
+            disconnectPrinter()
+        }
+        // Connect in background to light up printer LED immediately
+        Thread {
+            try {
+                connectPrinter(address)
+            } catch (_: Exception) {}
+        }.start()
     }
 
     @SuppressLint("MissingPermission")
@@ -106,6 +130,78 @@ class ThermalPrinterManager(private val context: Context) {
         return arr.toString()
     }
 
+    fun isPrinterConnected(): Boolean {
+        synchronized(socketLock) {
+            return sharedSocket?.isConnected == true && sharedOutputStream != null
+        }
+    }
+
+    fun disconnectPrinter() {
+        synchronized(socketLock) {
+            closeActiveSocketInternal()
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    fun connectPrinter(targetAddress: String? = null): Boolean {
+        val addr = if (!targetAddress.isNullOrBlank()) targetAddress else getSelectedPrinterAddress()
+        if (addr.isBlank()) return false
+        return try {
+            getOrConnectSocket(addr)
+            true
+        } catch (e: Exception) {
+            Log.w(TAG, "connectPrinter failed for $addr: ${e.message}")
+            false
+        }
+    }
+
+    private fun closeActiveSocketInternal() {
+        try { sharedOutputStream?.close() } catch (_: Exception) {}
+        try { sharedSocket?.close() } catch (_: Exception) {}
+        sharedSocket = null
+        sharedOutputStream = null
+        sharedConnectedAddress = null
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun getOrConnectSocket(targetAddress: String): Pair<BluetoothSocket, OutputStream> {
+        synchronized(socketLock) {
+            val adapter = bluetoothAdapter ?: throw Exception("Bluetooth tidak tersedia di perangkat")
+            if (!adapter.isEnabled) throw Exception("Bluetooth sedang nonaktif. Silakan aktifkan Bluetooth di HP Anda.")
+
+            // Check if existing socket is active and matches requested address
+            val currentSocket = sharedSocket
+            val currentStream = sharedOutputStream
+            if (sharedConnectedAddress == targetAddress && currentSocket != null && currentSocket.isConnected && currentStream != null) {
+                return Pair(currentSocket, currentStream)
+            }
+
+            // Close any old or dead socket before opening a fresh one
+            closeActiveSocketInternal()
+
+            val device: BluetoothDevice = adapter.getRemoteDevice(targetAddress)
+            adapter.cancelDiscovery()
+
+            val socket = try {
+                device.createRfcommSocketToServiceRecord(SPP_UUID)
+            } catch (e: Exception) {
+                // Fallback reflection for devices with strict RFCOMM channels
+                val m = device.javaClass.getMethod("createRfcommSocket", Int::class.javaPrimitiveType)
+                m.invoke(device, 1) as BluetoothSocket
+            }
+
+            socket.connect()
+            val stream = socket.outputStream
+
+            sharedSocket = socket
+            sharedOutputStream = stream
+            sharedConnectedAddress = targetAddress
+
+            Log.i(TAG, "Persistent Bluetooth socket established to $targetAddress. Printer ready!")
+            return Pair(socket, stream)
+        }
+    }
+
     @SuppressLint("MissingPermission")
     fun printRawEscPosSync(targetAddress: String?, bytes: ByteArray): String {
         val adapter = bluetoothAdapter ?: return "Bluetooth tidak tersedia di perangkat"
@@ -121,25 +217,32 @@ class ThermalPrinterManager(private val context: Context) {
             }
         } ?: return "Tidak ada printer Bluetooth yang dipasangkan di HP. Silakan pairing printer Bluetooth terlebih dahulu."
 
-        var socket: BluetoothSocket? = null
-        var outputStream: OutputStream? = null
-
         return try {
-            val device: BluetoothDevice = adapter.getRemoteDevice(address)
-            adapter.cancelDiscovery()
+            val stream = try {
+                getOrConnectSocket(address).second
+            } catch (e: Exception) {
+                // Retry once if first connection failed
+                synchronized(socketLock) { closeActiveSocketInternal() }
+                getOrConnectSocket(address).second
+            }
 
-            socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
-            socket.connect()
-            outputStream = socket.outputStream
+            try {
+                stream.write(bytes)
+                stream.flush()
+            } catch (writeEx: Exception) {
+                // Socket was severed (e.g. printer was turned off) -> Reconnect and retry write once
+                Log.w(TAG, "Socket write exception, attempting auto-reconnect: ${writeEx.message}")
+                synchronized(socketLock) { closeActiveSocketInternal() }
+                val reconnected = getOrConnectSocket(address)
+                reconnected.second.write(bytes)
+                reconnected.second.flush()
+            }
 
-            outputStream.write(bytes)
-            outputStream.flush()
+            // KEEP SOCKET OPEN! Do not close it, so printer LED stays ON (Ready).
             "OK"
         } catch (e: Exception) {
+            synchronized(socketLock) { closeActiveSocketInternal() }
             "Gagal mencetak thermal: ${e.message}"
-        } finally {
-            try { outputStream?.close() } catch (_: Exception) {}
-            try { socket?.close() } catch (_: Exception) {}
         }
     }
 
@@ -172,66 +275,63 @@ class ThermalPrinterManager(private val context: Context) {
             return@withContext Result.failure(Exception("Bluetooth sedang mati. Harap aktifkan Bluetooth"))
         }
 
-        var socket: BluetoothSocket? = null
-        var outputStream: OutputStream? = null
-
         try {
-            val device: BluetoothDevice = adapter.getRemoteDevice(printerAddress)
-            adapter.cancelDiscovery()
-
-            socket = device.createRfcommSocketToServiceRecord(SPP_UUID)
-            socket.connect()
-            outputStream = socket.outputStream
+            val stream = try {
+                getOrConnectSocket(printerAddress).second
+            } catch (e: Exception) {
+                synchronized(socketLock) { closeActiveSocketInternal() }
+                getOrConnectSocket(printerAddress).second
+            }
 
             val charset = Charset.forName("GBK")
 
             for ((index, voucher) in vouchers.withIndex()) {
-                outputStream.write(CMD_INIT)
+                stream.write(CMD_INIT)
 
                 // Header
-                outputStream.write(CMD_ALIGN_CENTER)
-                outputStream.write(CMD_BOLD_ON)
-                outputStream.write("${hotspotName.ifEmpty { "MIKHMON HOTSPOT" }}\n".toByteArray(charset))
-                outputStream.write(CMD_BOLD_OFF)
-                outputStream.write("================================\n".toByteArray(charset))
+                stream.write(CMD_ALIGN_CENTER)
+                stream.write(CMD_BOLD_ON)
+                stream.write("${hotspotName.ifEmpty { "MIKHMON HOTSPOT" }}\n".toByteArray(charset))
+                stream.write(CMD_BOLD_OFF)
+                stream.write("================================\n".toByteArray(charset))
 
                 // Voucher Box
-                outputStream.write(CMD_ALIGN_CENTER)
-                outputStream.write("KODE LOGIN VOUCHER\n".toByteArray(charset))
-                outputStream.write(CMD_FONT_LARGE)
-                outputStream.write(CMD_BOLD_ON)
-                outputStream.write("${voucher.username}\n".toByteArray(charset))
-                outputStream.write(CMD_FONT_NORMAL)
-                outputStream.write(CMD_BOLD_OFF)
+                stream.write(CMD_ALIGN_CENTER)
+                stream.write("KODE LOGIN VOUCHER\n".toByteArray(charset))
+                stream.write(CMD_FONT_LARGE)
+                stream.write(CMD_BOLD_ON)
+                stream.write("${voucher.username}\n".toByteArray(charset))
+                stream.write(CMD_FONT_NORMAL)
+                stream.write(CMD_BOLD_OFF)
 
                 if (voucher.password != voucher.username && voucher.password.isNotEmpty()) {
-                    outputStream.write("PASSWORD: ${voucher.password}\n".toByteArray(charset))
+                    stream.write("PASSWORD: ${voucher.password}\n".toByteArray(charset))
                 }
 
-                outputStream.write("--------------------------------\n".toByteArray(charset))
+                stream.write("--------------------------------\n".toByteArray(charset))
 
                 // Detail section
-                outputStream.write(CMD_ALIGN_LEFT)
+                stream.write(CMD_ALIGN_LEFT)
                 if (voucher.profile.isNotEmpty()) {
-                    outputStream.write("Paket  : ${voucher.profile}\n".toByteArray(charset))
+                    stream.write("Paket  : ${voucher.profile}\n".toByteArray(charset))
                 }
                 if (voucher.timeLimit.isNotEmpty()) {
-                    outputStream.write("Durasi : ${voucher.timeLimit}\n".toByteArray(charset))
+                    stream.write("Durasi : ${voucher.timeLimit}\n".toByteArray(charset))
                 }
                 if (voucher.price.isNotEmpty()) {
-                    outputStream.write("Harga  : Rp ${voucher.price}\n".toByteArray(charset))
+                    stream.write("Harga  : Rp ${voucher.price}\n".toByteArray(charset))
                 }
 
-                outputStream.write("--------------------------------\n".toByteArray(charset))
-                outputStream.write(CMD_ALIGN_CENTER)
+                stream.write("--------------------------------\n".toByteArray(charset))
+                stream.write(CMD_ALIGN_CENTER)
                 if (dnsName.isNotEmpty()) {
-                    outputStream.write("Login: http://$dnsName\n".toByteArray(charset))
+                    stream.write("Login: http://$dnsName\n".toByteArray(charset))
                 }
-                outputStream.write("Terima kasih & Selamat Berselancar\n".toByteArray(charset))
-                outputStream.write("Powered by NODERA\n".toByteArray(charset))
+                stream.write("Terima kasih & Selamat Berselancar\n".toByteArray(charset))
+                stream.write("Powered by NODERA\n".toByteArray(charset))
 
                 // Feed paper
-                outputStream.write(CMD_FEED_3)
+                stream.write(CMD_FEED_3)
 
                 // Add small delay between vouchers if batch printing
                 if (index < vouchers.size - 1) {
@@ -239,13 +339,12 @@ class ThermalPrinterManager(private val context: Context) {
                 }
             }
 
-            outputStream.flush()
+            stream.flush()
+            // KEEP SOCKET OPEN!
             Result.success(true)
         } catch (e: Exception) {
+            synchronized(socketLock) { closeActiveSocketInternal() }
             Result.failure(Exception("Gagal mencetak: ${e.message}"))
-        } finally {
-            try { outputStream?.close() } catch (_: Exception) {}
-            try { socket?.close() } catch (_: Exception) {}
         }
     }
 }
