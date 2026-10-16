@@ -665,26 +665,7 @@ $warungPortalUrl = $baseUrl . '/warung';
                               ?>
                               <tr>
                                 <td class="align-middle profile-header-cell">
-                                  <div style="font-weight: bold; font-size: 12px; margin-bottom: 2px;">
-                                    <i class="fa fa-ticket text-primary"></i> <?= htmlspecialchars($pName); ?>
-                                  </div>
-                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center;">
-                                    <?php if (!empty($profValidity)): ?>
-                                      <span class="badge bg-secondary" style="font-size: 10px; padding: 1px 4px;" title="Masa Aktif">
-                                        <i class="fa fa-clock-o"></i> <?= htmlspecialchars($profValidity); ?>
-                                      </span>
-                                    <?php endif; ?>
-                                    <?php if (!empty($rateLimit)): ?>
-                                      <span class="badge bg-blue" style="font-size: 10px; padding: 1px 4px;" title="Batas Kecepatan">
-                                        <i class="fa fa-tachometer"></i> <?= htmlspecialchars($rateLimit); ?>
-                                      </span>
-                                    <?php endif; ?>
-                                    <?php if (!empty($sharedUsers) && intval($sharedUsers) > 1): ?>
-                                      <span class="badge bg-purple" style="font-size: 10px; padding: 1px 4px;" title="Shared Users">
-                                        <i class="fa fa-users"></i> <?= htmlspecialchars($sharedUsers); ?> User
-                                      </span>
-                                    <?php endif; ?>
-                                  </div>
+                                  <b><?= htmlspecialchars($pName); ?></b>
                                 </td>
                                 <td class="align-middle" data-label="<?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
                                   <input type="number" min="0" step="any" name="custom_prices[<?= htmlspecialchars($pName); ?>][cost_price]" value="<?= htmlspecialchars($wCost); ?>" class="form-control input-sm" placeholder="Sesi: <?= $defCost > 0 ? htmlspecialchars(mikhmon_format_money($defCost, $currency, $langid)) : '-'; ?>" id="cp_cost_<?= $pHash; ?>" oninput="calcCustomFromCost('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)">
@@ -1155,26 +1136,7 @@ $warungPortalUrl = $baseUrl . '/warung';
                         ?>
                         <tr>
                           <td class="align-middle profile-header-cell">
-                            <div style="font-size: 13px; font-weight: bold; margin-bottom: 3px;">
-                              <i class="fa fa-ticket text-primary"></i> <?= htmlspecialchars($pName); ?>
-                            </div>
-                            <div style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center;">
-                              <?php if (!empty($profValidity)): ?>
-                                <span class="badge bg-secondary" style="font-size: 10px; padding: 2px 5px;" title="Masa Aktif">
-                                  <i class="fa fa-clock-o"></i> <?= htmlspecialchars($profValidity); ?>
-                                </span>
-                              <?php endif; ?>
-                              <?php if (!empty($rateLimit)): ?>
-                                <span class="badge bg-blue" style="font-size: 10px; padding: 2px 5px;" title="Batas Kecepatan">
-                                  <i class="fa fa-tachometer"></i> <?= htmlspecialchars($rateLimit); ?>
-                                </span>
-                              <?php endif; ?>
-                              <?php if (!empty($sharedUsers) && intval($sharedUsers) > 1): ?>
-                                <span class="badge bg-purple" style="font-size: 10px; padding: 2px 5px;" title="Shared Users">
-                                  <i class="fa fa-users"></i> <?= htmlspecialchars($sharedUsers); ?> User
-                                </span>
-                              <?php endif; ?>
-                            </div>
+                            <b><?= htmlspecialchars($pName); ?></b>
                             <input type="hidden" name="prices[<?= htmlspecialchars($pName); ?>][validity]" value="<?= htmlspecialchars($profValidity); ?>">
                           </td>
                           <td class="align-middle" data-label="<?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
