@@ -232,7 +232,7 @@ if (!empty($envLicKey) && (!defined('MIKHMON_LICENSE_KEY') || empty(MIKHMON_LICE
     if (!defined('MIKHMON_EXPIRY')) define('MIKHMON_EXPIRY', $expFormatted);
     if (!defined('MIKHMON_EXPIRY_RAW')) define('MIKHMON_EXPIRY_RAW', $envLicExp);
     if (!defined('MIKHMON_SIGNATURE')) define('MIKHMON_SIGNATURE', $envLicSig);
-    if (!defined('MIKHMON_BRAND')) define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'airnetsolution.com'));
+    if (!defined('MIKHMON_BRAND')) define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'dgtlnetsolution.com'));
     if (!defined('MIKHMON_PRODUCT_NAME')) define('MIKHMON_PRODUCT_NAME', $envLicProd);
     if (!defined('MIKHMON_ACTIVATED_AT')) define('MIKHMON_ACTIVATED_AT', date('Y-m-d H:i:s'));
     if (!defined('MIKHMON_SUBDOMAIN')) define('MIKHMON_SUBDOMAIN', 'desktop');
@@ -520,12 +520,12 @@ if (!function_exists('mikhmon_verify_desktop_license')) {
         ];
 
         $endpoints = array_unique(array_filter([
-            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/desktop-license/verify',
-            (function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://airnetsolution.com') . '/api/desktop-license/verify',
-            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/v1/desktop-license/verify',
-            'https://panel.airnetsolution.com/api/desktop-license/verify',
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.dgtlnetsolution.com') . '/api/desktop-license/verify',
+            (function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://dgtlnetsolution.com') . '/api/desktop-license/verify',
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.dgtlnetsolution.com') . '/api/v1/desktop-license/verify',
             'https://panel.dgtlnetsolution.com/api/desktop-license/verify',
             'https://digitalnet.dgtlnetsolution.com/api/desktop-license/verify',
+            'https://panel.airnetsolution.com/api/desktop-license/verify',
         ]));
 
         $response = null;
@@ -641,12 +641,12 @@ if (!function_exists('mikhmon_activate_desktop_license')) {
         ];
 
         $endpoints = array_unique(array_filter([
-            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/desktop-license/activate',
-            (function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://airnetsolution.com') . '/api/desktop-license/activate',
-            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/v1/desktop-license/activate',
-            'https://panel.airnetsolution.com/api/desktop-license/activate',
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.dgtlnetsolution.com') . '/api/desktop-license/activate',
+            (function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://dgtlnetsolution.com') . '/api/desktop-license/activate',
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.dgtlnetsolution.com') . '/api/v1/desktop-license/activate',
             'https://panel.dgtlnetsolution.com/api/desktop-license/activate',
             'https://digitalnet.dgtlnetsolution.com/api/desktop-license/activate',
+            'https://panel.airnetsolution.com/api/desktop-license/activate',
         ]));
 
         $response = null;
@@ -726,12 +726,12 @@ if (!function_exists('mikhmon_activate_trial_license')) {
         ];
 
         $endpoints = array_unique(array_filter([
-            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/desktop-license/trial',
-            (function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://airnetsolution.com') . '/api/desktop-license/trial',
-            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.airnetsolution.com') . '/api/v1/desktop-license/trial',
-            'https://panel.airnetsolution.com/api/desktop-license/trial',
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.dgtlnetsolution.com') . '/api/desktop-license/trial',
+            (function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : 'https://dgtlnetsolution.com') . '/api/desktop-license/trial',
+            (function_exists('mikhmon_get_panel_url') ? mikhmon_get_panel_url() : 'https://panel.dgtlnetsolution.com') . '/api/v1/desktop-license/trial',
             'https://panel.dgtlnetsolution.com/api/desktop-license/trial',
             'https://digitalnet.dgtlnetsolution.com/api/desktop-license/trial',
+            'https://panel.airnetsolution.com/api/desktop-license/trial',
         ]));
 
         $response = null;
@@ -820,8 +820,9 @@ if (!function_exists('mikhmon_render_desktop_heartbeat_script')) {
             var apis = [
               <?= json_encode(mikhmon_get_panel_url() . '/api/desktop-license/verify') ?>,
               <?= json_encode(mikhmon_get_api_url() . '/api/desktop-license/verify') ?>,
-              'https://panel.airnetsolution.com/api/desktop-license/verify',
-              'https://panel.dgtlnetsolution.com/api/desktop-license/verify'
+              'https://panel.dgtlnetsolution.com/api/desktop-license/verify',
+              'https://digitalnet.dgtlnetsolution.com/api/desktop-license/verify',
+              'https://panel.airnetsolution.com/api/desktop-license/verify'
             ];
             
             function tryApi(idx) {

@@ -496,13 +496,19 @@
       }
     });
 
-    // Handle External Links
-    document.querySelectorAll('.external-link').forEach(el => {
-      el.addEventListener('click', (e) => {
+    // Handle External Links via Event Delegation (so dynamically updated elements like i18nGuideText always work)
+    document.addEventListener('click', (e) => {
+      const targetLink = e.target.closest('a');
+      if (!targetLink) return;
+
+      const href = targetLink.getAttribute('href');
+      const isExternalClass = targetLink.classList.contains('external-link');
+      const isHttp = href && (href.startsWith('http://') || href.startsWith('https://'));
+
+      if (isExternalClass || (isHttp && !href.startsWith('http://127.0.0.1') && !href.startsWith('http://localhost'))) {
         e.preventDefault();
-        const url = el.getAttribute('href') || 'https://panel.dgtlnetsolution.com/desktop-licenses';
-        openUrl(url);
-      });
+        openUrl(href || 'https://panel.dgtlnetsolution.com/desktop-licenses');
+      }
     });
 
     // CS Indonesia WhatsApp Click

@@ -452,9 +452,9 @@ function tryDirectBrowserActivation(licenseKey, deviceHwid) {
     var apis = [
       <?= json_encode($panelUrl . '/api/desktop-license/activate') ?>,
       <?= json_encode((function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : ('https://' . $pDomain)) . '/api/desktop-license/activate') ?>,
-      'https://panel.airnetsolution.com/api/desktop-license/activate',
       'https://panel.dgtlnetsolution.com/api/desktop-license/activate',
-      'https://digitalnet.dgtlnetsolution.com/api/desktop-license/activate'
+      'https://digitalnet.dgtlnetsolution.com/api/desktop-license/activate',
+      'https://panel.airnetsolution.com/api/desktop-license/activate'
     ];
     var tryFetch = function(idx) {
       if (idx >= apis.length) {
@@ -509,8 +509,8 @@ function claimTrialLicenseLogin() {
         var hwid = (hwidEl ? hwidEl.value.trim() : '');
         var trialApis = [
           <?= json_encode($panelUrl . '/api/desktop-license/trial') ?>,
-          'https://panel.airnetsolution.com/api/desktop-license/trial',
-          'https://panel.dgtlnetsolution.com/api/desktop-license/trial'
+          'https://panel.dgtlnetsolution.com/api/desktop-license/trial',
+          'https://panel.airnetsolution.com/api/desktop-license/trial'
         ];
         var tryTrial = function(tIdx) {
           if (tIdx >= trialApis.length) {

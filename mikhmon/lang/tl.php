@@ -1897,6 +1897,6 @@ $_choose_router_session_lbl = "Pumili ng Session ng Router:";
 $_router_session_profiles_desc = "Ang mga profile sa ibaba ay awtomatikong kinukuha mula sa <b>MikroTik Hotspot User Profiles</b> para sa session <b>%s</b>.";
 $_no_profiles_in_mikrotik_desc = "Walang nakitang profile ng hotspot sa MikroTik router.<br>Siguraduhing nakakonekta ang router at nagawa na ang mga profile sa <b>Hotspot &rarr; User Profiles</b>.";
 
-\$_select_wa_community = "Pumili ng Komunidad sa WhatsApp";
-\$_select_wa_community_desc = "Mangyaring pumili ng komunidad sa WhatsApp ayon sa iyong rehiyon o wika:";
-\$_join = "Sumali";
+$_select_wa_community = "Pumili ng Komunidad sa WhatsApp";
+$_select_wa_community_desc = "Mangyaring pumili ng komunidad sa WhatsApp ayon sa iyong rehiyon o wika:";
+$_join = "Sumali";

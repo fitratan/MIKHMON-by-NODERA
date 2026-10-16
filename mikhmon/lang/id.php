@@ -1909,6 +1909,6 @@ $_choose_router_session_lbl = "Pilih Sesi Router:";
 $_router_session_profiles_desc = "Daftar profil di bawah ini diambil otomatis dari <b>User Profiles Hotspot MikroTik</b> untuk sesi <b>%s</b>. Pengaturan harga ini tersimpan khusus untuk sesi router ini dan berlaku bagi mitra warung yang terhubung ke sesi ini.";
 $_no_profiles_in_mikrotik_desc = "Tidak ada profil hotspot yang terdeteksi di MikroTik router.<br>Pastikan sesi router MikroTik terhubung dan profil voucher telah dibuat di menu <b>Hotspot &rarr; User Profiles</b>.";
 
-\$_select_wa_community = "Pilih Komunitas WhatsApp";
-\$_select_wa_community_desc = "Silakan pilih komunitas WhatsApp sesuai wilayah atau bahasa Anda:";
-\$_join = "Gabung";
+$_select_wa_community = "Pilih Komunitas WhatsApp";
+$_select_wa_community_desc = "Silakan pilih komunitas WhatsApp sesuai wilayah atau bahasa Anda:";
+$_join = "Gabung";

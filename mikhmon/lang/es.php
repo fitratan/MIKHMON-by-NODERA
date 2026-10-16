@@ -1897,6 +1897,6 @@ $_choose_router_session_lbl = "Seleccionar Sesión de Router:";
 $_router_session_profiles_desc = "Los perfiles a continuación se obtienen automáticamente de <b>User Profiles Hotspot MikroTik</b> para la sesión <b>%s</b>.";
 $_no_profiles_in_mikrotik_desc = "No se detectaron perfiles de hotspot en el router MikroTik.<br>Verifique la conexión del router y los perfiles en <b>Hotspot &rarr; User Profiles</b>.";
 
-\$_select_wa_community = "Seleccionar Comunidad de WhatsApp";
-\$_select_wa_community_desc = "Por favor seleccione la comunidad de WhatsApp según su región o idioma:";
-\$_join = "Unirse";
+$_select_wa_community = "Seleccionar Comunidad de WhatsApp";
+$_select_wa_community_desc = "Por favor seleccione la comunidad de WhatsApp según su región o idioma:";
+$_join = "Unirse";
