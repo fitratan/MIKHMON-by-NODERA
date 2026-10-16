@@ -2433,13 +2433,21 @@ $(document).ready(function() {
   }
   var savedDev = localStorage.getItem('mikhmon_thermal_device_name');
   if (savedDev) {
-    updateWarungBtUi('connected', '', { deviceName: savedDev, isConnected: true });
+    var nameEl = document.getElementById('rcPrinterDeviceName');
+    if (nameEl) {
+      nameEl.textContent = savedDev;
+      nameEl.className = 'text-secondary';
+    }
   }
   if (window.MikhmonThermal) {
     window.MikhmonThermal.autoConnect().then(function(connected) {
       if (connected && window.MikhmonThermal.deviceName) {
         updateWarungBtUi('connected', '', window.MikhmonThermal);
+      } else {
+        updateWarungBtUi('disconnected', '', window.MikhmonThermal);
       }
+    }).catch(function() {
+      updateWarungBtUi('disconnected', '', window.MikhmonThermal);
     });
   }
 });

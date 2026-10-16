@@ -197,16 +197,26 @@
           }
           if (savedName) {
             self.deviceName = savedName;
-            self.isConnected = true;
             localStorage.setItem('mikhmon_thermal_device_name', savedName);
+            var isConn = false;
             if (savedAddr) {
               localStorage.setItem('mikhmon_thermal_device_addr', savedAddr);
-              if (window.nodera.connectPrinter) {
-                try { window.nodera.connectPrinter(savedAddr); } catch(e) {}
+              if (window.nodera.isPrinterConnected && window.nodera.isPrinterConnected()) {
+                isConn = true;
+              } else if (window.nodera.connectPrinter) {
+                try { isConn = Boolean(window.nodera.connectPrinter(savedAddr)); } catch(e) {}
               }
+            } else if (window.nodera.isPrinterConnected) {
+              isConn = window.nodera.isPrinterConnected();
             }
-            self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
-            return true;
+            self.isConnected = isConn;
+            if (isConn) {
+              self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
+              return true;
+            } else {
+              self.notifyListeners('disconnected', (window.LANG_NOT_CONNECTED || 'Disconnected'));
+              return false;
+            }
           }
         } catch (e) {
           console.warn('Nodera Android printer init error:', e);
@@ -264,7 +274,9 @@
     ensureConnected: async function() {
       var self = this;
       if (self.isNoderaAndroid()) {
-        if (self.isConnected && self.deviceName) return true;
+        if (self.isConnected && self.deviceName && (window.nodera.isPrinterConnected ? window.nodera.isPrinterConnected() : true)) {
+          return true;
+        }
         var autoOk = await self.autoConnect();
         if (autoOk && self.isConnected) return true;
 
@@ -273,36 +285,49 @@
 
         if (savedName || savedAddr) {
           self.deviceName = savedName || 'Printer Thermal';
-          self.isConnected = true;
           if (savedAddr && window.nodera.setSelectedPrinter) {
             window.nodera.setSelectedPrinter(savedAddr, self.deviceName);
           }
-          if (window.nodera.connectPrinter) {
-            try { window.nodera.connectPrinter(savedAddr); } catch(e) {}
+          if (window.nodera.connectPrinter && savedAddr) {
+            var ok = false;
+            try { ok = window.nodera.connectPrinter(savedAddr); } catch(e) {}
+            if (ok) {
+              self.isConnected = true;
+              self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
+              return true;
+            }
           }
-          self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
-          return true;
+          self.isConnected = false;
+          self.notifyListeners('disconnected', 'Printer ' + self.deviceName + ' sedang offline');
+          throw new Error('Printer ' + self.deviceName + ' sedang mati atau di luar jangkauan. Silakan nyalakan printer Anda.');
         }
 
-        // Cek perangkat yang sudah dipasangkan di HP
+        // Cek perangkat yang sudah dipasangkan di HP jika belum ada yang disimpan
         if (window.nodera.getPairedPrinters) {
           try {
             var paired = JSON.parse(window.nodera.getPairedPrinters() || '[]');
             if (paired.length > 0) {
               self.deviceName = paired[0].name;
-              self.isConnected = true;
               if (window.nodera.setSelectedPrinter) {
                 window.nodera.setSelectedPrinter(paired[0].address, paired[0].name);
               }
               if (window.nodera.connectPrinter) {
-                try { window.nodera.connectPrinter(paired[0].address); } catch(e) {}
+                var ok = false;
+                try { ok = window.nodera.connectPrinter(paired[0].address); } catch(e) {}
+                if (ok) {
+                  self.isConnected = true;
+                  localStorage.setItem('mikhmon_thermal_device_name', paired[0].name);
+                  localStorage.setItem('mikhmon_thermal_device_addr', paired[0].address);
+                  self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
+                  return true;
+                }
               }
-              localStorage.setItem('mikhmon_thermal_device_name', paired[0].name);
-              localStorage.setItem('mikhmon_thermal_device_addr', paired[0].address);
-              self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
-              return true;
+              self.isConnected = false;
+              throw new Error('Printer ' + self.deviceName + ' sedang mati atau di luar jangkauan. Silakan nyalakan printer Anda.');
             }
-          } catch (e) {}
+          } catch (e) {
+            if (e.message && e.message.indexOf('sedang mati') !== -1) throw e;
+          }
         }
 
         // Jika benar-benar belum ada printer sama sekali di HP
@@ -340,6 +365,7 @@
 
       // Jika printer pernah dipasangkan sebelumnya, cari device tersimpan via getDevices()
       var savedId = localStorage.getItem('mikhmon_thermal_device_id');
+      var savedName = localStorage.getItem('mikhmon_thermal_device_name');
       if (savedId && navigator.bluetooth && navigator.bluetooth.getDevices) {
         try {
           var devs = await navigator.bluetooth.getDevices();
@@ -348,10 +374,21 @@
             await self._setupDevice(target);
             return true;
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn('GATT reconnect to saved device failed:', e);
+        }
       }
 
-      // Fallback: hanya jika perangkat belum pernah terdaftar sama sekali
+      // JIKA PRINTER SUDAH TERDAFTAR (savedId / savedName ada), JANGAN PERNAH MUNCULKAN MODAL requestDevice() OTOMATIS!
+      // Karena modal pairing Chrome yang muncul terus menerus saat printer mati sangat mengganggu.
+      if (savedId || savedName) {
+        var pName = savedName || 'RPP02N';
+        self.isConnected = false;
+        self.notifyListeners('disconnected', 'Printer ' + pName + ' sedang tidak aktif');
+        throw new Error('Printer ' + pName + ' sedang mati atau di luar jangkauan Bluetooth. Silakan nyalakan printer Anda.');
+      }
+
+      // Fallback: HANYA jika perangkat BELUM PERNAH dipasangkan sama sekali di browser ini
       var res = await self.connect('printers');
       return Boolean(res && res.success);
     },
@@ -1022,45 +1059,9 @@
     }
   };
 
-  function updateGlobalPrinterBadge(status, msg, thermalInstance) {
-    var badge = document.getElementById('globalPrinterBadge');
-    var textEl = document.getElementById('globalPrinterText');
-    if (!badge && !textEl) return;
-
-    var name = (thermalInstance && thermalInstance.deviceName) || localStorage.getItem('mikhmon_thermal_device_name') || '';
-    if (status === 'connected' || (name && (thermalInstance && thermalInstance.isConnected))) {
-      if (badge) {
-        badge.style.background = '#16a34a';
-        badge.style.color = '#ffffff';
-      }
-      if (textEl) {
-        textEl.textContent = name ? (name.length > 15 ? name.substring(0, 13) + '...' : name) : 'Printer Ready';
-      }
-    } else if (name) {
-      if (badge) {
-        badge.style.background = '#059669';
-        badge.style.color = '#ffffff';
-      }
-      if (textEl) {
-        textEl.textContent = name.length > 15 ? name.substring(0, 13) + '...' : name;
-      }
-    } else {
-      if (badge) {
-        badge.style.background = '#64748b';
-        badge.style.color = '#ffffff';
-      }
-      if (textEl) {
-        textEl.textContent = 'Printer';
-      }
-    }
-  }
-
-  MikhmonThermal.addListener(updateGlobalPrinterBadge);
-
   // Auto-connect saat DOM selesai dimuat
   if (typeof document !== 'undefined') {
     function initThermalAutoConnect() {
-      updateGlobalPrinterBadge('idle', '', MikhmonThermal);
       setTimeout(function() {
         if (MikhmonThermal.isSupported()) {
           MikhmonThermal.autoConnect();

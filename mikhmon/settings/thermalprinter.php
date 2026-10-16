@@ -578,13 +578,21 @@ $(document).ready(function() {
   updatePreviewReceipt(<?= json_encode($templateStyle); ?>);
   var savedName = localStorage.getItem('mikhmon_thermal_device_name');
   if (savedName) {
-    updateUiStatus('connected', '', { deviceName: savedName, isConnected: true });
+    var nameEl = document.getElementById('printerDeviceName');
+    if (nameEl) {
+      nameEl.textContent = savedName;
+      nameEl.className = 'text-secondary';
+    }
   }
   if (window.MikhmonThermal) {
     window.MikhmonThermal.autoConnect().then(function(connected) {
       if (connected && window.MikhmonThermal.deviceName) {
         updateUiStatus('connected', '', window.MikhmonThermal);
+      } else {
+        updateUiStatus('disconnected', '', window.MikhmonThermal);
       }
+    }).catch(function() {
+      updateUiStatus('disconnected', '', window.MikhmonThermal);
     });
   }
 });

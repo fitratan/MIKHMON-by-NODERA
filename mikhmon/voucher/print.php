@@ -419,13 +419,18 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   var savedDev = localStorage.getItem('mikhmon_thermal_device_name');
   if (savedDev) {
-    updatePrintBarBt('connected', '', { deviceName: savedDev, isConnected: true });
+    var btnText = document.getElementById('btnBtPrintAllText');
+    if (btnText) btnText.innerHTML = LANG_PRINT_VIA_BT + ' (' + savedDev + ')';
   }
   if (window.MikhmonThermal) {
     window.MikhmonThermal.autoConnect().then(function(connected) {
       if (connected && window.MikhmonThermal.deviceName) {
         updatePrintBarBt('connected', '', window.MikhmonThermal);
+      } else {
+        updatePrintBarBt('disconnected', '', window.MikhmonThermal);
       }
+    }).catch(function() {
+      updatePrintBarBt('disconnected', '', window.MikhmonThermal);
     });
   }
 });
