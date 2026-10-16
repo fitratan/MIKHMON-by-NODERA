@@ -208,7 +208,8 @@ if ($isAddonActive && $_SERVER['REQUEST_METHOD'] === 'POST') {
             $cleanPrices[$pName] = [
                 'cost_price' => (float) ($pData['cost_price'] ?? 0),
                 'sell_price' => (float) ($pData['sell_price'] ?? 0),
-                'status'     => $status
+                'status'     => $status,
+                'validity'   => trim($pData['validity'] ?? '')
             ];
         }
         warung_save_profile_prices($cleanPrices, $targetSession);
@@ -299,6 +300,77 @@ $isHttps = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_
 $baseUrl = ($isHttps ? 'https://' : 'http://') . $currentHost;
 $warungPortalUrl = $baseUrl . '/warung';
 ?>
+
+<style>
+.warung-responsive-table {
+  width: 100%;
+}
+@media (max-width: 767px) {
+  .warung-responsive-table thead {
+    display: none !important;
+  }
+  .warung-responsive-table, 
+  .warung-responsive-table tbody, 
+  .warung-responsive-table tr, 
+  .warung-responsive-table td {
+    display: block !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+  .warung-responsive-table tr {
+    background: #fff;
+    border: 1px solid rgba(128, 128, 128, 0.22) !important;
+    border-radius: 8px !important;
+    margin-bottom: 14px !important;
+    padding: 10px 14px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  }
+  .warung-responsive-table tr:last-child {
+    margin-bottom: 0 !important;
+  }
+  .warung-responsive-table td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 6px 0 !important;
+    border: none !important;
+    border-bottom: 1px dashed rgba(128, 128, 128, 0.15) !important;
+    font-size: 13px !important;
+    min-height: 42px;
+  }
+  .warung-responsive-table td:last-child {
+    border-bottom: none !important;
+    padding-top: 8px !important;
+  }
+  .warung-responsive-table td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    color: #495057;
+    font-size: 12px;
+    padding-right: 12px;
+    flex-shrink: 0;
+    max-width: 50%;
+  }
+  .warung-responsive-table td.profile-header-cell {
+    display: block !important;
+    padding-bottom: 8px !important;
+    margin-bottom: 6px !important;
+    border-bottom: 2px solid rgba(128, 128, 128, 0.2) !important;
+    min-height: auto;
+  }
+  .warung-responsive-table td.profile-header-cell::before {
+    display: none !important;
+  }
+  .warung-responsive-table td input.form-control,
+  .warung-responsive-table td select.form-control {
+    max-width: 170px !important;
+    text-align: right !important;
+  }
+  .warung-responsive-table td .input-group {
+    max-width: 120px !important;
+  }
+}
+</style>
 
 <?php if (!empty($alertMsg)): ?>
   <div class="alert bg-<?= $alertType; ?>" style="padding: 10px 14px; margin-bottom: 15px; border-radius: 4px;">
@@ -540,76 +612,105 @@ $warungPortalUrl = $baseUrl . '/warung';
                 </tr>
                 <tr id="customPriceSection" style="<?= !$hasCustomPrices ? 'display: none;' : ''; ?>">
                   <td colspan="2" style="padding-top: 10px;">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; flex-wrap: wrap; gap: 6px;">
-                      <div style="display: flex; align-items: center; gap: 4px; flex-wrap: wrap;">
-                        <span style="font-size: 11px; font-weight: bold;"><i class="fa fa-magic"></i> Set Rasio Cepat:</span>
-                        <button type="button" class="btn bg-secondary btn-xs" onclick="applyCustomBatchRatio(10)">+10%</button>
-                        <button type="button" class="btn bg-secondary btn-xs" onclick="applyCustomBatchRatio(15)">+15%</button>
-                        <button type="button" class="btn bg-secondary btn-xs" onclick="applyCustomBatchRatio(20)">+20%</button>
-                        <button type="button" class="btn bg-secondary btn-xs" onclick="applyCustomBatchRatio(25)">+25%</button>
-                        <button type="button" class="btn bg-secondary btn-xs" onclick="applyCustomBatchRatio(30)">+30%</button>
-                        <button type="button" class="btn bg-secondary btn-xs" onclick="applyCustomBatchRatio(50)">+50%</button>
-                      </div>
-                      <small class="text-secondary" style="font-size: 11px;"><i class="fa fa-info-circle"></i> Ketik nominal atau persen rasio</small>
+                    <div style="margin-bottom: 8px; font-size: 11px;" class="text-secondary">
+                      <i class="fa fa-info-circle text-primary"></i> <?= $_custom_price_ratio_hint ?? 'Ketik <b>Harga Modal Warung</b> dan <b>Rasio (%)</b> untuk menghitung otomatis <b>Harga Jual Konsumen</b> &amp; <b>Profit</b>.'; ?>
                     </div>
 
-                    <table class="table table-bordered table-sm" style="margin-bottom: 0;">
-                      <thead>
-                        <tr>
-                          <th><?= $_user_profile ?? 'Profil Voucher'; ?></th>
-                          <th><?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
-                          <th><?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
-                          <th style="width: 175px;"><?= $_profit_margin ?? 'Rasio & Margin'; ?></th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        <?php if (empty($formHotspotProfiles)): ?>
+                    <div class="table-responsive">
+                      <table class="table table-bordered table-sm warung-responsive-table" style="margin-bottom: 0;">
+                        <thead>
                           <tr>
-                            <td colspan="4" class="text-center text-secondary" style="font-size: 12px; padding: 10px;">
-                              <?= $_no_profiles_detected_router ?? 'Belum ada profil hotspot yang terdeteksi untuk sesi router ini.'; ?>
-                            </td>
+                            <th><?= $_user_profile ?? 'Profil Voucher Hotspot'; ?></th>
+                            <th style="width: 160px;"><?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
+                            <th style="width: 110px;"><?= $_profit_ratio ?? 'Rasio (%)'; ?></th>
+                            <th style="width: 160px;"><?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
+                            <th style="width: 130px; text-align: right;"><?= $_profit_margin ?? 'Profit / Margin'; ?></th>
                           </tr>
-                        <?php else: ?>
-                          <?php foreach ($formHotspotProfiles as $hp): ?>
-                            <?php 
-                              $pName = $hp['name'] ?? '';
-                              if (empty($pName) || $pName === 'default') continue;
-                              $wCustom = $selectedWarung['custom_prices'][$pName] ?? [];
-                              $wSell = $wCustom['sell_price'] ?? '';
-                              $wCost = $wCustom['cost_price'] ?? '';
-                              $defSell = (float)($formPriceMap[$pName]['sell_price'] ?? 0);
-                              $defCost = (float)($formPriceMap[$pName]['cost_price'] ?? 0);
-                              $calcCost = ($wCost !== '' && (float)$wCost > 0) ? (float)$wCost : $defCost;
-                              $calcSell = ($wSell !== '' && (float)$wSell > 0) ? (float)$wSell : $defSell;
-                              $cpMr = mikhmon_calc_margin_ratio($calcCost, $calcSell);
-                              $pHash = md5($pName);
-                            ?>
+                        </thead>
+                        <tbody>
+                          <?php if (empty($formHotspotProfiles)): ?>
                             <tr>
-                              <td class="align-middle"><b><?= htmlspecialchars($pName); ?></b></td>
-                              <td>
-                                <input type="number" min="0" step="any" name="custom_prices[<?= htmlspecialchars($pName); ?>][cost_price]" value="<?= htmlspecialchars($wCost); ?>" class="form-control input-sm" placeholder="Sesi: <?= $defCost > 0 ? htmlspecialchars(mikhmon_format_money($defCost, $currency, $langid)) : '-'; ?>" id="cp_cost_<?= $pHash; ?>" oninput="calcCustomFromCost('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)">
+                              <td colspan="5" class="text-center text-secondary" style="font-size: 12px; padding: 10px;">
+                                <?= $_no_profiles_detected_router ?? 'Belum ada profil hotspot yang terdeteksi untuk sesi router ini.'; ?>
                               </td>
-                              <td>
-                                <input type="number" min="0" step="any" name="custom_prices[<?= htmlspecialchars($pName); ?>][sell_price]" value="<?= htmlspecialchars($wSell); ?>" class="form-control input-sm" placeholder="Sesi: <?= $defSell > 0 ? htmlspecialchars(mikhmon_format_money($defSell, $currency, $langid)) : '-'; ?>" id="cp_sell_<?= $pHash; ?>" oninput="calcCustomFromSell('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)">
-                              </td>
-                              <td class="align-middle" style="white-space: nowrap;">
-                                <div style="display: flex; align-items: center; gap: 6px;">
-                                  <div class="input-group input-group-sm" style="width: 78px; display: inline-flex;">
-                                    <input type="number" step="any" min="-100" id="cp_ratio_<?= $pHash; ?>" value="<?= number_format($cpMr['ratio'], 1, '.', ''); ?>" class="form-control" style="font-weight: bold; text-align: right; padding: 2px 4px; height: 26px; font-size: 11px;" oninput="calcCustomFromRatio('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)" title="Ketik persentase rasio / markup (%)">
+                            </tr>
+                          <?php else: ?>
+                            <?php foreach ($formHotspotProfiles as $hp): ?>
+                              <?php 
+                                $pName = $hp['name'] ?? '';
+                                if (empty($pName) || $pName === 'default') continue;
+                                $wCustom = $selectedWarung['custom_prices'][$pName] ?? [];
+                                $wSell = $wCustom['sell_price'] ?? '';
+                                $wCost = $wCustom['cost_price'] ?? '';
+                                $defSell = (float)($formPriceMap[$pName]['sell_price'] ?? 0);
+                                $defCost = (float)($formPriceMap[$pName]['cost_price'] ?? 0);
+                                $calcCost = ($wCost !== '' && (float)$wCost > 0) ? (float)$wCost : $defCost;
+                                $calcSell = ($wSell !== '' && (float)$wSell > 0) ? (float)$wSell : $defSell;
+                                $cpMr = mikhmon_calc_margin_ratio($calcCost, $calcSell);
+                                $pHash = md5($pName);
+
+                                // Profile metadata
+                                $profValidity = '';
+                                if (function_exists('mikhmon_resolve_profile_validity')) {
+                                    $profValidity = mikhmon_resolve_profile_validity($hp, $pName, [], ($langid === 'fr'));
+                                }
+                                if (empty($profValidity)) {
+                                    $profValidity = $hp['validity'] ?? ($formPriceMap[$pName]['validity'] ?? '');
+                                }
+                                if (empty($profValidity) && function_exists('mikhmon_infer_validity')) {
+                                    $profValidity = mikhmon_infer_validity($pName, '', ($langid === 'fr'));
+                                }
+                                $rateLimit = $hp['rate-limit'] ?? '';
+                                $sharedUsers = $hp['shared-users'] ?? '';
+                              ?>
+                              <tr>
+                                <td class="align-middle profile-header-cell">
+                                  <div style="font-weight: bold; font-size: 12px; margin-bottom: 2px;">
+                                    <i class="fa fa-ticket text-primary"></i> <?= htmlspecialchars($pName); ?>
+                                  </div>
+                                  <div style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center;">
+                                    <?php if (!empty($profValidity)): ?>
+                                      <span class="badge bg-secondary" style="font-size: 10px; padding: 1px 4px;" title="Masa Aktif">
+                                        <i class="fa fa-clock-o"></i> <?= htmlspecialchars($profValidity); ?>
+                                      </span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($rateLimit)): ?>
+                                      <span class="badge bg-blue" style="font-size: 10px; padding: 1px 4px;" title="Batas Kecepatan">
+                                        <i class="fa fa-tachometer"></i> <?= htmlspecialchars($rateLimit); ?>
+                                      </span>
+                                    <?php endif; ?>
+                                    <?php if (!empty($sharedUsers) && intval($sharedUsers) > 1): ?>
+                                      <span class="badge bg-purple" style="font-size: 10px; padding: 1px 4px;" title="Shared Users">
+                                        <i class="fa fa-users"></i> <?= htmlspecialchars($sharedUsers); ?> User
+                                      </span>
+                                    <?php endif; ?>
+                                  </div>
+                                </td>
+                                <td class="align-middle" data-label="<?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
+                                  <input type="number" min="0" step="any" name="custom_prices[<?= htmlspecialchars($pName); ?>][cost_price]" value="<?= htmlspecialchars($wCost); ?>" class="form-control input-sm" placeholder="Sesi: <?= $defCost > 0 ? htmlspecialchars(mikhmon_format_money($defCost, $currency, $langid)) : '-'; ?>" id="cp_cost_<?= $pHash; ?>" oninput="calcCustomFromCost('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)">
+                                </td>
+                                <td class="align-middle" data-label="<?= $_profit_ratio ?? 'Rasio (%)'; ?>">
+                                  <div class="input-group input-group-sm" style="max-width: 100px;">
+                                    <input type="number" step="any" min="-100" id="cp_ratio_<?= $pHash; ?>" value="<?= number_format($cpMr['ratio'], 1, '.', ''); ?>" class="form-control" style="font-weight: bold; text-align: right; padding: 2px 4px; height: 28px; font-size: 11px;" oninput="calcCustomFromRatio('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)" placeholder="20" title="Ketik persentase rasio / markup (%)">
                                     <span class="input-group-addon" style="padding: 2px 4px; font-size: 10px; font-weight: bold;">%</span>
                                   </div>
-                                  <div id="cp_margin_<?= $pHash; ?>" style="white-space: nowrap;">
-                                    <b class="<?= $cpMr['is_profit'] ? 'text-primary' : 'text-danger'; ?>" style="font-size: 11px;">
+                                </td>
+                                <td class="align-middle" data-label="<?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
+                                  <input type="number" min="0" step="any" name="custom_prices[<?= htmlspecialchars($pName); ?>][sell_price]" value="<?= htmlspecialchars($wSell); ?>" class="form-control input-sm" placeholder="Sesi: <?= $defSell > 0 ? htmlspecialchars(mikhmon_format_money($defSell, $currency, $langid)) : '-'; ?>" id="cp_sell_<?= $pHash; ?>" oninput="calcCustomFromSell('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)">
+                                </td>
+                                <td class="align-middle text-right" data-label="<?= $_profit_margin ?? 'Profit / Margin'; ?>" style="white-space: nowrap;">
+                                  <div id="cp_margin_<?= $pHash; ?>">
+                                    <b class="<?= $cpMr['is_profit'] ? 'text-primary' : 'text-danger'; ?>" style="font-size: 12px;">
                                       <?= mikhmon_format_margin($cpMr['margin'], $currency, $langid); ?>
                                     </b>
                                   </div>
-                                </div>
-                              </td>
-                            </tr>
-                          <?php endforeach; ?>
-                        <?php endif; ?>
-                      </tbody>
-                    </table>
+                                </td>
+                              </tr>
+                            <?php endforeach; ?>
+                          <?php endif; ?>
+                        </tbody>
+                      </table>
+                    </div>
                   </td>
                 </tr>
                 <tr>
@@ -999,93 +1100,114 @@ $warungPortalUrl = $baseUrl . '/warung';
               Daftar profil di bawah ini diambil otomatis dari <b>User Profiles Hotspot MikroTik</b> untuk sesi <b><?= htmlspecialchars($session ?: 'Default'); ?></b>. Pengaturan harga ini tersimpan khusus untuk sesi router ini dan berlaku bagi mitra warung yang terhubung ke sesi ini.
             </p>
 
-            <div style="margin-bottom: 15px; padding: 10px 14px; background: rgba(0,0,0,0.03); border: 1px solid rgba(128,128,128,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-              <div style="display: flex; align-items: center; gap: 6px; flex-wrap: wrap;">
-                <span style="font-size: 12px; font-weight: bold;"><i class="fa fa-magic"></i> Set Rasio Cepat Semua:</span>
-                <button type="button" class="btn bg-secondary btn-xs" onclick="applyBatchRatio(10)">+10%</button>
-                <button type="button" class="btn bg-secondary btn-xs" onclick="applyBatchRatio(15)">+15%</button>
-                <button type="button" class="btn bg-secondary btn-xs" onclick="applyBatchRatio(20)">+20%</button>
-                <button type="button" class="btn bg-secondary btn-xs" onclick="applyBatchRatio(25)">+25%</button>
-                <button type="button" class="btn bg-secondary btn-xs" onclick="applyBatchRatio(30)">+30%</button>
-                <button type="button" class="btn bg-secondary btn-xs" onclick="applyBatchRatio(50)">+50%</button>
-              </div>
-              <div style="display: flex; align-items: center; gap: 6px;">
-                <label style="margin: 0; font-size: 12px; cursor: pointer; font-weight: normal;">
-                  <input type="checkbox" id="chkAutoRound" checked style="vertical-align: middle;"> Bulatkan Modal Otomatis
-                </label>
-              </div>
+            <div style="margin-bottom: 12px; font-size: 12px;" class="text-secondary">
+              <i class="fa fa-info-circle text-primary"></i> <?= $_tab2_ratio_hint ?? 'Ketik <b>Harga Modal Warung</b> dan <b>Rasio (%)</b> untuk menghitung otomatis <b>Harga Jual Konsumen</b> beserta <b>Profit / Margin</b>.'; ?>
             </div>
 
             <form method="POST">
               <input type="hidden" name="action" value="save_prices">
               <input type="hidden" name="target_session" value="<?= htmlspecialchars($session); ?>">
-              <table class="table table-bordered table-hover table-sm">
-                <thead>
-                  <tr>
-                    <th><?= $_user_profile ?? 'Nama Profil Hotspot'; ?></th>
-                    <th style="width: 180px;"><?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
-                    <th style="width: 180px;"><?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
-                    <th style="width: 220px;"><?= $_profit_margin ?? 'Rasio & Margin Keuntungan'; ?></th>
-                    <th style="width: 120px;"><?= $_status ?? 'Status'; ?></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <?php if (empty($hotspotProfiles)): ?>
+              <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm warung-responsive-table">
+                  <thead>
                     <tr>
-                      <td colspan="5" style="text-align: center; padding: 30px;" class="text-secondary">
-                        <i class="fa fa-info-circle" style="font-size: 28px; display: block; margin-bottom: 8px;"></i>
-                        Tidak ada profil hotspot yang terdeteksi di MikroTik router.<br>
-                        Pastikan sesi router MikroTik terhubung dan profil voucher telah dibuat di menu <b>Hotspot &rarr; User Profiles</b>.
-                      </td>
+                      <th><?= $_user_profile ?? 'Profil Voucher Hotspot'; ?></th>
+                      <th style="width: 170px;"><?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
+                      <th style="width: 120px;"><?= $_profit_ratio ?? 'Rasio (%)'; ?></th>
+                      <th style="width: 170px;"><?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
+                      <th style="width: 140px; text-align: right;"><?= $_profit_margin ?? 'Profit / Margin'; ?></th>
+                      <th style="width: 110px; text-align: center;"><?= $_status ?? 'Status'; ?></th>
                     </tr>
-                  <?php else: ?>
-                    <?php foreach ($hotspotProfiles as $hp): ?>
-                      <?php
-                        $pName = $hp['name'] ?? '';
-                        if ($pName === 'default' || empty($pName)) continue;
-                        $curSell = (float) ($priceMap[$pName]['sell_price'] ?? 0);
-                        $curCost = (float) ($priceMap[$pName]['cost_price'] ?? 0);
-                        $curStatus = ($priceMap[$pName]['status'] ?? 'enable') === 'disable' ? 'disable' : 'enable';
-                        $mr = mikhmon_calc_margin_ratio($curCost, $curSell);
-                        $pHash = md5($pName);
-                      ?>
+                  </thead>
+                  <tbody>
+                    <?php if (empty($hotspotProfiles)): ?>
                       <tr>
-                        <td class="align-middle">
-                          <b><?= htmlspecialchars($pName); ?></b>
-                          <?php if (!empty($hp['validity'])): ?>
-                            <br><small class="text-secondary"><i class="fa fa-clock-o"></i> <?= htmlspecialchars($hp['validity']); ?></small>
-                          <?php endif; ?>
+                        <td colspan="6" style="text-align: center; padding: 30px;" class="text-secondary">
+                          <i class="fa fa-info-circle" style="font-size: 28px; display: block; margin-bottom: 8px;"></i>
+                          Tidak ada profil hotspot yang terdeteksi di MikroTik router.<br>
+                          Pastikan sesi router MikroTik terhubung dan profil voucher telah dibuat di menu <b>Hotspot &rarr; User Profiles</b>.
                         </td>
-                        <td>
-                          <input type="number" name="prices[<?= htmlspecialchars($pName); ?>][cost_price]" value="<?= $curCost; ?>" class="form-control" placeholder="Contoh: 4000" min="0" step="any" required id="cost_<?= $pHash; ?>" oninput="calcFromCost('<?= $pHash; ?>')">
-                        </td>
-                        <td>
-                          <input type="number" name="prices[<?= htmlspecialchars($pName); ?>][sell_price]" value="<?= $curSell; ?>" class="form-control" placeholder="Contoh: 5000" min="0" step="any" required id="sell_<?= $pHash; ?>" oninput="calcFromSell('<?= $pHash; ?>')">
-                        </td>
-                        <td class="align-middle" style="white-space: nowrap;">
-                          <div style="display: flex; align-items: center; gap: 8px;">
-                            <div class="input-group input-group-sm" style="width: 88px; display: inline-flex;">
-                              <input type="number" step="any" min="-100" id="ratio_<?= $pHash; ?>" value="<?= number_format($mr['ratio'], 1, '.', ''); ?>" class="form-control" style="font-weight: bold; text-align: right; padding: 2px 4px; height: 28px;" oninput="calcFromRatio('<?= $pHash; ?>')" title="Ketik persentase rasio / markup (%)">
+                      </tr>
+                    <?php else: ?>
+                      <?php foreach ($hotspotProfiles as $hp): ?>
+                        <?php
+                          $pName = $hp['name'] ?? '';
+                          if ($pName === 'default' || empty($pName)) continue;
+                          $curSell = (float) ($priceMap[$pName]['sell_price'] ?? 0);
+                          $curCost = (float) ($priceMap[$pName]['cost_price'] ?? 0);
+                          $curStatus = ($priceMap[$pName]['status'] ?? 'enable') === 'disable' ? 'disable' : 'enable';
+                          $mr = mikhmon_calc_margin_ratio($curCost, $curSell);
+                          $pHash = md5($pName);
+
+                          // Profile metadata
+                          $profValidity = '';
+                          if (function_exists('mikhmon_resolve_profile_validity')) {
+                              $profValidity = mikhmon_resolve_profile_validity($hp, $pName, [], ($langid === 'fr'));
+                          }
+                          if (empty($profValidity)) {
+                              $profValidity = $hp['validity'] ?? ($priceMap[$pName]['validity'] ?? '');
+                          }
+                          if (empty($profValidity) && function_exists('mikhmon_infer_validity')) {
+                              $profValidity = mikhmon_infer_validity($pName, '', ($langid === 'fr'));
+                          }
+                          $rateLimit = $hp['rate-limit'] ?? '';
+                          $sharedUsers = $hp['shared-users'] ?? '';
+                        ?>
+                        <tr>
+                          <td class="align-middle profile-header-cell">
+                            <div style="font-size: 13px; font-weight: bold; margin-bottom: 3px;">
+                              <i class="fa fa-ticket text-primary"></i> <?= htmlspecialchars($pName); ?>
+                            </div>
+                            <div style="display: flex; gap: 4px; flex-wrap: wrap; align-items: center;">
+                              <?php if (!empty($profValidity)): ?>
+                                <span class="badge bg-secondary" style="font-size: 10px; padding: 2px 5px;" title="Masa Aktif">
+                                  <i class="fa fa-clock-o"></i> <?= htmlspecialchars($profValidity); ?>
+                                </span>
+                              <?php endif; ?>
+                              <?php if (!empty($rateLimit)): ?>
+                                <span class="badge bg-blue" style="font-size: 10px; padding: 2px 5px;" title="Batas Kecepatan">
+                                  <i class="fa fa-tachometer"></i> <?= htmlspecialchars($rateLimit); ?>
+                                </span>
+                              <?php endif; ?>
+                              <?php if (!empty($sharedUsers) && intval($sharedUsers) > 1): ?>
+                                <span class="badge bg-purple" style="font-size: 10px; padding: 2px 5px;" title="Shared Users">
+                                  <i class="fa fa-users"></i> <?= htmlspecialchars($sharedUsers); ?> User
+                                </span>
+                              <?php endif; ?>
+                            </div>
+                            <input type="hidden" name="prices[<?= htmlspecialchars($pName); ?>][validity]" value="<?= htmlspecialchars($profValidity); ?>">
+                          </td>
+                          <td class="align-middle" data-label="<?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
+                            <input type="number" name="prices[<?= htmlspecialchars($pName); ?>][cost_price]" value="<?= $curCost; ?>" class="form-control" placeholder="Contoh: 4000" min="0" step="any" required id="cost_<?= $pHash; ?>" oninput="calcFromCost('<?= $pHash; ?>')">
+                          </td>
+                          <td class="align-middle" data-label="<?= $_profit_ratio ?? 'Rasio Warung (%)'; ?>">
+                            <div class="input-group input-group-sm" style="max-width: 110px;">
+                              <input type="number" step="any" min="-100" id="ratio_<?= $pHash; ?>" value="<?= number_format($mr['ratio'], 1, '.', ''); ?>" class="form-control" style="font-weight: bold; text-align: right; height: 32px;" oninput="calcFromRatio('<?= $pHash; ?>')" placeholder="20" title="Ketik persentase markup (%)">
                               <span class="input-group-addon" style="padding: 2px 6px; font-size: 11px; font-weight: bold;">%</span>
                             </div>
-                            <div id="margin_<?= $pHash; ?>" style="white-space: nowrap;">
-                              <b class="<?= $mr['is_profit'] ? 'text-primary' : 'text-danger'; ?>" style="font-size: 12px;">
+                          </td>
+                          <td class="align-middle" data-label="<?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
+                            <input type="number" name="prices[<?= htmlspecialchars($pName); ?>][sell_price]" value="<?= $curSell; ?>" class="form-control" placeholder="Contoh: 5000" min="0" step="any" required id="sell_<?= $pHash; ?>" oninput="calcFromSell('<?= $pHash; ?>')">
+                          </td>
+                          <td class="align-middle text-right" data-label="<?= $_profit_margin ?? 'Profit / Margin'; ?>" style="white-space: nowrap;">
+                            <div id="margin_<?= $pHash; ?>">
+                              <b class="<?= $mr['is_profit'] ? 'text-primary' : 'text-danger'; ?>" style="font-size: 13px;">
                                 <?= mikhmon_format_margin($mr['margin'], $currency, $langid); ?>
                               </b>
                             </div>
-                          </div>
-                        </td>
-                        <td class="align-middle">
-                          <select name="prices[<?= htmlspecialchars($pName); ?>][status]" class="form-control">
-                            <option value="enable" <?= $curStatus === 'enable' ? 'selected' : ''; ?>>Enable</option>
-                            <option value="disable" <?= $curStatus === 'disable' ? 'selected' : ''; ?>>Disable</option>
-                          </select>
-                        </td>
-                      </tr>
-                    <?php endforeach; ?>
-                  <?php endif; ?>
-                </tbody>
-              </table>
+                          </td>
+                          <td class="align-middle text-center" data-label="<?= $_status ?? 'Status'; ?>">
+                            <select name="prices[<?= htmlspecialchars($pName); ?>][status]" class="form-control" style="font-size: 12px; height: 32px;">
+                              <option value="enable" <?= $curStatus === 'enable' ? 'selected' : ''; ?>>Enable</option>
+                              <option value="disable" <?= $curStatus === 'disable' ? 'selected' : ''; ?>>Disable</option>
+                            </select>
+                          </td>
+                        </tr>
+                      <?php endforeach; ?>
+                    <?php endif; ?>
+                  </tbody>
+                </table>
+              </div>
 
               <?php if (!empty($hotspotProfiles)): ?>
                 <div style="margin-top: 15px; text-align: right;">
@@ -1481,32 +1603,100 @@ function formatMoneyJs(num, curr, lang) {
   }
 }
 
-function smartRoundCost(rawCost, curr, lang) {
-  var chk = document.getElementById('chkAutoRound');
-  if (chk && !chk.checked) {
-    return Math.max(0, Math.round(rawCost * 100) / 100);
-  }
+function formatRoundedSell(rawSell, curr) {
   var currUpper = (curr || 'RP').toUpperCase().trim();
   if (currUpper === '$' || currUpper === 'USD' || currUpper === 'EUR' || currUpper === '€') {
-    return Math.max(0, Math.round(rawCost * 100) / 100);
-  } else if (currUpper === 'FCFA' || lang === 'fr') {
-    return Math.max(0, Math.round(rawCost / 50) * 50);
-  } else {
-    return Math.max(0, Math.round(rawCost / 100) * 100);
+    return Math.round(rawSell * 100) / 100;
   }
+  return Math.round(rawSell);
+}
+
+function updateMarginDisplay(marginEl, margin) {
+  if (!marginEl) return;
+  var sign = margin >= 0 ? '+' : '-';
+  var textClass = margin >= 0 ? 'text-primary' : 'text-danger';
+  var formatted = formatMoneyJs(Math.abs(margin), mikhmonCurrency, mikhmonLang);
+  marginEl.innerHTML = '<b class="' + textClass + '" style="font-size: 13px;">' + sign + formatted + '</b>';
+}
+
+function updateCustomMarginDisplay(marginEl, margin) {
+  if (!marginEl) return;
+  var sign = margin >= 0 ? '+' : '-';
+  var textClass = margin >= 0 ? 'text-primary' : 'text-danger';
+  var formatted = formatMoneyJs(Math.abs(margin), mikhmonCurrency, mikhmonLang);
+  marginEl.innerHTML = '<b class="' + textClass + '" style="font-size: 12px;">' + sign + formatted + '</b>';
 }
 
 // 1. Dual-Sync Tab 2 (Profil Sesi)
 function calcFromCost(hash) {
-  var sellEl = document.getElementById('sell_' + hash);
   var costEl = document.getElementById('cost_' + hash);
   var ratioEl = document.getElementById('ratio_' + hash);
+  var sellEl = document.getElementById('sell_' + hash);
   var marginEl = document.getElementById('margin_' + hash);
 
-  var sell = sellEl ? parseFloat(sellEl.value) : 0;
   var cost = costEl ? parseFloat(costEl.value) : 0;
-  if (isNaN(sell)) sell = 0;
+  var ratioVal = ratioEl ? ratioEl.value.trim() : '';
+  var sellVal = sellEl ? sellEl.value.trim() : '';
+
   if (isNaN(cost)) cost = 0;
+
+  // If user has set a ratio, auto-calculate sell and profit
+  if (ratioVal !== '' && !isNaN(parseFloat(ratioVal))) {
+    var ratio = parseFloat(ratioVal);
+    var rawSell = cost * (1 + (ratio / 100));
+    var sell = formatRoundedSell(rawSell, mikhmonCurrency);
+    if (sellEl && document.activeElement !== sellEl) {
+      sellEl.value = sell;
+    }
+    var margin = sell - cost;
+    updateMarginDisplay(marginEl, margin);
+  } else if (sellVal !== '' && !isNaN(parseFloat(sellVal))) {
+    var sell = parseFloat(sellVal);
+    var margin = sell - cost;
+    var ratio = cost > 0 ? ((margin / cost) * 100) : (sell > 0 ? 100 : 0);
+    if (ratioEl && document.activeElement !== ratioEl) {
+      ratioEl.value = ratio.toFixed(1);
+    }
+    updateMarginDisplay(marginEl, margin);
+  } else {
+    updateMarginDisplay(marginEl, 0);
+  }
+}
+
+function calcFromRatio(hash) {
+  var costEl = document.getElementById('cost_' + hash);
+  var ratioEl = document.getElementById('ratio_' + hash);
+  var sellEl = document.getElementById('sell_' + hash);
+  var marginEl = document.getElementById('margin_' + hash);
+
+  var cost = costEl ? parseFloat(costEl.value) : 0;
+  var ratio = ratioEl ? parseFloat(ratioEl.value) : 0;
+
+  if (isNaN(cost)) cost = 0;
+  if (isNaN(ratio)) ratio = 0;
+
+  var rawSell = cost * (1 + (ratio / 100));
+  var sell = formatRoundedSell(rawSell, mikhmonCurrency);
+
+  if (sellEl && document.activeElement !== sellEl) {
+    sellEl.value = sell;
+  }
+
+  var margin = sell - cost;
+  updateMarginDisplay(marginEl, margin);
+}
+
+function calcFromSell(hash) {
+  var costEl = document.getElementById('cost_' + hash);
+  var ratioEl = document.getElementById('ratio_' + hash);
+  var sellEl = document.getElementById('sell_' + hash);
+  var marginEl = document.getElementById('margin_' + hash);
+
+  var cost = costEl ? parseFloat(costEl.value) : 0;
+  var sell = sellEl ? parseFloat(sellEl.value) : 0;
+
+  if (isNaN(cost)) cost = 0;
+  if (isNaN(sell)) sell = 0;
 
   var margin = sell - cost;
   var ratio = 0;
@@ -1519,121 +1709,86 @@ function calcFromCost(hash) {
   if (ratioEl && document.activeElement !== ratioEl) {
     ratioEl.value = ratio.toFixed(1);
   }
-  if (marginEl) {
-    var sign = margin >= 0 ? '+' : '-';
-    var textClass = margin >= 0 ? 'text-primary' : 'text-danger';
-    var formatted = formatMoneyJs(Math.abs(margin), mikhmonCurrency, mikhmonLang);
-    marginEl.innerHTML = '<b class="' + textClass + '" style="font-size: 12px;">' + sign + formatted + '</b>';
-  }
-}
-
-function calcFromSell(hash) {
-  calcFromCost(hash);
-}
-
-function calcFromRatio(hash) {
-  var sellEl = document.getElementById('sell_' + hash);
-  var costEl = document.getElementById('cost_' + hash);
-  var ratioEl = document.getElementById('ratio_' + hash);
-  var marginEl = document.getElementById('margin_' + hash);
-
-  var sell = sellEl ? parseFloat(sellEl.value) : 0;
-  var ratio = ratioEl ? parseFloat(ratioEl.value) : 0;
-  if (isNaN(sell)) sell = 0;
-  if (isNaN(ratio)) ratio = 0;
-
-  var rawCost = sell > 0 ? (sell / (1 + (ratio / 100))) : 0;
-  var finalCost = smartRoundCost(rawCost, mikhmonCurrency, mikhmonLang);
-
-  if (costEl && document.activeElement !== costEl) {
-    costEl.value = finalCost;
-  }
-
-  var margin = sell - finalCost;
-  if (marginEl) {
-    var sign = margin >= 0 ? '+' : '-';
-    var textClass = margin >= 0 ? 'text-primary' : 'text-danger';
-    var formatted = formatMoneyJs(Math.abs(margin), mikhmonCurrency, mikhmonLang);
-    marginEl.innerHTML = '<b class="' + textClass + '" style="font-size: 12px;">' + sign + formatted + '</b>';
-  }
-}
-
-function applyBatchRatio(percent) {
-  var ratioInputs = document.querySelectorAll('input[id^="ratio_"]');
-  ratioInputs.forEach(function(inp) {
-    var hash = inp.id.replace('ratio_', '');
-    inp.value = percent;
-    calcFromRatio(hash);
-  });
+  updateMarginDisplay(marginEl, margin);
 }
 
 // 2. Dual-Sync Modal Form (Harga Khusus Warung)
 function calcCustomFromCost(hash, defCost, defSell) {
   var costIn = document.getElementById('cp_cost_' + hash);
-  var sellIn = document.getElementById('cp_sell_' + hash);
   var ratioIn = document.getElementById('cp_ratio_' + hash);
+  var sellIn = document.getElementById('cp_sell_' + hash);
   var marginEl = document.getElementById('cp_margin_' + hash);
 
   var costVal = costIn ? costIn.value.trim() : '';
+  var ratioVal = ratioIn ? ratioIn.value.trim() : '';
   var sellVal = sellIn ? sellIn.value.trim() : '';
+
   var cost = (costVal !== '' && !isNaN(parseFloat(costVal))) ? parseFloat(costVal) : parseFloat(defCost || 0);
-  var sell = (sellVal !== '' && !isNaN(parseFloat(sellVal))) ? parseFloat(sellVal) : parseFloat(defSell || 0);
 
-  var margin = sell - cost;
-  var ratio = 0;
-  if (cost > 0) {
-    ratio = (margin / cost) * 100;
-  } else if (sell > 0) {
-    ratio = 100;
+  if (ratioVal !== '' && !isNaN(parseFloat(ratioVal))) {
+    var ratio = parseFloat(ratioVal);
+    var rawSell = cost * (1 + (ratio / 100));
+    var sell = formatRoundedSell(rawSell, mikhmonCurrency);
+    if (sellIn && document.activeElement !== sellIn) {
+      sellIn.value = sell;
+    }
+    var margin = sell - cost;
+    updateCustomMarginDisplay(marginEl, margin);
+  } else if (sellVal !== '' && !isNaN(parseFloat(sellVal))) {
+    var sell = parseFloat(sellVal);
+    var margin = sell - cost;
+    var ratio = cost > 0 ? ((margin / cost) * 100) : (sell > 0 ? 100 : 0);
+    if (ratioIn && document.activeElement !== ratioIn) {
+      ratioIn.value = ratio.toFixed(1);
+    }
+    updateCustomMarginDisplay(marginEl, margin);
+  } else {
+    var sell = (sellVal !== '' && !isNaN(parseFloat(sellVal))) ? parseFloat(sellVal) : parseFloat(defSell || 0);
+    var margin = sell - cost;
+    updateCustomMarginDisplay(marginEl, margin);
   }
-
-  if (ratioIn && document.activeElement !== ratioIn) {
-    ratioIn.value = ratio.toFixed(1);
-  }
-  if (marginEl) {
-    var sign = margin >= 0 ? '+' : '-';
-    var textClass = margin >= 0 ? 'text-primary' : 'text-danger';
-    var formatted = formatMoneyJs(Math.abs(margin), mikhmonCurrency, mikhmonLang);
-    marginEl.innerHTML = '<b class="' + textClass + '" style="font-size: 11px;">' + sign + formatted + '</b>';
-  }
-}
-
-function calcCustomFromSell(hash, defCost, defSell) {
-  calcCustomFromCost(hash, defCost, defSell);
 }
 
 function calcCustomFromRatio(hash, defCost, defSell) {
   var costIn = document.getElementById('cp_cost_' + hash);
-  var sellIn = document.getElementById('cp_sell_' + hash);
   var ratioIn = document.getElementById('cp_ratio_' + hash);
+  var sellIn = document.getElementById('cp_sell_' + hash);
   var marginEl = document.getElementById('cp_margin_' + hash);
 
-  var sellVal = sellIn ? sellIn.value.trim() : '';
-  var sell = (sellVal !== '' && !isNaN(parseFloat(sellVal))) ? parseFloat(sellVal) : parseFloat(defSell || 0);
+  var costVal = costIn ? costIn.value.trim() : '';
+  var cost = (costVal !== '' && !isNaN(parseFloat(costVal))) ? parseFloat(costVal) : parseFloat(defCost || 0);
   var ratio = ratioIn ? parseFloat(ratioIn.value) : 0;
   if (isNaN(ratio)) ratio = 0;
 
-  var rawCost = sell > 0 ? (sell / (1 + (ratio / 100))) : 0;
-  var finalCost = smartRoundCost(rawCost, mikhmonCurrency, mikhmonLang);
+  var rawSell = cost * (1 + (ratio / 100));
+  var sell = formatRoundedSell(rawSell, mikhmonCurrency);
 
-  if (costIn && document.activeElement !== costIn) {
-    costIn.value = finalCost;
+  if (sellIn && document.activeElement !== sellIn) {
+    sellIn.value = sell;
   }
-  var margin = sell - finalCost;
-  if (marginEl) {
-    var sign = margin >= 0 ? '+' : '-';
-    var textClass = margin >= 0 ? 'text-primary' : 'text-danger';
-    var formatted = formatMoneyJs(Math.abs(margin), mikhmonCurrency, mikhmonLang);
-    marginEl.innerHTML = '<b class="' + textClass + '" style="font-size: 11px;">' + sign + formatted + '</b>';
-  }
+  var margin = sell - cost;
+  updateCustomMarginDisplay(marginEl, margin);
 }
 
-function applyCustomBatchRatio(percent) {
-  var ratioInputs = document.querySelectorAll('input[id^="cp_ratio_"]');
-  ratioInputs.forEach(function(inp) {
-    inp.value = percent;
-    inp.dispatchEvent(new Event('input'));
-  });
+function calcCustomFromSell(hash, defCost, defSell) {
+  var costIn = document.getElementById('cp_cost_' + hash);
+  var ratioIn = document.getElementById('cp_ratio_' + hash);
+  var sellIn = document.getElementById('cp_sell_' + hash);
+  var marginEl = document.getElementById('cp_margin_' + hash);
+
+  var costVal = costIn ? costIn.value.trim() : '';
+  var sellVal = sellIn ? sellIn.value.trim() : '';
+
+  var cost = (costVal !== '' && !isNaN(parseFloat(costVal))) ? parseFloat(costVal) : parseFloat(defCost || 0);
+  var sell = (sellVal !== '' && !isNaN(parseFloat(sellVal))) ? parseFloat(sellVal) : parseFloat(defSell || 0);
+
+  var margin = sell - cost;
+  var ratio = cost > 0 ? ((margin / cost) * 100) : (sell > 0 ? 100 : 0);
+
+  if (ratioIn && document.activeElement !== ratioIn) {
+    ratioIn.value = ratio.toFixed(1);
+  }
+  updateCustomMarginDisplay(marginEl, margin);
 }
 
 // Backwards-compatible aliases
