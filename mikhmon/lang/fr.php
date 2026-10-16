@@ -1901,3 +1901,7 @@ $_price_settings_header = "Paramètres des Prix de Revient des Profils (Par Sess
 $_choose_router_session_lbl = "Choisir la Session Routeur :";
 $_router_session_profiles_desc = "Les profils ci-dessous proviennent automatiquement des <b>User Profiles Hotspot MikroTik</b> pour la session <b>%s</b>.";
 $_no_profiles_in_mikrotik_desc = "Aucun profil hotspot détecté sur le routeur MikroTik.<br>Vérifiez la connexion du routeur et la présence des profils sous <b>Hotspot &rarr; User Profiles</b>.";
+
+\$_select_wa_community = "Sélectionnez la Communauté WhatsApp";
+\$_select_wa_community_desc = "Veuillez sélectionner la communauté WhatsApp selon votre région ou votre langue :";
+\$_join = "Rejoindre";

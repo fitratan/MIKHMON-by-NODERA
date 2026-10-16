@@ -1901,3 +1901,7 @@ $_price_settings_header = "Hotspot Profile Cost Price Settings (Per Router Sessi
 $_choose_router_session_lbl = "Select Router Session:";
 $_router_session_profiles_desc = "The profiles below are automatically fetched from <b>MikroTik Hotspot User Profiles</b> for session <b>%s</b>. These price settings are stored specifically for this router session.";
 $_no_profiles_in_mikrotik_desc = "No hotspot profiles detected in MikroTik router.<br>Please ensure the MikroTik router is connected and voucher profiles have been created under <b>Hotspot &rarr; User Profiles</b>.";
+
+\$_select_wa_community = "Select WhatsApp Community";
+\$_select_wa_community_desc = "Please select the WhatsApp community for your region or language:";
+\$_join = "Join";
