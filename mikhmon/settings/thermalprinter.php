@@ -576,6 +576,10 @@ function updatePreviewReceipt(style) {
 
 $(document).ready(function() {
   updatePreviewReceipt(<?= json_encode($templateStyle); ?>);
+  var savedName = localStorage.getItem('mikhmon_thermal_device_name');
+  if (savedName) {
+    updateUiStatus('connected', '', { deviceName: savedName, isConnected: true });
+  }
   if (window.MikhmonThermal) {
     window.MikhmonThermal.autoConnect().then(function(connected) {
       if (connected && window.MikhmonThermal.deviceName) {

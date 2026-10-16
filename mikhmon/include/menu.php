@@ -297,6 +297,13 @@ $themeSep = (strpos($cleanThemeUrl, '?') !== false) ? '&' : '?';
       <span class="badge mikhmon-licensed-badge" title="<?= function_exists('mikhmon_expiry_text') ? mikhmon_expiry_text() : 'Licensed' ?>"><i class="fa fa-shield"></i> Licensed</span>
     <?php endif; ?>
 
+    <!-- Global Thermal Printer Status Badge -->
+    <a href="./admin.php?id=thermalprinter" title="<?= $_thermal_printer_settings ?? 'Thermal Printer'; ?>" style="text-decoration:none; display:inline-flex; align-items:center; margin-right:4px;">
+      <span id="globalPrinterBadge" class="badge" style="font-size:11px; padding:3px 7px; border-radius:4px; background:#475569; color:#fff; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+        <i class="fa fa-print"></i> <span id="globalPrinterText">Printer</span>
+      </span>
+    </a>
+
     <!-- Mobile 3-Dots Kebab Trigger -->
     <a href="javascript:void(0)" id="topKebabBtn" class="top-kebab-btn" title="<?= $_menu ?? "Menu"; ?>"><i class="fa fa-ellipsis-v"></i></a>
   </div>
@@ -477,6 +484,13 @@ include('./info.php');
     <?php if (function_exists('mikhmon_is_desktop_mode') && mikhmon_is_desktop_mode() && function_exists('mikhmon_is_licensed') && mikhmon_is_licensed()): ?>
       <span class="badge mikhmon-licensed-badge" title="<?= function_exists('mikhmon_expiry_text') ? mikhmon_expiry_text() : 'Licensed' ?>"><i class="fa fa-shield"></i> Licensed</span>
     <?php endif; ?>
+
+    <!-- Global Thermal Printer Status Badge -->
+    <a href="./admin.php?id=thermalprinter" title="<?= $_thermal_printer_settings ?? 'Thermal Printer'; ?>" style="text-decoration:none; display:inline-flex; align-items:center; margin-right:4px;">
+      <span id="globalPrinterBadge" class="badge" style="font-size:11px; padding:3px 7px; border-radius:4px; background:#475569; color:#fff; display:inline-flex; align-items:center; gap:4px; cursor:pointer;">
+        <i class="fa fa-print"></i> <span id="globalPrinterText">Printer</span>
+      </span>
+    </a>
 
     <!-- Mobile 3-Dots Kebab Trigger -->
     <a href="javascript:void(0)" id="topKebabBtn" class="top-kebab-btn" title="<?= $_menu ?? "Menu"; ?>"><i class="fa fa-ellipsis-v"></i></a>

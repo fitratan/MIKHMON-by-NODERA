@@ -2431,6 +2431,17 @@ $(document).ready(function() {
   if ($('#selWarungThermalStyle').length) {
     $('#selWarungThermalStyle').val(s);
   }
+  var savedDev = localStorage.getItem('mikhmon_thermal_device_name');
+  if (savedDev) {
+    updateWarungBtUi('connected', '', { deviceName: savedDev, isConnected: true });
+  }
+  if (window.MikhmonThermal) {
+    window.MikhmonThermal.autoConnect().then(function(connected) {
+      if (connected && window.MikhmonThermal.deviceName) {
+        updateWarungBtUi('connected', '', window.MikhmonThermal);
+      }
+    });
+  }
 });
 
 function warungPrintReceiptSmart() {

@@ -78,6 +78,8 @@ if ($isWarung) {
 		<!-- pace -->
 		<link id="mikhmonPaceCss" href="css/pace.<?= !empty($theme) ? $theme : 'dark'; ?>.css" rel="stylesheet" />
 		<script src="js/pace.min.js"></script>
+		<!-- Mikhmon Universal Thermal Driver -->
+		<script src="js/mikhmon-thermal.js?v=<?= filemtime(__DIR__ . '/../js/mikhmon-thermal.js') ?: time(); ?>"></script>
 
 		<!-- PWA Service Worker & Install Prompt Listener -->
 		<script>

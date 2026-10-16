@@ -417,6 +417,10 @@ document.addEventListener('DOMContentLoaded', function() {
     selStyle.value = currentThermalStyle;
     changeThermalStyle(currentThermalStyle);
   }
+  var savedDev = localStorage.getItem('mikhmon_thermal_device_name');
+  if (savedDev) {
+    updatePrintBarBt('connected', '', { deviceName: savedDev, isConnected: true });
+  }
   if (window.MikhmonThermal) {
     window.MikhmonThermal.autoConnect().then(function(connected) {
       if (connected && window.MikhmonThermal.deviceName) {
