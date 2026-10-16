@@ -54,11 +54,23 @@ class ThermalPrinterManager(private val context: Context) {
     fun isBluetoothEnabled(): Boolean = bluetoothAdapter?.isEnabled == true
 
     fun getSelectedPrinterAddress(): String {
-        return prefs.getString(KEY_PRINTER_ADDR, "") ?: ""
+        val saved = prefs.getString(KEY_PRINTER_ADDR, "") ?: ""
+        if (saved.isNotBlank()) return saved
+        return try {
+            getPairedPrinters().firstOrNull()?.address ?: ""
+        } catch (_: Exception) {
+            ""
+        }
     }
 
     fun getSelectedPrinterName(): String {
-        return prefs.getString(KEY_PRINTER_NAME, "") ?: ""
+        val saved = prefs.getString(KEY_PRINTER_NAME, "") ?: ""
+        if (saved.isNotBlank()) return saved
+        return try {
+            getPairedPrinters().firstOrNull()?.name ?: ""
+        } catch (_: Exception) {
+            ""
+        }
     }
 
     fun setSelectedPrinter(address: String, name: String) {

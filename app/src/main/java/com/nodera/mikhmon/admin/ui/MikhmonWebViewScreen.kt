@@ -77,6 +77,11 @@ class MikhmonWebBridge(
     @JavascriptInterface
     fun setSelectedPrinter(address: String, name: String): Boolean {
         printerManager.setSelectedPrinter(address, name)
+        try {
+            val cfgMgr = com.nodera.mikhmon.admin.data.RouterConfigManager(context)
+            val current = cfgMgr.loadConfig()
+            cfgMgr.saveConfig(current.copy(printerAddress = address, printerName = name))
+        } catch (_: Exception) {}
         return true
     }
 

@@ -50,10 +50,14 @@ fun RouterSettingsScreen(
     var hotspotName by remember { mutableStateOf(currentConfig.hotspotName) }
     var dnsName by remember { mutableStateOf(currentConfig.dnsName) }
 
-    var selectedPrinterAddress by remember { mutableStateOf(currentConfig.printerAddress) }
-    var selectedPrinterName by remember { mutableStateOf(currentConfig.printerName) }
-
     val printerManager = remember { ThermalPrinterManager(context) }
+    var selectedPrinterAddress by remember {
+        mutableStateOf(currentConfig.printerAddress.ifEmpty { printerManager.getSelectedPrinterAddress() })
+    }
+    var selectedPrinterName by remember {
+        mutableStateOf(currentConfig.printerName.ifEmpty { printerManager.getSelectedPrinterName() })
+    }
+
     var pairedPrinters by remember { mutableStateOf<List<PairedPrinter>>(emptyList()) }
     var isTestingConnection by remember { mutableStateOf(false) }
     var isTestingPrinter by remember { mutableStateOf(false) }
@@ -62,6 +66,11 @@ fun RouterSettingsScreen(
         pairedPrinters = printerManager.getPairedPrinters()
         if (pairedPrinters.isEmpty()) {
             Toast.makeText(context, "Pasangkan printer thermal di Bluetooth HP terlebih dahulu", Toast.LENGTH_LONG).show()
+        } else if (selectedPrinterAddress.isEmpty()) {
+            val first = pairedPrinters.first()
+            selectedPrinterName = first.name
+            selectedPrinterAddress = first.address
+            printerManager.setSelectedPrinter(first.address, first.name)
         }
     }
 
@@ -339,7 +348,14 @@ fun RouterSettingsScreen(
                                     onClick = {
                                         selectedPrinterName = p.name
                                         selectedPrinterAddress = p.address
+                                        printerManager.setSelectedPrinter(p.address, p.name)
+                                        try {
+                                            val cfgMgr = RouterConfigManager(context)
+                                            val current = cfgMgr.loadConfig()
+                                            cfgMgr.saveConfig(current.copy(printerAddress = p.address, printerName = p.name))
+                                        } catch (_: Exception) {}
                                         printerDropdownExpanded = false
+                                        Toast.makeText(context, "Printer aktif: ${p.name}", Toast.LENGTH_SHORT).show()
                                     }
                                 )
                             }
@@ -389,6 +405,7 @@ fun RouterSettingsScreen(
                         printerAddress = selectedPrinterAddress,
                         printerName = selectedPrinterName
                     )
+                    printerManager.setSelectedPrinter(selectedPrinterAddress, selectedPrinterName)
                     RouterConfigManager(context).saveConfig(updated)
                     RouterConfigManager.updateClient(updated)
                     onConfigSaved(updated)

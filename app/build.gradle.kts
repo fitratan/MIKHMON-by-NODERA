@@ -11,8 +11,8 @@ android {
         applicationId = "com.nodera.mikhmon.admin"
         minSdk = 24
         targetSdk = 28
-        versionCode = 333
-        versionName = "3.3.3"
+        versionCode = 335
+        versionName = "3.3.5"
         ndk {
             abiFilters.addAll(listOf("arm64-v8a"))
         }
