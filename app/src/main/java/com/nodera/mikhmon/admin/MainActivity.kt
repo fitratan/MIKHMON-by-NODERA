@@ -4,7 +4,9 @@ import android.Manifest
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -289,6 +291,43 @@ fun NoderaLauncherScreen(
                             contentDescription = "Salin HWID",
                             tint = MikhmonBlue,
                             modifier = Modifier.size(13.dp)
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(14.dp))
+
+                // WhatsApp Community Link (English)
+                Surface(
+                    color = Color(0xFF1E293B).copy(alpha = 0.85f),
+                    shape = RoundedCornerShape(20.dp),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF25D366).copy(alpha = 0.5f)),
+                    modifier = Modifier.clickable {
+                        try {
+                            val communityUrl = "https://chat.whatsapp.com/LsSEp8DYrvn41nhznnOGd7?s=cl&p=a&mlu=4&ilr=4"
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(communityUrl))
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Cannot open WhatsApp: ${e.message}", Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 14.dp, vertical = 7.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            Icons.Default.Share,
+                            contentDescription = "WhatsApp Community",
+                            tint = Color(0xFF25D366),
+                            modifier = Modifier.size(13.dp)
+                        )
+                        Spacer(modifier = Modifier.width(7.dp))
+                        Text(
+                            text = "Join WhatsApp Community",
+                            color = Color.White,
+                            fontSize = 11.5.sp,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
