@@ -1,3 +1,4 @@
+<?php
 /**
  * WARUNG ENGINE HELPER — MIKHMON by NODERA
  * Manajemen Warung Reseller, Saldo Kulakan, Generate Voucher, & WhatsApp Gateway
