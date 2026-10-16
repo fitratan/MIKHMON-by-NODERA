@@ -127,6 +127,12 @@ foreach ($logoCandidates as $cand) {
       <form autocomplete="on" action="" method="post" id="mikhmonLoginForm" style="width: 100%; max-width: 320px; box-sizing: border-box; text-align: left;">
         
         <div style="margin-bottom: 12px; width: 100%;">
+          <a href="https://chat.whatsapp.com/LsSEp8DYrvn41nhznnOGd7?s=cl&p=a&mlu=4&ilr=4" target="_blank" rel="noopener noreferrer" class="btn-login bg-success pointer" style="width: 100%; height: 36px; font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 !important; box-sizing: border-box; text-decoration: none; color: #ffffff;">
+            <i class="fa fa-whatsapp" style="font-size: 16px;"></i> Join WhatsApp Community
+          </a>
+        </div>
+
+        <div style="margin-bottom: 12px; width: 100%;">
           <input style="width: 100%; height: 38px; font-size: 14px; box-sizing: border-box; padding: 8px 12px; margin: 0 !important;" class="form-control" type="text" name="user" id="_username" placeholder="Username" required="1" autofocus autocomplete="username">
         </div>
 
