@@ -302,12 +302,9 @@ $warungPortalUrl = $baseUrl . '/warung';
 ?>
 
 <style>
-/* Warung Form & Table Layout Optimization */
 .warung-form-table {
   width: 100%;
   margin-bottom: 0;
-  border-collapse: separate;
-  border-spacing: 0;
 }
 .warung-form-table td {
   padding: 8px 6px;
@@ -317,42 +314,7 @@ $warungPortalUrl = $baseUrl . '/warung';
   width: 32%;
   font-weight: 600;
 }
-.warung-responsive-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-.warung-responsive-table th,
-.warung-responsive-table td {
-  vertical-align: middle !important;
-}
-.warung-form-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-top: 18px;
-  padding-top: 14px;
-  border-top: 1px solid rgba(128, 128, 128, 0.2);
-  gap: 10px;
-  flex-wrap: wrap;
-}
-
-@media (min-width: 768px) {
-  .warung-responsive-table .col-profile { min-width: 130px; }
-  .warung-responsive-table .col-modal { width: 145px; }
-  .warung-responsive-table .col-ratio { width: 100px; }
-  .warung-responsive-table .col-sell { width: 145px; }
-  .warung-responsive-table .col-margin { width: 120px; text-align: right; }
-  .warung-responsive-table .col-status { width: 95px; text-align: center; }
-  .warung-responsive-table input.form-control {
-    font-size: 12px;
-    height: 30px;
-    padding: 3px 6px;
-    text-align: right;
-  }
-}
-
-@media (max-width: 767px) {
-  /* 1. Basic Form: Stack labels and inputs vertically on mobile */
+@media (max-width: 750px) {
   .warung-form-table,
   .warung-form-table tbody,
   .warung-form-table tr,
@@ -380,95 +342,6 @@ $warungPortalUrl = $baseUrl . '/warung';
   }
   .warung-form-table td:last-child {
     padding: 2px 0 4px 0 !important;
-  }
-  .warung-pin-group {
-    max-width: 100% !important;
-    width: 100% !important;
-  }
-
-  /* 2. Custom Prices: Transform table into mobile-friendly card per profile */
-  .warung-responsive-table thead {
-    display: none !important;
-  }
-  .warung-responsive-table, 
-  .warung-responsive-table tbody, 
-  .warung-responsive-table tr, 
-  .warung-responsive-table td {
-    display: block !important;
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-  .warung-responsive-table tr {
-    background: rgba(128, 128, 128, 0.08) !important;
-    border: 1px solid rgba(128, 128, 128, 0.22) !important;
-    border-radius: 8px !important;
-    margin-bottom: 12px !important;
-    padding: 8px 12px !important;
-  }
-  .warung-responsive-table tr:last-child {
-    margin-bottom: 0 !important;
-  }
-  .warung-responsive-table td {
-    display: flex !important;
-    justify-content: space-between !important;
-    align-items: center !important;
-    padding: 5px 0 !important;
-    border: none !important;
-    border-bottom: 1px dashed rgba(128, 128, 128, 0.15) !important;
-    font-size: 13px !important;
-    min-height: 38px;
-  }
-  .warung-responsive-table td:last-child {
-    border-bottom: none !important;
-    padding-top: 6px !important;
-  }
-  .warung-responsive-table td::before {
-    content: attr(data-label);
-    font-weight: 600;
-    font-size: 12px;
-    opacity: 0.85;
-    padding-right: 8px;
-    flex-shrink: 0;
-    max-width: 48%;
-  }
-  .warung-responsive-table td.profile-header-cell {
-    display: block !important;
-    padding-bottom: 6px !important;
-    margin-bottom: 4px !important;
-    border-bottom: 1px solid rgba(128, 128, 128, 0.25) !important;
-    min-height: auto;
-    font-size: 14px !important;
-  }
-  .warung-responsive-table td.profile-header-cell::before {
-    display: none !important;
-  }
-  .warung-responsive-table td input.form-control,
-  .warung-responsive-table td select.form-control {
-    max-width: 150px !important;
-    width: 150px !important;
-    text-align: right !important;
-    font-size: 13px !important;
-    height: 32px !important;
-    padding: 4px 6px !important;
-  }
-  .warung-responsive-table td .input-group {
-    max-width: 110px !important;
-    width: 110px !important;
-  }
-
-  /* 3. Action Buttons on Mobile: full-width stack */
-  .warung-form-actions {
-    flex-direction: column-reverse !important;
-    align-items: stretch !important;
-    gap: 8px !important;
-  }
-  .warung-form-actions a,
-  .warung-form-actions button {
-    width: 100% !important;
-    text-align: center !important;
-    box-sizing: border-box !important;
-    padding: 10px 14px !important;
-    font-size: 14px !important;
   }
 }
 </style>
@@ -724,15 +597,15 @@ $warungPortalUrl = $baseUrl . '/warung';
                   </div>
                 </div>
 
-                <div class="table-responsive">
-                  <table class="table table-bordered table-sm warung-responsive-table" style="margin-bottom: 0;">
+                <div class="overflow box-bordered mr-t-10">
+                  <table class="table table-bordered table-hover text-nowrap" style="margin-bottom: 0;">
                     <thead>
                       <tr>
-                        <th class="col-profile"><?= $_user_profile ?? 'Profil Voucher Hotspot'; ?></th>
-                        <th class="col-modal"><?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
-                        <th class="col-ratio"><?= $_profit_ratio ?? 'Rasio (%)'; ?></th>
-                        <th class="col-sell"><?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
-                        <th class="col-margin" style="text-align: right;"><?= $_profit_margin ?? 'Profit / Margin'; ?></th>
+                        <th class="align-middle"><?= $_user_profile ?? 'Profil Voucher Hotspot'; ?></th>
+                        <th class="align-middle" style="width: 140px;"><?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
+                        <th class="align-middle text-center" style="width: 100px;"><?= $_profit_ratio ?? 'Rasio (%)'; ?></th>
+                        <th class="align-middle" style="width: 140px;"><?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
+                        <th class="align-middle text-right" style="width: 120px;"><?= $_profit_margin ?? 'Profit / Margin'; ?></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -758,24 +631,24 @@ $warungPortalUrl = $baseUrl . '/warung';
                             $pHash = md5($pName);
                           ?>
                           <tr>
-                            <td class="align-middle profile-header-cell">
+                            <td class="align-middle">
                               <b><?= htmlspecialchars($pName); ?></b>
                             </td>
-                            <td class="align-middle" data-label="<?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
+                            <td class="align-middle">
                               <input type="number" min="0" step="any" name="custom_prices[<?= htmlspecialchars($pName); ?>][cost_price]" value="<?= htmlspecialchars($wCost); ?>" class="form-control" placeholder="Sesi: <?= $defCost > 0 ? htmlspecialchars(mikhmon_format_money($defCost, $currency, $langid)) : '-'; ?>" id="cp_cost_<?= $pHash; ?>" oninput="calcCustomFromCost('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)">
                             </td>
-                            <td class="align-middle" data-label="<?= $_profit_ratio ?? 'Rasio (%)'; ?>">
-                              <div class="input-group input-group-sm" style="max-width: 100px;">
-                                <input type="number" step="any" min="-100" id="cp_ratio_<?= $pHash; ?>" value="<?= number_format($cpMr['ratio'], 1, '.', ''); ?>" class="form-control" style="font-weight: bold; text-align: right; padding: 2px 4px; height: 30px; font-size: 11px;" oninput="calcCustomFromRatio('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)" placeholder="20" title="Ketik persentase rasio / markup (%)">
-                                <span class="input-group-addon" style="padding: 2px 4px; font-size: 10px; font-weight: bold;">%</span>
+                            <td class="align-middle text-center">
+                              <div style="display: inline-flex; align-items: center; justify-content: center; width: 85px;">
+                                <input type="number" step="any" min="-100" id="cp_ratio_<?= $pHash; ?>" value="<?= number_format($cpMr['ratio'], 1, '.', ''); ?>" class="form-control" style="font-weight: bold; text-align: right; padding: 2px 4px; height: 30px; font-size: 12px; width: 62px;" oninput="calcCustomFromRatio('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)" placeholder="20" title="Ketik persentase rasio / markup (%)">
+                                <span style="font-weight: bold; margin-left: 3px; font-size: 11px;">%</span>
                               </div>
                             </td>
-                            <td class="align-middle" data-label="<?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
+                            <td class="align-middle">
                               <input type="number" min="0" step="any" name="custom_prices[<?= htmlspecialchars($pName); ?>][sell_price]" value="<?= htmlspecialchars($wSell); ?>" class="form-control" placeholder="Sesi: <?= $defSell > 0 ? htmlspecialchars(mikhmon_format_money($defSell, $currency, $langid)) : '-'; ?>" id="cp_sell_<?= $pHash; ?>" oninput="calcCustomFromSell('<?= $pHash; ?>', <?= $defCost; ?>, <?= $defSell; ?>)">
                             </td>
-                            <td class="align-middle text-right" data-label="<?= $_profit_margin ?? 'Profit / Margin'; ?>" style="white-space: nowrap;">
+                            <td class="align-middle text-right" style="white-space: nowrap;">
                               <div id="cp_margin_<?= $pHash; ?>">
-                                <b class="<?= $cpMr['is_profit'] ? 'text-primary' : 'text-danger'; ?>" style="font-size: 12px;">
+                                <b class="<?= $cpMr['is_profit'] ? 'text-primary' : 'text-danger'; ?>" style="font-size: 13px;">
                                   <?= mikhmon_format_margin($cpMr['margin'], $currency, $langid); ?>
                                 </b>
                               </div>
@@ -788,12 +661,9 @@ $warungPortalUrl = $baseUrl . '/warung';
                 </div>
               </div>
 
-              <!-- ACTION FOOTER: KEMBALI & SIMPAN -->
-              <div class="warung-form-actions">
-                <a href="<?= $adminWarungBaseUrl ?>&tab=list<?= !empty($session) ? '&session='.$session : ''; ?>" class="btn bg-secondary" style="font-size: 13px;">
-                  <i class="fa fa-arrow-left"></i> <?= $_back ?? 'Kembali'; ?>
-                </a>
-                <button type="submit" class="btn bg-primary btn-save-warung" style="font-weight: bold; font-size: 14px; padding: 8px 24px;">
+              <!-- ACTION FOOTER: HANYA SIMPAN (TIDAK ADA TOMBOL KEMBALI) -->
+              <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(128,128,128,0.2);">
+                <button type="submit" class="btn bg-primary" style="font-weight: bold; font-size: 14px; padding: 7px 24px;">
                   <i class="fa fa-save"></i> <?= $isEdit ? ($_save_changes ?? 'Simpan Perubahan') : ($_save_warung ?? 'Simpan Warung Baru'); ?>
                 </button>
               </div>
@@ -1172,7 +1042,7 @@ $warungPortalUrl = $baseUrl . '/warung';
           </div>
           <div class="card-body">
             <p class="text-secondary" style="font-size: 13px; margin-top: 0; margin-bottom: 15px;">
-              Daftar profil di bawah ini diambil otomatis dari <b>User Profiles Hotspot MikroTik</b> untuk sesi <b><?= htmlspecialchars($session ?: 'Default'); ?></b>. Pengaturan harga ini tersimpan khusus untuk sesi router ini dan berlaku bagi mitra warung yang terhubung ke sesi ini.
+              <?= sprintf($_router_session_profiles_desc ?? 'Daftar profil di bawah ini diambil otomatis dari <b>User Profiles Hotspot MikroTik</b> untuk sesi <b>%s</b>. Pengaturan harga ini tersimpan khusus untuk sesi router ini dan berlaku bagi mitra warung yang terhubung ke sesi ini.', htmlspecialchars($session ?: 'Default')); ?>
             </p>
 
             <div style="margin-bottom: 12px; font-size: 12px;" class="text-secondary">
@@ -1182,16 +1052,16 @@ $warungPortalUrl = $baseUrl . '/warung';
             <form method="POST">
               <input type="hidden" name="action" value="save_prices">
               <input type="hidden" name="target_session" value="<?= htmlspecialchars($session); ?>">
-              <div class="table-responsive">
-                <table class="table table-bordered table-hover table-sm warung-responsive-table">
+              <div class="overflow box-bordered mr-t-10">
+                <table class="table table-bordered table-hover text-nowrap" style="margin-bottom: 0;">
                   <thead>
                     <tr>
-                      <th class="col-profile"><?= $_user_profile ?? 'Profil Voucher Hotspot'; ?></th>
-                      <th class="col-modal"><?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
-                      <th class="col-ratio"><?= $_profit_ratio ?? 'Rasio (%)'; ?></th>
-                      <th class="col-sell"><?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
-                      <th class="col-margin" style="text-align: right;"><?= $_profit_margin ?? 'Profit / Margin'; ?></th>
-                      <th class="col-status" style="text-align: center;"><?= $_status ?? 'Status'; ?></th>
+                      <th class="align-middle"><?= $_user_profile ?? 'Profil Voucher Hotspot'; ?></th>
+                      <th class="align-middle" style="width: 140px;"><?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
+                      <th class="align-middle text-center" style="width: 100px;"><?= $_profit_ratio ?? 'Rasio (%)'; ?></th>
+                      <th class="align-middle" style="width: 140px;"><?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)</th>
+                      <th class="align-middle text-right" style="width: 120px;"><?= $_profit_margin ?? 'Profit / Margin'; ?></th>
+                      <th class="align-middle text-center" style="width: 100px;"><?= $_status ?? 'Status'; ?></th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1199,8 +1069,7 @@ $warungPortalUrl = $baseUrl . '/warung';
                       <tr>
                         <td colspan="6" style="text-align: center; padding: 30px;" class="text-secondary">
                           <i class="fa fa-info-circle" style="font-size: 28px; display: block; margin-bottom: 8px;"></i>
-                          Tidak ada profil hotspot yang terdeteksi di MikroTik router.<br>
-                          Pastikan sesi router MikroTik terhubung dan profil voucher telah dibuat di menu <b>Hotspot &rarr; User Profiles</b>.
+                          <?= $_no_profiles_in_mikrotik_desc ?? 'Tidak ada profil hotspot yang terdeteksi di MikroTik router.<br>Pastikan sesi router MikroTik terhubung dan profil voucher telah dibuat di menu <b>Hotspot &rarr; User Profiles</b>.'; ?>
                         </td>
                       </tr>
                     <?php else: ?>
@@ -1229,31 +1098,31 @@ $warungPortalUrl = $baseUrl . '/warung';
                           $sharedUsers = $hp['shared-users'] ?? '';
                         ?>
                         <tr>
-                          <td class="align-middle profile-header-cell">
+                          <td class="align-middle">
                             <b><?= htmlspecialchars($pName); ?></b>
                             <input type="hidden" name="prices[<?= htmlspecialchars($pName); ?>][validity]" value="<?= htmlspecialchars($profValidity); ?>">
                           </td>
-                          <td class="align-middle" data-label="<?= $_warung_cost_price ?? 'Harga Modal Warung'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
+                          <td class="align-middle">
                             <input type="number" name="prices[<?= htmlspecialchars($pName); ?>][cost_price]" value="<?= $curCost; ?>" class="form-control" placeholder="Contoh: 4000" min="0" step="any" required id="cost_<?= $pHash; ?>" oninput="calcFromCost('<?= $pHash; ?>')">
                           </td>
-                          <td class="align-middle" data-label="<?= $_profit_ratio ?? 'Rasio Warung (%)'; ?>">
-                            <div class="input-group input-group-sm" style="max-width: 110px;">
-                              <input type="number" step="any" min="-100" id="ratio_<?= $pHash; ?>" value="<?= number_format($mr['ratio'], 1, '.', ''); ?>" class="form-control" style="font-weight: bold; text-align: right; height: 32px;" oninput="calcFromRatio('<?= $pHash; ?>')" placeholder="20" title="Ketik persentase markup (%)">
-                              <span class="input-group-addon" style="padding: 2px 6px; font-size: 11px; font-weight: bold;">%</span>
+                          <td class="align-middle text-center">
+                            <div style="display: inline-flex; align-items: center; justify-content: center; width: 85px;">
+                              <input type="number" step="any" min="-100" id="ratio_<?= $pHash; ?>" value="<?= number_format($mr['ratio'], 1, '.', ''); ?>" class="form-control" style="font-weight: bold; text-align: right; padding: 2px 4px; height: 30px; font-size: 12px; width: 62px;" oninput="calcFromRatio('<?= $pHash; ?>')" placeholder="20" title="Ketik persentase markup (%)">
+                              <span style="font-weight: bold; margin-left: 3px; font-size: 11px;">%</span>
                             </div>
                           </td>
-                          <td class="align-middle" data-label="<?= $_consumer_sell_price ?? 'Harga Jual Konsumen'; ?> (<?= htmlspecialchars($currency ?: 'Rp'); ?>)">
+                          <td class="align-middle">
                             <input type="number" name="prices[<?= htmlspecialchars($pName); ?>][sell_price]" value="<?= $curSell; ?>" class="form-control" placeholder="Contoh: 5000" min="0" step="any" required id="sell_<?= $pHash; ?>" oninput="calcFromSell('<?= $pHash; ?>')">
                           </td>
-                          <td class="align-middle text-right" data-label="<?= $_profit_margin ?? 'Profit / Margin'; ?>" style="white-space: nowrap;">
+                          <td class="align-middle text-right" style="white-space: nowrap;">
                             <div id="margin_<?= $pHash; ?>">
                               <b class="<?= $mr['is_profit'] ? 'text-primary' : 'text-danger'; ?>" style="font-size: 13px;">
                                 <?= mikhmon_format_margin($mr['margin'], $currency, $langid); ?>
                               </b>
                             </div>
                           </td>
-                          <td class="align-middle text-center" data-label="<?= $_status ?? 'Status'; ?>">
-                            <select name="prices[<?= htmlspecialchars($pName); ?>][status]" class="form-control" style="font-size: 12px; height: 32px;">
+                          <td class="align-middle text-center">
+                            <select name="prices[<?= htmlspecialchars($pName); ?>][status]" class="form-control" style="font-size: 12px; height: 30px;">
                               <option value="enable" <?= $curStatus === 'enable' ? 'selected' : ''; ?>>Enable</option>
                               <option value="disable" <?= $curStatus === 'disable' ? 'selected' : ''; ?>>Disable</option>
                             </select>
@@ -1266,8 +1135,8 @@ $warungPortalUrl = $baseUrl . '/warung';
               </div>
 
               <?php if (!empty($hotspotProfiles)): ?>
-                <div class="warung-form-actions" style="justify-content: flex-end;">
-                  <button type="submit" class="btn bg-primary btn-save-warung" style="font-weight: bold; font-size: 14px; padding: 8px 24px;">
+                <div style="margin-top: 15px; padding-top: 12px; border-top: 1px solid rgba(128,128,128,0.2);">
+                  <button type="submit" class="btn bg-primary" style="font-weight: bold; font-size: 14px; padding: 7px 24px;">
                     <i class="fa fa-save"></i> <?= $_save_price_settings ?? 'Simpan Pengaturan Harga'; ?>
                   </button>
                 </div>
@@ -1510,9 +1379,7 @@ $warungPortalUrl = $baseUrl . '/warung';
               <tr>
                 <td class="align-middle" style="width: 25%;"><b>URL Warung:</b></td>
                 <td>
-                  <div class="input-group">
-                    <input type="text" class="form-control" readonly value="<?= htmlspecialchars($warungPortalUrl); ?>" id="inputWarungUrl">
-                  </div>
+                  <input type="text" class="form-control" readonly value="<?= htmlspecialchars($warungPortalUrl); ?>" id="inputWarungUrl">
                 </td>
               </tr>
             </table>
