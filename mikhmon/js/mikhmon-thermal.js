@@ -172,20 +172,35 @@
       if (self.isNoderaAndroid()) {
         try {
           var savedName = (window.nodera.getSelectedPrinterName && window.nodera.getSelectedPrinterName()) || '';
+          var savedAddr = (window.nodera.getSelectedPrinterAddress && window.nodera.getSelectedPrinterAddress()) || '';
+          if (!savedName || !savedAddr) {
+            var localName = localStorage.getItem('mikhmon_thermal_device_name') || '';
+            var localAddr = localStorage.getItem('mikhmon_thermal_device_addr') || '';
+            if (localName && localAddr) {
+              savedName = localName;
+              savedAddr = localAddr;
+              if (window.nodera.setSelectedPrinter) {
+                window.nodera.setSelectedPrinter(savedAddr, savedName);
+              }
+            }
+          }
           if (!savedName && window.nodera.getPairedPrinters) {
             var printersJson = window.nodera.getPairedPrinters();
             var printers = JSON.parse(printersJson || '[]');
             if (printers.length > 0) {
-              if (window.nodera.setSelectedPrinter) {
-                window.nodera.setSelectedPrinter(printers[0].address, printers[0].name);
-              }
+              savedAddr = printers[0].address;
               savedName = printers[0].name;
+              if (window.nodera.setSelectedPrinter) {
+                window.nodera.setSelectedPrinter(savedAddr, savedName);
+              }
             }
           }
           if (savedName) {
             self.deviceName = savedName;
             self.isConnected = true;
-            self.notifyListeners('connected', 'Terhubung ke ' + self.deviceName);
+            localStorage.setItem('mikhmon_thermal_device_name', savedName);
+            if (savedAddr) localStorage.setItem('mikhmon_thermal_device_addr', savedAddr);
+            self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
             return true;
           }
         } catch (e) {
@@ -237,16 +252,25 @@
 
     /**
      * Memastikan printer terhubung sebelum mencetak tanpa modal berulang.
-     * 1. Jika sudah connected & characteristic siap -> langsung return true.
-     * 2. Jika GATT idle/disconnect tapi device masih ada -> reconnect GATT langsung tanpa popup!
-     * 3. Jika baru dibuka -> autoConnect() silent via getDevices() tanpa popup!
-     * 4. Hanya jika printer baru pertama kali digunakan -> tampilkan modal pairing Chrome.
+     * 1. Jika sudah connected & characteristic/device siap -> langsung return true.
+     * 2. Jika di Android atau GATT idle -> autoConnect() silent tanpa popup!
+     * 3. Hanya jika printer baru pertama kali digunakan -> tampilkan modal pairing.
      */
     ensureConnected: async function() {
       var self = this;
       if (self.isNoderaAndroid()) {
-        if (self.isConnected) return true;
-        return await self.autoConnect();
+        if (self.isConnected && self.deviceName) return true;
+        var autoOk = await self.autoConnect();
+        if (autoOk && self.isConnected) return true;
+        var savedName = (window.nodera.getSelectedPrinterName && window.nodera.getSelectedPrinterName()) || localStorage.getItem('mikhmon_thermal_device_name') || '';
+        if (savedName) {
+          self.deviceName = savedName;
+          self.isConnected = true;
+          self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
+          return true;
+        }
+        var res = await self.connect('printers');
+        return Boolean(res && res.success);
       }
 
       if (self.isConnected && self.characteristic && self.device && self.device.gatt && self.device.gatt.connected) {
@@ -256,7 +280,7 @@
       // Reconnect GATT langsung jika objek device tersimpan di memori
       if (self.device && self.device.gatt) {
         try {
-          self.notifyListeners('connecting', 'Menghubungkan kembali ke ' + self.deviceName + '...');
+          self.notifyListeners('connecting', (window.LANG_CONNECTING || 'Connecting...') + ' (' + self.deviceName + ')');
           var server = await self.device.gatt.connect();
           if (server) {
             await self._setupDevice(self.device);
@@ -283,7 +307,7 @@
     },
 
     /**
-     * Connect to Bluetooth device (shows browser chooser modal)
+     * Connect to Bluetooth device (shows browser chooser modal or Android picker)
      * @param {string} mode - 'printers' (default, filtered) or 'all' (acceptAllDevices)
      */
     connect: async function(mode) {
@@ -294,9 +318,10 @@
           var printersJson = (window.nodera.getPairedPrinters && window.nodera.getPairedPrinters()) || '[]';
           var printers = JSON.parse(printersJson || '[]');
           if (printers.length === 0) {
-            alert('Tidak ada printer Bluetooth yang terpasang (paired) di HP. Silakan pairing printer Anda di Pengaturan Bluetooth HP terlebih dahulu.');
-            self.notifyListeners('idle', 'Belum ada printer Bluetooth');
-            throw new Error('Belum ada printer Bluetooth dipasangkan');
+            var msgNoBt = window.LANG_NO_PRINTER_PAIRED || 'Tidak ada printer Bluetooth yang terpasang (paired) di HP. Silakan pairing printer Anda di Pengaturan Bluetooth HP terlebih dahulu.';
+            alert(msgNoBt);
+            self.notifyListeners('idle', msgNoBt);
+            throw new Error(msgNoBt);
           }
           if (printers.length === 1) {
             if (window.nodera.setSelectedPrinter) {
@@ -304,16 +329,18 @@
             }
             self.deviceName = printers[0].name;
             self.isConnected = true;
-            self.notifyListeners('connected', 'Terhubung ke ' + self.deviceName);
+            localStorage.setItem('mikhmon_thermal_device_name', self.deviceName);
+            localStorage.setItem('mikhmon_thermal_device_addr', printers[0].address);
+            self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
             return { success: true, name: self.deviceName };
           }
-          var optionsText = 'Pilih nomor printer Bluetooth yang ingin digunakan:\n';
+          var optionsText = (window.LANG_CHOOSE_PRINTER_PROMPT || 'Pilih nomor printer Bluetooth yang ingin digunakan:') + '\n';
           for (var i = 0; i < printers.length; i++) {
             optionsText += (i + 1) + '. ' + printers[i].name + ' (' + printers[i].address + ')\n';
           }
           var choice = prompt(optionsText, '1');
           if (!choice) {
-            self.notifyListeners('idle', 'Pemilihan dibatalkan');
+            self.notifyListeners('idle', 'Cancelled');
             return { cancelled: true };
           }
           var idx = parseInt(choice, 10) - 1;
@@ -323,12 +350,14 @@
             }
             self.deviceName = printers[idx].name;
             self.isConnected = true;
-            self.notifyListeners('connected', 'Terhubung ke ' + self.deviceName);
+            localStorage.setItem('mikhmon_thermal_device_name', self.deviceName);
+            localStorage.setItem('mikhmon_thermal_device_addr', printers[idx].address);
+            self.notifyListeners('connected', (window.LANG_CONNECTED || 'Connected') + ': ' + self.deviceName);
             return { success: true, name: self.deviceName };
           }
           return { cancelled: true };
         } catch (err) {
-          self.notifyListeners('error', err.message || 'Gagal memilih printer');
+          self.notifyListeners('error', err.message || 'Error choosing printer');
           throw err;
         }
       }
@@ -911,6 +940,7 @@
       }
 
       if (self.isNoderaAndroid()) {
+        await self.ensureConnected();
         var bytes = self.buildVoucherBytes(data, logoBytes);
         return await self.sendRawBytes(bytes);
       }
@@ -930,7 +960,7 @@
         return self.printVoucherRawBT(data, logoBytes);
       }
 
-      throw new Error('Printer thermal belum terhubung. Silakan sambungkan terlebih dahulu.');
+      throw new Error(window.LANG_NOT_CONNECTED || 'Printer thermal belum terhubung. Silakan sambungkan terlebih dahulu.');
     },
 
     /**
@@ -942,22 +972,19 @@
     }
   };
 
-  // Auto-connect saat DOM selesai dimuat jika perangkat pernah disandingkan
+  // Auto-connect saat DOM selesai dimuat
   if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(function() {
-          if (MikhmonThermal.isSupported() && localStorage.getItem('mikhmon_thermal_device_id')) {
-            MikhmonThermal.autoConnect();
-          }
-        }, 300);
-      });
-    } else {
+    function initThermalAutoConnect() {
       setTimeout(function() {
-        if (MikhmonThermal.isSupported() && localStorage.getItem('mikhmon_thermal_device_id')) {
+        if (MikhmonThermal.isSupported()) {
           MikhmonThermal.autoConnect();
         }
-      }, 300);
+      }, 150);
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initThermalAutoConnect);
+    } else {
+      initThermalAutoConnect();
     }
   }
 

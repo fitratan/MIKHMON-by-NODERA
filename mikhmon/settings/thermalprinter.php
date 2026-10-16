@@ -328,6 +328,15 @@ var LANG_READY = <?= json_encode($_status_ready ?? 'Siap Mencetak'); ?>;
 var LANG_NOT_CONNECTED = <?= json_encode($_printer_not_connected ?? 'Belum Terhubung'); ?>;
 var LANG_CHANGE_PRINTER = <?= json_encode($_change_printer ?? 'Ganti Printer'); ?>;
 var LANG_SCAN_PRINTER = <?= json_encode($_scan_bluetooth_printer ?? 'Pindai Printer Bluetooth'); ?>;
+var LANG_SAVED_READY = <?= json_encode($_saved_printer_ready ?? 'Tersimpan & Siap'); ?>;
+
+window.LANG_CONNECTED = LANG_CONNECTED;
+window.LANG_CONNECTING = LANG_CONNECTING;
+window.LANG_READY = LANG_READY;
+window.LANG_NOT_CONNECTED = LANG_NOT_CONNECTED;
+window.LANG_CHANGE_PRINTER = LANG_CHANGE_PRINTER;
+window.LANG_SCAN_PRINTER = LANG_SCAN_PRINTER;
+window.LANG_CHOOSE_PRINTER_PROMPT = <?= json_encode($_select_default_printer ?? 'Pilih nomor printer Bluetooth:'); ?>;
 
 function openScanModal() {
   var modal = document.getElementById('dialogScanBtModal');
@@ -567,5 +576,12 @@ function updatePreviewReceipt(style) {
 
 $(document).ready(function() {
   updatePreviewReceipt(<?= json_encode($templateStyle); ?>);
+  if (window.MikhmonThermal) {
+    window.MikhmonThermal.autoConnect().then(function(connected) {
+      if (connected && window.MikhmonThermal.deviceName) {
+        updateUiStatus('connected', '', window.MikhmonThermal);
+      }
+    });
+  }
 });
 </script>

@@ -1854,5 +1854,11 @@ $_step_enter_code = "3. Enter voucher code above";
 $_print_selected_voucher = "Print Selected Voucher";
 $_select_voucher_to_print = "Select Voucher";
 $_thermal_style_label = "Receipt Style";
-
-
+$_thermal_preview_hint = "Preview automatically adapts to the template style chosen above.";
+$_saved_printer_ready = "Saved & Ready";
+$_default_printer = "Default Printer";
+$_btn_reconnect = "Reconnect";
+$_select_default_printer = "Select Default Printer";
+$_preview = "Preview";
+$_back = "Back";
+$_settings_saved = "Settings saved successfully!";

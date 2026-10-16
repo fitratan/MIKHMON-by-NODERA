@@ -127,6 +127,28 @@ html, body {
   #mobileLangDropdown {
     display: none !important;
   }
+
+  .navbar-right .mikhmon-licensed-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: #10b981 !important;
+    color: #ffffff !important;
+    font-size: 11px !important;
+    font-weight: 700 !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    vertical-align: middle !important;
+    margin-top: 13px !important;
+    margin-right: 8px !important;
+    float: right !important;
+    line-height: 1.4 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.15) !important;
+  }
+  .navbar-right .mikhmon-licensed-badge i {
+    font-size: 11px !important;
+    color: #ffffff !important;
+  }
 }
 
 /* Equal height cards for Mikhmon Dashboard #r_1 */
@@ -638,6 +660,29 @@ html, body {
   .navbar-right a, .navbar-right select, .navbar-right span {
     float: none !important;
     margin: 0 !important;
+  }
+
+  /* Licensed Badge (Positioned directly to the left of the 3-dots button) */
+  .navbar-right .mikhmon-licensed-badge {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 4px !important;
+    background: #10b981 !important;
+    color: #ffffff !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    padding: 3px 7px !important;
+    border-radius: 6px !important;
+    vertical-align: middle !important;
+    line-height: 1 !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2) !important;
+    white-space: nowrap !important;
+    margin-right: 4px !important;
+    flex-shrink: 0 !important;
+  }
+  .navbar-right .mikhmon-licensed-badge i {
+    font-size: 10px !important;
+    color: #ffffff !important;
   }
 
   /* 3-Dots Kebab Button */

@@ -1861,5 +1861,11 @@ $_step_enter_code = "3. Masukkan kode voucher di atas";
 $_print_selected_voucher = "Cetak Voucher Terpilih";
 $_select_voucher_to_print = "Pilih Voucher";
 $_thermal_style_label = "Gaya Struk";
-
-
+$_thermal_preview_hint = "Pratinjau otomatis menyesuaikan pilihan model template di atas.";
+$_saved_printer_ready = "Tersimpan & Siap";
+$_default_printer = "Printer Default";
+$_btn_reconnect = "Sambungkan Ulang";
+$_select_default_printer = "Pilih Printer Default";
+$_preview = "Pratinjau";
+$_back = "Kembali";
+$_settings_saved = "Pengaturan berhasil disimpan!";

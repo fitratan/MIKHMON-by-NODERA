@@ -368,6 +368,17 @@ var LANG_NO_VOUCHER = <?= json_encode($_no_voucher_to_print ?? 'Tidak ada vouche
 var LANG_BATCH_CONFIRM = <?= json_encode($_confirm_batch_thermal_print ?? 'Anda akan mencetak banyak voucher sekaligus ke printer thermal. Kertas akan keluar panjang. Lanjutkan cetak semua?'); ?>;
 var LANG_BT_CONN_ERR = <?= json_encode($_printer_not_connected ?? 'Koneksi printer Bluetooth'); ?>;
 
+window.LANG_CONNECTED = LANG_CONNECTED;
+window.LANG_CONNECTING = LANG_CONNECTING;
+window.LANG_NOT_CONNECTED = LANG_NOT_CONNECTED;
+window.LANG_PRINT_VIA_BT = LANG_PRINT_VIA_BT;
+window.LANG_PRINT_TO = LANG_PRINT_TO;
+window.LANG_PRINTING = LANG_PRINTING;
+window.LANG_PRINTED = LANG_PRINTED;
+window.LANG_PRINT_SUCCESS = LANG_PRINT_SUCCESS;
+window.LANG_PRINT_FAIL = LANG_PRINT_FAIL;
+window.LANG_PRINT_VOUCHER_FAIL = LANG_PRINT_VOUCHER_FAIL;
+
 function updatePrintBarBt(status, msg, thermalInstance) {
   var btnText = document.getElementById('btnBtPrintAllText');
   var statusEl = document.getElementById('btPrintStatus');
@@ -405,6 +416,13 @@ document.addEventListener('DOMContentLoaded', function() {
   if (selStyle) {
     selStyle.value = currentThermalStyle;
     changeThermalStyle(currentThermalStyle);
+  }
+  if (window.MikhmonThermal) {
+    window.MikhmonThermal.autoConnect().then(function(connected) {
+      if (connected && window.MikhmonThermal.deviceName) {
+        updatePrintBarBt('connected', '', window.MikhmonThermal);
+      }
+    });
   }
 });
 

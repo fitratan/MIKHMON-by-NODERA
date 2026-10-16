@@ -1854,5 +1854,11 @@ $_step_enter_code = "3. Entrez le code coupon ci-dessus";
 $_print_selected_voucher = "Imprimer le Coupon Sélectionné";
 $_select_voucher_to_print = "Sélectionner un coupon";
 $_thermal_style_label = "Style du Reçu";
-
-
+$_thermal_preview_hint = "L'aperçu s'adapte automatiquement au style de modèle choisi ci-dessus.";
+$_saved_printer_ready = "Enregistré & Prêt";
+$_default_printer = "Imprimante par Défaut";
+$_btn_reconnect = "Reconnecter";
+$_select_default_printer = "Sélectionner Imprimante par Défaut";
+$_preview = "Aperçu";
+$_back = "Retour";
+$_settings_saved = "Paramètres enregistrés avec succès !";
