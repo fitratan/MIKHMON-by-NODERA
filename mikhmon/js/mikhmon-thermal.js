@@ -379,16 +379,7 @@
         }
       }
 
-      // JIKA PRINTER SUDAH TERDAFTAR (savedId / savedName ada), JANGAN PERNAH MUNCULKAN MODAL requestDevice() OTOMATIS!
-      // Karena modal pairing Chrome yang muncul terus menerus saat printer mati sangat mengganggu.
-      if (savedId || savedName) {
-        var pName = savedName || 'RPP02N';
-        self.isConnected = false;
-        self.notifyListeners('disconnected', 'Printer ' + pName + ' sedang tidak aktif');
-        throw new Error('Printer ' + pName + ' sedang mati atau di luar jangkauan Bluetooth. Silakan nyalakan printer Anda.');
-      }
-
-      // Fallback: HANYA jika perangkat BELUM PERNAH dipasangkan sama sekali di browser ini
+      // Fallback: Jika silent reconnect tidak tersedia di browser (seperti Chrome Android), sambungkan via picker
       var res = await self.connect('printers');
       return Boolean(res && res.success);
     },
