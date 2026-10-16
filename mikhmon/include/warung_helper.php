@@ -30,6 +30,74 @@ if (!defined('WARUNG_DATA_FILE')) {
 }
 
 /**
+ * Format money string dynamically based on currency setting and language locale.
+ */
+if (!function_exists('mikhmon_format_money')) {
+    function mikhmon_format_money($amount, $curr = 'Rp', $lang = 'id') {
+        $num = (float) $amount;
+        $currUpper = strtoupper(trim((string)$curr));
+        $decimals = (floor($num) != $num) ? 2 : 0;
+        if ($currUpper === 'FCFA' || $lang === 'fr') {
+            return number_format($num, $decimals, ',', ' ') . ' FCFA';
+        } elseif ($currUpper === '$' || $currUpper === 'USD') {
+            return '$ ' . number_format($num, 2, '.', ',');
+        } elseif ($currUpper === 'EUR' || $currUpper === '€') {
+            return '€ ' . number_format($num, 2, ',', '.');
+        } else {
+            $currStr = !empty($curr) ? trim((string)$curr) : 'Rp';
+            return $currStr . ' ' . number_format($num, $decimals, ',', '.');
+        }
+    }
+}
+
+/**
+ * Format profit margin with sign (+ / -) dynamically based on currency.
+ */
+if (!function_exists('mikhmon_format_margin')) {
+    function mikhmon_format_margin($margin, $curr = 'Rp', $lang = 'id') {
+        $num = (float) $margin;
+        $sign = ($num >= 0) ? '+' : '';
+        $currUpper = strtoupper(trim((string)$curr));
+        $decimals = (floor($num) != $num) ? 2 : 0;
+        if ($currUpper === 'FCFA' || $lang === 'fr') {
+            return $sign . number_format($num, $decimals, ',', ' ') . ' FCFA';
+        } elseif ($currUpper === '$' || $currUpper === 'USD') {
+            return $sign . '$ ' . number_format($num, 2, '.', ',');
+        } elseif ($currUpper === 'EUR' || $currUpper === '€') {
+            return $sign . '€ ' . number_format($num, 2, ',', '.');
+        } else {
+            $currStr = !empty($curr) ? trim((string)$curr) : 'Rp';
+            return $sign . $currStr . ' ' . number_format($num, $decimals, ',', '.');
+        }
+    }
+}
+
+/**
+ * Calculate margin nominal and markup ratio percentage safely.
+ */
+if (!function_exists('mikhmon_calc_margin_ratio')) {
+    function mikhmon_calc_margin_ratio($cost, $sell) {
+        $cost = (float) $cost;
+        $sell = (float) $sell;
+        $margin = $sell - $cost;
+        $ratio = 0.0;
+        if ($cost > 0) {
+            $ratio = round(($margin / $cost) * 100, 1);
+        } elseif ($sell > 0) {
+            $ratio = 100.0;
+        }
+        return [
+            'cost'      => $cost,
+            'sell'      => $sell,
+            'margin'    => $margin,
+            'ratio'     => $ratio,
+            'sign'      => ($margin >= 0 ? '+' : ''),
+            'is_profit' => ($margin >= 0),
+        ];
+    }
+}
+
+/**
  * Normalize Indonesian phone number for display (e.g. 085812345678).
  */
 function warung_normalize_phone_display($phone) {

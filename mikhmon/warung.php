@@ -989,6 +989,7 @@ include_once __DIR__ . '/include/headhtml.php';
                           $margin = $sellPrice - $costPrice;
                           $stock = intval($pData['stock'] ?? 0);
                           $isOutOfStock = ($stockMode === 'pool' && $stock <= 0);
+                          $cMr = mikhmon_calc_margin_ratio($costPrice, $sellPrice);
                         ?>
                         <tr style="<?= $isOutOfStock ? 'opacity: 0.6;' : 'cursor: pointer;'; ?>" <?= !$isOutOfStock ? 'onclick="openBuyDialog(\''.htmlspecialchars(addslashes($pName)).'\', '.$sellPrice.', '.$costPrice.')"' : ''; ?>>
                           <td class="align-middle" style="padding-left: 12px;">
@@ -1011,7 +1012,10 @@ include_once __DIR__ . '/include/headhtml.php';
                             <b class="text-green"><?= mikhmon_format_money($sellPrice, $currency, $langid); ?></b>
                           </td>
                           <td class="align-middle">
-                            <b class="text-primary"><?= mikhmon_format_margin($margin, $currency, $langid); ?></b>
+                            <b class="<?= $cMr['is_profit'] ? 'text-primary' : 'text-danger'; ?>"><?= mikhmon_format_margin($margin, $currency, $langid); ?></b>
+                            <span class="badge <?= $cMr['is_profit'] ? 'bg-success' : 'bg-danger'; ?>" style="font-size: 10px; padding: 2px 4px; margin-left: 3px;">
+                              <?= ($cMr['ratio'] >= 0 ? '+' : '') . number_format($cMr['ratio'], 1); ?>%
+                            </span>
                           </td>
                           <td class="text-center align-middle" style="white-space: nowrap;">
                             <?php if ($isOutOfStock): ?>
@@ -1041,6 +1045,7 @@ include_once __DIR__ . '/include/headhtml.php';
                         $margin = $sellPrice - $costPrice;
                         $stock = intval($pData['stock'] ?? 0);
                         $isOutOfStock = ($stockMode === 'pool' && $stock <= 0);
+                        $cMr = mikhmon_calc_margin_ratio($costPrice, $sellPrice);
                       ?>
                       <div class="warung-pkg-card" style="<?= $isOutOfStock ? 'opacity: 0.6;' : ''; ?>" <?= !$isOutOfStock ? 'onclick="openBuyDialog(\''.htmlspecialchars(addslashes($pName)).'\', '.$sellPrice.', '.$costPrice.')"' : ''; ?>>
                         <div class="warung-pkg-info">
@@ -1057,7 +1062,7 @@ include_once __DIR__ . '/include/headhtml.php';
                           <div class="warung-pkg-price-row">
                             <span class="warung-pkg-sell-price"><?= mikhmon_format_money($sellPrice, $currency, $langid); ?></span>
                             <span class="warung-pkg-cost-tag"><?= $_modal ?? 'Modal'; ?>: <?= mikhmon_format_money($costPrice, $currency, $langid); ?></span>
-                            <span class="warung-pkg-margin-badge"><?= mikhmon_format_margin($margin, $currency, $langid); ?></span>
+                            <span class="warung-pkg-margin-badge"><?= mikhmon_format_margin($margin, $currency, $langid); ?> (<?= ($cMr['ratio'] >= 0 ? '+' : '') . number_format($cMr['ratio'], 1); ?>%)</span>
                           </div>
                         </div>
                         <div class="warung-pkg-action">
