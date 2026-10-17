@@ -12,7 +12,25 @@ if (!defined('IS_BUY_PAGE')) {
 $isBuyPage = true;
 
 if (session_status() === PHP_SESSION_NONE) {
-    @ini_set('session.cookie_path', '/');
+    $dir = __DIR__;
+    $isRoot = (file_exists($dir . '/buy.php') || file_exists($dir . '/admin.php') || file_exists($dir . '/include/config.php'));
+    $mikhRoot = $isRoot ? $dir : (file_exists(dirname($dir) . '/buy.php') || file_exists(dirname($dir) . '/admin.php') ? dirname($dir) : $dir);
+    $instanceHash = substr(md5($mikhRoot), 0, 10);
+    @session_name('MIKH_' . $instanceHash);
+    $cookiePath = $isRoot 
+        ? rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '')), '/') 
+        : rtrim(str_replace('\\', '/', dirname(dirname($_SERVER['SCRIPT_NAME'] ?? ''))), '/');
+    @ini_set('session.cookie_path', !empty($cookiePath) ? $cookiePath : '/');
+    $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || 
+                (isset($_SERVER['SERVER_PORT']) && $_SERVER['SERVER_PORT'] == 443) || 
+                (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+    if (PHP_VERSION_ID >= 70300) {
+        @ini_set('session.cookie_samesite', 'Lax');
+    }
+    @ini_set('session.cookie_httponly', '1');
+    if ($isSecure) {
+        @ini_set('session.cookie_secure', '1');
+    }
     @session_start();
 }
 error_reporting(0);
@@ -183,6 +201,7 @@ if (!empty($location_data['locations']) && is_array($location_data['locations'])
     $existingSess = array_column($availableLocations, 'session');
     foreach ($location_data['locations'] as $sKey => $locName) {
         if ($sKey === 'mikhmon' || empty($sKey) || in_array($sKey, $existingSess)) continue;
+        if (!empty($data) && count($sessionKeys) > 0 && !isset($data[$sKey])) continue;
         $displayName = trim($locName) ?: ucwords(str_replace(['-', '_'], ' ', (string)$sKey));
         $availableLocations[] = [
             'session' => $sKey,
@@ -197,6 +216,7 @@ if (!empty($noderapay_data) && is_array($noderapay_data)) {
     $existingSess = array_column($availableLocations, 'session');
     foreach ($noderapay_data as $sKey => $sVal) {
         if ($sKey === 'mikhmon' || $sKey === 'default' || empty($sKey) || in_array($sKey, $existingSess)) continue;
+        if (!empty($data) && count($sessionKeys) > 0 && !isset($data[$sKey])) continue;
         $displayName = trim($sVal['merchant_name'] ?? ($sVal['store_title'] ?? '')) ?: ucwords(str_replace(['-', '_'], ' ', (string)$sKey));
         $availableLocations[] = [
             'session' => $sKey,
@@ -5111,6 +5131,10 @@ const I18N = {
 };
 </script>
 <script>
+    const instanceId = <?= json_encode(substr(md5(file_exists(__DIR__ . '/index.php') ? __DIR__ : (file_exists(dirname(__DIR__) . '/index.php') ? dirname(__DIR__) : __DIR__)), 0, 10)); ?>;
+    try {
+      ['nodera_pending_order_default', 'nodera_pending_order_hotspot', 'nodera_pkgs_default', 'nodera_pkgs_hotspot'].forEach(k => localStorage.removeItem(k));
+    } catch(e) {}
     const currentTheme = <?= json_encode($selectedTheme); ?>;
     const currencyStr = <?= json_encode($currency); ?>;
     let activeSession = <?= json_encode($session); ?>;
@@ -5595,7 +5619,7 @@ const I18N = {
     }
 
         async function loadPackages() {
-      const cacheKey = 'nodera_pkgs_' + encodeURIComponent(activeSession);
+      const cacheKey = 'ndr_' + instanceId + '_pkgs_' + encodeURIComponent(activeSession);
       try {
         const cached = localStorage.getItem(cacheKey);
         if (cached) {
@@ -5817,7 +5841,7 @@ const I18N = {
     }
 
     function getPendingStorageKey() {
-      return 'nodera_pending_order_' + (activeSession || 'default');
+      return 'ndr_' + instanceId + '_pending_' + (activeSession || 'default');
     }
 
     function savePendingOrder(order, durSec) {

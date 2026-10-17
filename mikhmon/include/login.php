@@ -127,9 +127,9 @@ foreach ($logoCandidates as $cand) {
       <form autocomplete="on" action="" method="post" id="mikhmonLoginForm" style="width: 100%; max-width: 320px; box-sizing: border-box; text-align: left;">
         
         <div style="margin-bottom: 12px; width: 100%;">
-          <button type="button" onclick="openWaCommunityModal()" class="btn-login bg-success pointer" style="width: 100%; height: 36px; font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 !important; box-sizing: border-box; color: #ffffff; border: none;">
+          <a href="https://chat.whatsapp.com/KdrgfTVGre54MpCcE7UuI8?s=cl&p=a&mlu=4&ilr=4" target="_blank" rel="noopener noreferrer" class="btn-login bg-success pointer" style="width: 100%; height: 36px; font-size: 13px; font-weight: bold; display: flex; align-items: center; justify-content: center; gap: 8px; margin: 0 !important; box-sizing: border-box; text-decoration: none; color: #ffffff;">
             <i class="fa fa-whatsapp" style="font-size: 16px;"></i> Join WhatsApp Community
-          </button>
+          </a>
         </div>
 
         <div style="margin-bottom: 12px; width: 100%;">
@@ -268,64 +268,7 @@ foreach ($logoCandidates as $cand) {
   </div>
 </div>
 
-<!-- MODAL PEMILIHAN KOMUNITAS WHATSAPP (NATIVE MIKHMON THEME) -->
-<div id="ndrWaCommunityModal" style="display:none; position:fixed; z-index:99999; left:0; top:0; width:100%; height:100%; background:rgba(0,0,0,0.65); justify-content:center; align-items:center;">
-  <div class="card" style="width:92%; max-width:440px; box-shadow:0 10px 30px rgba(0,0,0,0.5); border-radius:4px; margin:0; padding:0; overflow:hidden;">
-    <div class="card-header" style="display:flex; justify-content:space-between; align-items:center; padding:10px 15px;">
-      <h3 class="card-title" style="margin:0; font-size:15px; display:flex; align-items:center; gap:8px;">
-        <i class="fa fa-whatsapp text-green" style="font-size:18px;"></i> <?= $_select_wa_community ?? 'Pilih Komunitas WhatsApp'; ?>
-      </h3>
-      <button type="button" onclick="closeWaCommunityModal()" style="background:none; border:none; color:inherit; font-size:20px; line-height:1; cursor:pointer; opacity:0.8;" title="<?= $_close ?? 'Tutup'; ?>">&times;</button>
-    </div>
-    <div class="card-body" style="padding:16px;">
-      <p class="text-secondary" style="font-size:12.5px; margin:0 0 14px 0; line-height:1.4;">
-        <?= $_select_wa_community_desc ?? 'Silakan pilih komunitas WhatsApp sesuai wilayah atau bahasa Anda:'; ?>
-      </p>
-
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <!-- Pilihan 1: Indonesia -->
-        <a href="https://chat.whatsapp.com/KdrgfTVGre54MpCcE7UuI8?s=cl&p=a&mlu=4&ilr=4" target="_blank" rel="noopener noreferrer" onclick="closeWaCommunityModal()" class="community-card-link" style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:5px; border:1px solid rgba(128,128,128,0.25); background:rgba(128,128,128,0.06); color:inherit; text-decoration:none; transition:all 0.2s;">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span style="font-size:26px; line-height:1;">🇮🇩</span>
-            <div style="text-align:left;">
-              <strong style="font-size:14px; display:block;">Komunitas Indonesia</strong>
-              <small class="text-secondary" style="font-size:11px;">Mikhmon &amp; Nodera Billing Indonesia</small>
-            </div>
-          </div>
-          <span class="badge bg-success" style="font-size:11px; padding:5px 10px; border-radius:4px; font-weight:bold;">
-            <i class="fa fa-whatsapp"></i> <?= $_join ?? 'Gabung'; ?>
-          </span>
-        </a>
-
-        <!-- Pilihan 2: Côte d'Ivoire -->
-        <a href="https://chat.whatsapp.com/LsSEp8DYrvn41nhznnOGd7?s=cl&p=a&mlu=4&ilr=4" target="_blank" rel="noopener noreferrer" onclick="closeWaCommunityModal()" class="community-card-link" style="display:flex; align-items:center; justify-content:space-between; padding:12px 14px; border-radius:5px; border:1px solid rgba(128,128,128,0.25); background:rgba(128,128,128,0.06); color:inherit; text-decoration:none; transition:all 0.2s;">
-          <div style="display:flex; align-items:center; gap:12px;">
-            <span style="font-size:26px; line-height:1;">🇨🇮</span>
-            <div style="text-align:left;">
-              <strong style="font-size:14px; display:block;">Communauté Côte d'Ivoire</strong>
-              <small class="text-secondary" style="font-size:11px;">Mikhmon &amp; Airnet Côte d'Ivoire</small>
-            </div>
-          </div>
-          <span class="badge bg-success" style="font-size:11px; padding:5px 10px; border-radius:4px; font-weight:bold;">
-            <i class="fa fa-whatsapp"></i> <?= ($langid === 'fr') ? 'Rejoindre' : ($_join ?? 'Gabung'); ?>
-          </span>
-        </a>
-      </div>
-
-      <div style="margin-top:16px; padding-top:10px; border-top:1px solid rgba(128,128,128,0.18); text-align:right;">
-        <button type="button" onclick="closeWaCommunityModal()" class="btn bg-secondary" style="margin:0; font-size:12px; padding:6px 14px;">
-          <?= $_close ?? 'Tutup'; ?>
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <style>
-.community-card-link:hover {
-  background: rgba(39, 174, 96, 0.12) !important;
-  border-color: rgba(39, 174, 96, 0.5) !important;
-}
 .mikhmon-rem-row {
   display: block !important;
   text-align: left !important;
@@ -358,15 +301,6 @@ foreach ($logoCandidates as $cand) {
 
 <script>
 var deferredPwaPrompt = null;
-
-function openWaCommunityModal() {
-  var m = document.getElementById('ndrWaCommunityModal');
-  if (m) m.style.display = 'flex';
-}
-function closeWaCommunityModal() {
-  var m = document.getElementById('ndrWaCommunityModal');
-  if (m) m.style.display = 'none';
-}
 
 function toggleMikhmonPass() {
   var pass = document.getElementById('_password');
@@ -452,9 +386,9 @@ function tryDirectBrowserActivation(licenseKey, deviceHwid) {
     var apis = [
       <?= json_encode($panelUrl . '/api/desktop-license/activate') ?>,
       <?= json_encode((function_exists('mikhmon_get_api_url') ? mikhmon_get_api_url() : ('https://' . $pDomain)) . '/api/desktop-license/activate') ?>,
+      'https://panel.airnetsolution.com/api/desktop-license/activate',
       'https://panel.dgtlnetsolution.com/api/desktop-license/activate',
-      'https://digitalnet.dgtlnetsolution.com/api/desktop-license/activate',
-      'https://panel.airnetsolution.com/api/desktop-license/activate'
+      'https://digitalnet.dgtlnetsolution.com/api/desktop-license/activate'
     ];
     var tryFetch = function(idx) {
       if (idx >= apis.length) {
@@ -509,8 +443,8 @@ function claimTrialLicenseLogin() {
         var hwid = (hwidEl ? hwidEl.value.trim() : '');
         var trialApis = [
           <?= json_encode($panelUrl . '/api/desktop-license/trial') ?>,
-          'https://panel.dgtlnetsolution.com/api/desktop-license/trial',
-          'https://panel.airnetsolution.com/api/desktop-license/trial'
+          'https://panel.airnetsolution.com/api/desktop-license/trial',
+          'https://panel.dgtlnetsolution.com/api/desktop-license/trial'
         ];
         var tryTrial = function(tIdx) {
           if (tIdx >= trialApis.length) {
@@ -642,11 +576,16 @@ document.addEventListener('DOMContentLoaded', function() {
   var userInput = document.getElementById('_username');
   var passInput = document.getElementById('_password');
   var remCheckbox = document.getElementById('_remember');
+  var instSlug = (window.location.pathname || '').replace(/\/(index\.php|admin\.php|login\.php)?.*$/, '').replace(/[^a-zA-Z0-9_-]/g, '_') || 'root';
 
   try {
-    var savedUser = localStorage.getItem('mikhmon_saved_user');
-    var savedPass = localStorage.getItem('mikhmon_saved_pass');
-    var rememberPref = localStorage.getItem('mikhmon_remember_pref');
+    // Clean up legacy unscoped keys
+    localStorage.removeItem('mikhmon_saved_user');
+    localStorage.removeItem('mikhmon_saved_pass');
+
+    var savedUser = localStorage.getItem('mikhmon_saved_user_' + instSlug);
+    var savedPass = localStorage.getItem('mikhmon_saved_pass_' + instSlug);
+    var rememberPref = localStorage.getItem('mikhmon_remember_pref_' + instSlug);
 
     if (rememberPref !== null && remCheckbox) {
       remCheckbox.checked = (rememberPref === '1');
@@ -665,13 +604,13 @@ document.addEventListener('DOMContentLoaded', function() {
     form.addEventListener('submit', function() {
       try {
         if (remCheckbox && remCheckbox.checked) {
-          if (userInput) localStorage.setItem('mikhmon_saved_user', userInput.value);
-          if (passInput) localStorage.setItem('mikhmon_saved_pass', passInput.value);
-          localStorage.setItem('mikhmon_remember_pref', '1');
+          if (userInput) localStorage.setItem('mikhmon_saved_user_' + instSlug, userInput.value);
+          if (passInput) localStorage.setItem('mikhmon_saved_pass_' + instSlug, passInput.value);
+          localStorage.setItem('mikhmon_remember_pref_' + instSlug, '1');
         } else {
-          localStorage.removeItem('mikhmon_saved_user');
-          localStorage.removeItem('mikhmon_saved_pass');
-          localStorage.setItem('mikhmon_remember_pref', '0');
+          localStorage.removeItem('mikhmon_saved_user_' + instSlug);
+          localStorage.removeItem('mikhmon_saved_pass_' + instSlug);
+          localStorage.setItem('mikhmon_remember_pref_' + instSlug, '0');
         }
       } catch(e) {}
     });
@@ -683,24 +622,6 @@ document.addEventListener('DOMContentLoaded', function() {
     if (btn) {
       btn.style.display = 'none';
     }
-  }
-});
-
-window.addEventListener('click', function(e) {
-  var waModal = document.getElementById('ndrWaCommunityModal');
-  if (waModal && e.target === waModal) {
-    closeWaCommunityModal();
-  }
-  var licModal = document.getElementById('ndrDesktopLicenseModal');
-  if (licModal && e.target === licModal) {
-    closeDesktopLicenseModal();
-  }
-});
-
-window.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    closeWaCommunityModal();
-    closeDesktopLicenseModal();
   }
 });
 </script>
