@@ -378,7 +378,7 @@ $noderapay_data = [];
 if (file_exists($npConfigFile)) {
     include $npConfigFile;
 }
-$npCfg = $noderapay_data[$session] ?? null;
+$npCfg = $noderapay_data[$session] ?? ($noderapay_data['default'] ?? null);
 if (!$npCfg) {
     foreach ($noderapay_data as $s => $c) {
         if (!empty($c['api_key'])) {
@@ -1042,7 +1042,15 @@ if ($action === 'create_qris' || $action === 'create_qris_order' || $action === 
     // 1. Direct Autonomous Gateway Execution (WijayaPay Direct from Mikhmon)
     $paymentMode = $npCfg['payment_mode'] ?? 'noderapay';
     $gwProvider = $npCfg['gateway_provider'] ?? 'tripay';
-    $gwConfig = $npCfg['gateway_config'][$gwProvider] ?? [];
+    $gwEnv = $npCfg['gateway_env'] ?? 'production';
+    $rawGwConfig = $npCfg['gateway_config'][$gwProvider] ?? ($npCfg['gateway_config'] ?? []);
+    $gwConfig = is_array($rawGwConfig) ? $rawGwConfig : [];
+    if (!isset($gwConfig['mode'])) {
+        $gwConfig['mode'] = $gwEnv;
+    }
+    if (!isset($gwConfig['gateway_env'])) {
+        $gwConfig['gateway_env'] = $gwEnv;
+    }
     $json = null;
 
     if ($paymentMode === 'payment_gateway' && $gwProvider === 'wijayapay') {
@@ -1122,6 +1130,111 @@ if ($action === 'create_qris' || $action === 'create_qris_order' || $action === 
         }
     }
 
+    if ($paymentMode === 'payment_gateway' && $gwProvider === 'tripay') {
+        $tpMerchant = trim($gwConfig['merchant_code'] ?? ($gwConfig['code_merchant'] ?? ($npCfg['merchant_code'] ?? ($npCfg['code_merchant'] ?? ''))));
+        $tpKey      = trim($gwConfig['api_key'] ?? ($npCfg['api_key'] ?? ''));
+        $tpPriv     = trim($gwConfig['private_key'] ?? ($npCfg['private_key'] ?? ''));
+
+        if (!empty($tpMerchant) && !empty($tpKey) && !empty($tpPriv)) {
+            $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+            $host = $_SERVER['HTTP_HOST'] ?? '';
+            $currentDir = rtrim(dirname($_SERVER['REQUEST_URI'] ?? ''), '/');
+            $callbackUrl = "{$scheme}://{$host}{$currentDir}/api_webhook.php";
+            $isSandbox = ($gwEnv === 'sandbox' || str_starts_with($tpKey, 'DEV-'));
+            $tpUrl = $isSandbox ? 'https://tripay.co.id/api-sandbox/transaction/create' : 'https://tripay.co.id/api/transaction/create';
+
+            $signature = hash_hmac('sha256', $tpMerchant . $orderId . (int) $price, $tpPriv);
+
+            $tpPayload = [
+                'method'         => 'QRIS',
+                'merchant_ref'   => $orderId,
+                'amount'         => (int) $price,
+                'customer_name'  => !empty($customerName) ? $customerName : ($finalMerchantName ?: 'Pelanggan Hotspot'),
+                'customer_email' => 'customer@nodera.id',
+                'customer_phone' => !empty($phone) ? $phone : '081234567890',
+                'order_items'    => [
+                    [
+                        'sku'      => 'VCR-' . $orderId,
+                        'name'     => 'Voucher ' . $profile,
+                        'price'    => (int) $price,
+                        'quantity' => 1,
+                    ],
+                ],
+                'callback_url'   => $callbackUrl,
+                'return_url'     => $callbackUrl,
+                'expired_time'   => time() + (24 * 3600),
+                'signature'      => $signature,
+            ];
+
+            $ch = curl_init($tpUrl);
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($tpPayload));
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $tpKey,
+                'Content-Type: application/json',
+                'Accept: application/json',
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            if (function_exists('mikhmon_curl_set_ssl')) {
+                mikhmon_curl_set_ssl($ch);
+            } else {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            }
+            curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+            $tpRes = curl_exec($ch);
+            $tpHttp = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            $tpJson = json_decode($tpRes, true);
+            if (($tpHttp === 200 || $tpHttp === 201) && ($tpJson['success'] ?? false)) {
+                $tpData = $tpJson['data'] ?? [];
+                $tpTotal = (float) ($tpData['amount'] ?? $price);
+                if (isset($tpData['total_fee']) && (float) $tpData['total_fee'] > 0) {
+                    $tpTotal += (float) $tpData['total_fee'];
+                }
+                $tpQr = $tpData['qr_string'] ?? '';
+                $tpQrImage = $tpData['qr_url'] ?? '';
+                $tpCheckoutUrl = $tpData['checkout_url'] ?? '';
+
+                $json = [
+                    'success'          => true,
+                    'order_id'         => $orderId,
+                    'trx_reference'    => $tpData['reference'] ?? '',
+                    'amount'           => $price,
+                    'price'            => $price,
+                    'package_price'    => $price,
+                    'admin_fee'        => max(0, $tpTotal - $price),
+                    'unique_code'      => 0,
+                    'total_amount'     => $tpTotal,
+                    'qr_string'        => $tpQr,
+                    'qr_image_url'     => $tpQrImage,
+                    'qr_data_uri'      => $tpQrImage ?: $tpCheckoutUrl,
+                    'checkout_url'     => $tpCheckoutUrl,
+                    'payment_url'      => $tpCheckoutUrl,
+                    'status'           => 'pending',
+                    'merchant_name'    => $finalMerchantName,
+                    'payment_mode'     => 'payment_gateway',
+                    'payment_method'   => 'qris',
+                    'gateway_provider' => 'tripay',
+                ];
+            } else {
+                $errMsg = $tpJson['message'] ?? ('HTTP ' . $tpHttp . ': Gagal membuat transaksi di TriPay.');
+                echo json_encode([
+                    'success' => false,
+                    'message' => 'Tripay: ' . $errMsg,
+                ]);
+                exit;
+            }
+        } else {
+            echo json_encode([
+                'success' => false,
+                'message' => 'Tripay: Kode Merchant, API Key, atau Private Key belum dikonfigurasi di Mikhmon.',
+            ]);
+            exit;
+        }
+    }
+
     // 2. Autonomous NODERA Pay Universal Gateway API Execution
     if (!$json) {
         $merchantCode = $npCfg['merchant_code'] ?? ($npCfg['code_merchant'] ?? '');
@@ -1140,6 +1253,7 @@ if ($action === 'create_qris' || $action === 'create_qris_order' || $action === 
             'payment_mode'     => $paymentMode,
             'gateway_provider' => $gwProvider,
             'gateway_config'   => $gwConfig,
+            'gateway_env'      => $gwEnv,
             'payment_method'   => $npCfg['payment_method'] ?? 'qris',
             'code_payment'     => $npCfg['payment_method'] ?? 'QRIS',
             'merchant_code'    => $merchantCode,
@@ -1441,6 +1555,38 @@ if ($action === 'check_status' || $action === 'check_qris_status' || $action ===
             $status = 'PAID';
         } elseif ($wStatus === 'expired' || $wStatus === 'failed') {
             $status = 'EXPIRED';
+        }
+    } elseif ($orderPaymentMode === 'payment_gateway' && $orderGwProvider === 'tripay' && !empty($order['trx_reference'])) {
+        $tpKey = trim($orderGwConfig['api_key'] ?? ($npCfg['api_key'] ?? ''));
+        if (!empty($tpKey)) {
+            $isSandbox = ($npCfg['gateway_env'] ?? 'production') === 'sandbox' || str_starts_with($tpKey, 'DEV-');
+            $detailUrl = ($isSandbox ? 'https://tripay.co.id/api-sandbox/' : 'https://tripay.co.id/api/') . 'transaction/detail?' . http_build_query([
+                'reference' => $order['trx_reference']
+            ]);
+            $ch = curl_init($detailUrl);
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+                'Authorization: Bearer ' . $tpKey,
+                'Accept: application/json',
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            if (function_exists('mikhmon_curl_set_ssl')) {
+                mikhmon_curl_set_ssl($ch);
+            } else {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
+                curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            }
+            curl_setopt($ch, CURLOPT_TIMEOUT, 6);
+            $tpRes = curl_exec($ch);
+            curl_close($ch);
+            $tpJson = json_decode($tpRes, true);
+            if (($tpJson['success'] ?? false) && isset($tpJson['data']['status'])) {
+                $tpStatus = strtoupper($tpJson['data']['status']);
+                if ($tpStatus === 'PAID') {
+                    $status = 'PAID';
+                } elseif (in_array($tpStatus, ['EXPIRED', 'FAILED', 'REFUND'])) {
+                    $status = 'EXPIRED';
+                }
+            }
         }
     } else {
         if ($npCfg && !empty($npCfg['api_key'])) {

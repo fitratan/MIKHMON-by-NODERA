@@ -45,12 +45,15 @@ if ($action === 'voucher_expired') {
 }
 
 $orderId = trim(
-    $payload['order_id'] 
+    $payload['merchant_ref']
+    ?? ($payload['data']['merchant_ref'] ?? '')
+    ?? $payload['order_id'] 
     ?? $payload['ref_id'] 
     ?? ($payload['data']['ref_id'] ?? '') 
     ?? ($payload['data']['order_id'] ?? '') 
     ?? ($payload['data']['trx_reference'] ?? '') 
     ?? ($payload['trx_reference'] ?? '') 
+    ?? ($_POST['merchant_ref'] ?? '')
     ?? ($_POST['ref_id'] ?? '') 
     ?? ($_POST['order_id'] ?? '')
 );
@@ -132,8 +135,10 @@ if (!$npCfg) {
 $secretKey = $npCfg['secret_key'] ?? '';
 $apiKey    = $npCfg['api_key'] ?? '';
 $allReqHeaders = function_exists('getallheaders') ? array_change_key_case(getallheaders(), CASE_LOWER) : [];
-$incomingSignature = $_SERVER['HTTP_X_SIGNATURE'] 
+$incomingSignature = $_SERVER['HTTP_X_CALLBACK_SIGNATURE']
+    ?? $_SERVER['HTTP_X_SIGNATURE'] 
     ?? $_SERVER['HTTP_X_NODERA_SIGNATURE'] 
+    ?? $allReqHeaders['x-callback-signature']
     ?? $allReqHeaders['x-signature'] 
     ?? $allReqHeaders['x-nodera-signature'] 
     ?? ($payload['signature'] ?? ($payload['data']['signature'] ?? ($_POST['signature'] ?? '')));
@@ -193,6 +198,25 @@ if (!$signatureValid && !empty($orderId)) {
     if (!empty($wCode) && !empty($wKey)) {
         $expectedWp = md5($wCode . $wKey . $orderId);
         if (!empty($incomingSignature) && hash_equals(strtolower($expectedWp), strtolower($incomingSignature))) {
+            $signatureValid = true;
+        }
+    }
+}
+
+// 2.5 Check Tripay specific signature: hash_hmac('sha256', $rawPayload, private_key)
+if (!$signatureValid && !empty($incomingSignature)) {
+    $tpPriv = trim($npCfg['gateway_config']['tripay']['private_key'] ?? ($npCfg['private_key'] ?? ''));
+    if (empty($tpPriv)) {
+        foreach ($noderapay_data as $s => $c) {
+            if (!empty($c['gateway_config']['tripay']['private_key'])) {
+                $tpPriv = trim($c['gateway_config']['tripay']['private_key']);
+                break;
+            }
+        }
+    }
+    if (!empty($tpPriv)) {
+        $expectedTp = hash_hmac('sha256', $rawPayload, $tpPriv);
+        if (hash_equals(strtolower($expectedTp), strtolower($incomingSignature))) {
             $signatureValid = true;
         }
     }
