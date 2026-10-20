@@ -15,7 +15,7 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-session_start();
+include_once(__DIR__ . '/../include/init_session.php');
 // hide all error
 error_reporting(0);
 
@@ -27,6 +27,7 @@ if (!isset($_SESSION["mikhmon"])) {
 } else {
 // time zone
 date_default_timezone_set($_SESSION['timezone']);
+$genAuthToken = hash('sha256', ($session ?? '') . ':' . ($useradm ?? '') . ':' . ($passadm ?? '') . ':nodera_mikhmon_gen');
 
 	$genprof = $_GET['genprof'];
 	if ($genprof != "") {
@@ -524,11 +525,24 @@ function submitGenForm(e) {
     e.preventDefault();
   }
 
+  var genToken = "<?= $genAuthToken; ?>";
+  var sessionName = encodeURIComponent("<?= $session; ?>");
+
   var formData = new FormData(form);
   formData.append("action", "init");
+  formData.append("gen_token", genToken);
 
-  fetch("./process/generate_batch.php?session=" + encodeURIComponent("<?= $session; ?>"), {
+  function fallbackDirectSubmit() {
+    if (pText) {
+      pText.innerHTML = "<i class='fa fa-circle-o-notch fa-spin'></i> <?= $_processing ?? "Processing..."; ?> (Direct Mode)...";
+    }
+    form.onsubmit = null;
+    HTMLFormElement.prototype.submit.call(form);
+  }
+
+  fetch("./process/generate_batch.php?session=" + sessionName, {
     method: "POST",
+    credentials: "same-origin",
     body: formData
   })
   .then(function(res) {
@@ -558,7 +572,7 @@ function submitGenForm(e) {
         pPercent.innerText = "100%";
         pText.innerHTML = "<i class='fa fa-check-circle text-success'></i> <?= $_success_added_vouchers ?? "Successfully added"; ?> " + total + " <?= $_vouchers ?? "vouchers"; ?>! <?= $_loading ?? "Loading..."; ?>";
         setTimeout(function() {
-          window.location.href = "./?hotspot-user=" + (total < 2 ? encodeURIComponent(users[0].name) : "generate") + "&session=" + encodeURIComponent("<?= $session; ?>");
+          window.location.href = "./?hotspot-user=" + (total < 2 ? encodeURIComponent(users[0].name) : "generate") + "&session=" + sessionName;
         }, 500);
         return;
       }
@@ -566,6 +580,7 @@ function submitGenForm(e) {
       var curBatch = batches[idx];
       var batchData = new FormData();
       batchData.append("action", "batch");
+      batchData.append("gen_token", genToken);
       batchData.append("server", data.server);
       batchData.append("profile", data.profile);
       batchData.append("timelimit", data.timelimit);
@@ -573,8 +588,9 @@ function submitGenForm(e) {
       batchData.append("commt", data.commt);
       batchData.append("batch", JSON.stringify(curBatch));
 
-      fetch("./process/generate_batch.php?session=" + encodeURIComponent("<?= $session; ?>"), {
+      fetch("./process/generate_batch.php?session=" + sessionName, {
         method: "POST",
+        credentials: "same-origin",
         body: batchData
       })
       .then(function(res) {
@@ -595,12 +611,17 @@ function submitGenForm(e) {
         processBatch(idx + 1);
       })
       .catch(function(err) {
-        pText.innerHTML = "<i class='fa fa-exclamation-triangle text-danger'></i> <?= $_error ?? "Error"; ?>: " + processed + "/" + total + ": " + err.message;
-        if (btn) {
-          btn.disabled = false;
-          btn.style.pointerEvents = "auto";
-          btn.style.opacity = "1";
-          btn.innerHTML = "<i class='fa fa-save'></i> <?= $_generate ?>";
+        console.warn("Batch add failed at idx " + idx + ":", err);
+        if (processed === 0) {
+          fallbackDirectSubmit();
+        } else {
+          pText.innerHTML = "<i class='fa fa-exclamation-triangle text-danger'></i> <?= $_error ?? "Error"; ?>: " + processed + "/" + total + ": " + err.message;
+          if (btn) {
+            btn.disabled = false;
+            btn.style.pointerEvents = "auto";
+            btn.style.opacity = "1";
+            btn.innerHTML = "<i class='fa fa-save'></i> <?= $_generate ?>";
+          }
         }
       });
     }
@@ -608,15 +629,8 @@ function submitGenForm(e) {
     processBatch(0);
   })
   .catch(function(err) {
-    if (pText) {
-      pText.innerHTML = "<i class='fa fa-exclamation-triangle text-danger'></i> " + err.message;
-    }
-    if (btn) {
-      btn.disabled = false;
-      btn.style.pointerEvents = "auto";
-      btn.style.opacity = "1";
-      btn.innerHTML = "<i class='fa fa-save'></i> <?= $_generate ?>";
-    }
+    console.warn("Init voucher batch failed, falling back to direct submit:", err);
+    fallbackDirectSubmit();
   });
 
   return false;
