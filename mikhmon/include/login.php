@@ -81,6 +81,23 @@ foreach ($logoCandidates as $cand) {
                 </button>
               </div>
             </div>
+            <script>
+            (function() {
+              if (!sessionStorage.getItem('ndr_auto_restore_attempted')) {
+                sessionStorage.setItem('ndr_auto_restore_attempted', '1');
+                var fd = new FormData();
+                fd.append('action', 'ajax_activate_trial_license');
+                fetch('./admin.php', { method: 'POST', body: fd })
+                  .then(function(res) { return res.json(); })
+                  .then(function(data) {
+                    if (data && data.success) {
+                      window.location.reload();
+                    }
+                  })
+                  .catch(function() {});
+              }
+            })();
+            </script>
           <?php else: ?>
             <div style="margin: 0 auto 14px; max-width: 320px; text-align: left; background: rgba(39, 174, 96, 0.08); border: 1px solid rgba(39, 174, 96, 0.4); border-radius: 8px; padding: 8px 12px;">
               <div style="display: flex; align-items: center; justify-content: space-between;">

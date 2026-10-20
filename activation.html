@@ -428,8 +428,18 @@
           currentHwid = await window.noderaDesktop.getHwid();
           hwidDisplay.textContent = currentHwid || 'NDR-HWID-STANDALONE';
 
-          // Detect previously expired license/trial
+          // Detect previously expired license/trial or auto-restore active trial
           const savedLic = await window.noderaDesktop.getLicenseInfo();
+          if (!savedLic || !savedLic.license_key) {
+            try {
+              const resAuto = await window.noderaDesktop.activateTrial();
+              if (resAuto && resAuto.success) {
+                alertBox.className = 'p-3.5 rounded-xl text-xs font-semibold bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 block';
+                alertBox.textContent = resAuto.message || 'Lisensi/Trial aktif terdeteksi. Membuka aplikasi...';
+                return;
+              }
+            } catch (e) {}
+          }
           if (savedLic && savedLic.license_key) {
             const expStr = savedLic.expires_at || '';
             let isExpired = false;

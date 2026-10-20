@@ -172,10 +172,15 @@ define('MIKHMON_SUBDOMAIN', 'desktop');
 }
 
 function readSavedLicense() {
+  const currentHwid = getHardwareId();
   try {
     if (fs.existsSync(LICENSE_FILE)) {
       const data = JSON.parse(fs.readFileSync(LICENSE_FILE, 'utf8'));
-      if (data && data.license_key) return data;
+      if (data && data.license_key) {
+        if (!data.hwid || data.hwid.toUpperCase() === currentHwid.toUpperCase()) {
+          return data;
+        }
+      }
     }
   } catch (err) {
     console.error('Error reading license file:', err.message);
@@ -188,8 +193,10 @@ function readSavedLicense() {
     if (fs.existsSync(licJsonPath)) {
       const data = JSON.parse(fs.readFileSync(licJsonPath, 'utf8'));
       if (data && data.license_key) {
-        saveLicense(data);
-        return data;
+        if (!data.hwid || data.hwid.toUpperCase() === currentHwid.toUpperCase()) {
+          saveLicense(data);
+          return data;
+        }
       }
     }
   } catch (e) {}
@@ -448,7 +455,9 @@ app.on('web-contents-created', (event, contents) => {
 });
 
 async function checkLicenseAndRoute() {
+  const hwid = getHardwareId();
   const saved = readSavedLicense();
+
   if (saved && saved.license_key) {
     const check = await verifyLicenseOnline(saved.license_key);
     if (check.valid) {
@@ -456,6 +465,49 @@ async function checkLicenseAndRoute() {
       return;
     }
   }
+
+  // Auto-restore active trial atau lisensi resmi berdasarkan Hardware ID (HWID)
+  // Memungkinkan pengguna yang download ulang atau install ulang langsung lanjut tanpa ditanya lisensi
+  try {
+    const osInfo = `${process.platform} ${require('os').release()} (${require('os').arch()})`;
+    const deviceName = require('os').hostname();
+    const res = await callLicenseApi('/trial', {
+      hwid: hwid,
+      device_name: deviceName,
+      os_info: osInfo,
+    });
+
+    if (res && res.success && res.data) {
+      const licenseData = {
+        license_key: res.data.license_key,
+        hwid: hwid,
+        status: 'ACTIVE',
+        product_name: res.data.product_name || 'Mikhmon Desktop Standalone',
+        last_verified_at: new Date().toISOString(),
+        expires_at: res.data.expires_at,
+        signature: res.data.signature || '',
+        is_trial: !!res.data.is_trial,
+        features: res.data.features,
+      };
+      saveLicense(licenseData);
+      syncLicenseToPhp(licenseData);
+
+      // Pastikan PHP server berjalan dengan environment lisensi yang baru
+      if (phpProcess) {
+        try { phpProcess.kill(); } catch (e) {}
+        phpProcess = null;
+      }
+      startPhpServer(serverPort);
+
+      setTimeout(() => {
+        loadMikhmonApp();
+      }, 800);
+      return;
+    }
+  } catch (err) {
+    console.warn('Auto-restore license by HWID failed or device unactivated:', err.message);
+  }
+
   loadActivationScreen();
 }
 

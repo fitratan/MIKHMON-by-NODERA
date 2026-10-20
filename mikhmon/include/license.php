@@ -185,9 +185,18 @@ if (empty($envLicKey) && !empty($envLicFile) && file_exists($envLicFile)) {
 if (!function_exists('mikhmon_sync_license_from_storage')) {
     function mikhmon_sync_license_from_storage(): void {
         $lFile = __DIR__ . '/../config/license.php';
+        $currentHwid = mikhmon_get_hwid();
+
+        // Jika config/license.php sudah valid untuk HWID perangkat ini, tidak perlu timpa
         if (file_exists($lFile) && filesize($lFile) > 100) {
-            return;
+            $content = (string)@file_get_contents($lFile);
+            if (strpos($content, "'MIKHMON_STATUS', 'ACTIVE'") !== false) {
+                if (defined('MIKHMON_HWID') && !empty(MIKHMON_HWID) && strcasecmp(trim(MIKHMON_HWID), trim($currentHwid)) === 0) {
+                    return;
+                }
+            }
         }
+
         $jsonCandidates = [
             getenv('NODERA_LICENSE_FILE') ?: '',
             __DIR__ . '/../config/nodera_license.json',
@@ -200,8 +209,11 @@ if (!function_exists('mikhmon_sync_license_from_storage')) {
             if (!empty($cand) && file_exists($cand)) {
                 $json = @json_decode(@file_get_contents($cand), true);
                 if (is_array($json) && !empty($json['license_key'])) {
-                    mikhmon_save_desktop_license_data($json);
-                    return;
+                    // Match HWID atau jika HWID cocok dengan perangkat saat ini
+                    if (empty($json['hwid']) || strcasecmp(trim($json['hwid']), trim($currentHwid)) === 0) {
+                        mikhmon_save_desktop_license_data($json);
+                        return;
+                    }
                 }
             }
         }
@@ -419,21 +431,33 @@ if (!function_exists('mikhmon_is_licensed')) {
     function mikhmon_is_licensed(): bool {
         // Desktop / Standalone mode validation
         if (mikhmon_is_desktop_mode()) {
+            $currentHwid = mikhmon_get_hwid();
             $isUnlicensed = (!defined('MIKHMON_LICENSE_KEY') || empty(trim(MIKHMON_LICENSE_KEY)) || !defined('MIKHMON_STATUS') || in_array(strtoupper(MIKHMON_STATUS), ['UNLICENSED', 'INACTIVE'], true));
-            
-            // Auto-claim 7-day trial on first run if never attempted
-            if ($isUnlicensed) {
-                $trialMarker = __DIR__ . '/../config/.trial_attempted';
-                if (!file_exists($trialMarker)) {
-                    @touch($trialMarker);
-                    if (function_exists('mikhmon_activate_trial_license')) {
-                        $res = mikhmon_activate_trial_license();
-                        if (!empty($res['success'])) {
-                            $lFile = __DIR__ . '/../config/license.php';
-                            if (file_exists($lFile)) {
-                                @include $lFile;
+            $hwidMismatch = (defined('MIKHMON_HWID') && !empty(MIKHMON_HWID) && strcasecmp(trim(MIKHMON_HWID), trim($currentHwid)) !== 0);
+
+            // Jika lisensi lokal belum aktif atau berbeda HWID (misal setelah download ulang / install ulang)
+            if ($isUnlicensed || $hwidMismatch) {
+                // 1. Cek penyimpanan lokal (AppData / nodera_license.json)
+                mikhmon_sync_license_from_storage();
+
+                $stillUnlicensed = (!defined('MIKHMON_LICENSE_KEY') || empty(trim(MIKHMON_LICENSE_KEY)) || !defined('MIKHMON_STATUS') || in_array(strtoupper(MIKHMON_STATUS), ['UNLICENSED', 'INACTIVE'], true));
+                $stillMismatch = (defined('MIKHMON_HWID') && !empty(MIKHMON_HWID) && strcasecmp(trim(MIKHMON_HWID), trim($currentHwid)) !== 0);
+
+                // 2. Hubungi Cloud Server secara otomatis untuk memulihkan trial/lisensi aktif terikat HWID
+                if ($stillUnlicensed || $stillMismatch) {
+                    $retryMarker = __DIR__ . '/../config/.last_hwid_query';
+                    $lastQuery = file_exists($retryMarker) ? (int) @file_get_contents($retryMarker) : 0;
+                    if (time() - $lastQuery > 10) {
+                        @file_put_contents($retryMarker, (string)time());
+                        if (function_exists('mikhmon_activate_trial_license')) {
+                            $res = mikhmon_activate_trial_license();
+                            if (!empty($res['success'])) {
+                                $lFile = __DIR__ . '/../config/license.php';
+                                if (file_exists($lFile)) {
+                                    @include $lFile;
+                                }
+                                return true;
                             }
-                            return true;
                         }
                     }
                 }
@@ -449,8 +473,7 @@ if (!function_exists('mikhmon_is_licensed')) {
                 return false;
             }
             // Strict HWID matching (case-insensitive)
-            $currentHwid = mikhmon_get_hwid();
-            if (empty(MIKHMON_HWID) || strcasecmp(trim(MIKHMON_HWID), trim($currentHwid)) !== 0) {
+            if (strcasecmp(trim(MIKHMON_HWID), trim($currentHwid)) !== 0) {
                 return false;
             }
 
