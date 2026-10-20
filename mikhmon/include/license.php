@@ -13,15 +13,11 @@ if (!function_exists('mikhmon_is_desktop_mode')) {
         if (defined('MIKHMON_MODE') && MIKHMON_MODE === 'DESKTOP') {
             return true;
         }
-        $hasCloudMarker = file_exists(__DIR__ . '/../.cloud_mode') || file_exists(__DIR__ . '/.cloud_mode');
+        $hasCloudMarker = file_exists(__DIR__ . '/../.cloud_mode') || file_exists(__DIR__ . '/.cloud_mode') || file_exists(dirname(dirname(__DIR__)) . '/.cloud_mode');
         if ($hasCloudMarker) {
             return false;
         }
-        $host = $_SERVER['HTTP_HOST'] ?? ($_SERVER['SERVER_NAME'] ?? '');
-        $host = strtolower(explode(':', $host)[0]);
-        $isLocal = in_array($host, ['127.0.0.1', 'localhost', '::1'])
-            || (isset($_SERVER['SERVER_ADDR']) && in_array($_SERVER['SERVER_ADDR'], ['127.0.0.1', '::1']));
-        return $isLocal;
+        return true;
     }
 }
 

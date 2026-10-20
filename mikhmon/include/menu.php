@@ -650,6 +650,8 @@ include('./info.php');
     <a href="./admin.php?id=sessions" class="menu "> <i class="fa fa-gear "></i> <?= $_admin_settings ?> </a>
     <a href="./?hotspot=uplogo&session=<?= $session; ?>" class="menu <?= $uplogo ?? ''; ?>"> <i class="fa fa-upload "></i> <?= $_upload_logo ?> </a>
   </div>
+  <!--system update-->
+  <a href="./admin.php?id=update" class="menu <?= ($id == 'update' || ($hotspot ?? '') == 'update') ? 'active' : ''; ?>"><i class="fa fa-refresh"></i> <span><?= !empty($_system_update) ? $_system_update : 'Pembaruan Sistem'; ?></span></a>
   <!--about-->
   <a href="./?hotspot=about&session=<?= $session; ?>" class="menu <?= $sabout ?? ''; ?>"><i class="fa fa-info-circle"></i> <span><?= $_about ?></span></a>
 

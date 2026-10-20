@@ -204,7 +204,7 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
   $_SESSION['themecolor'] = $themecolor;
 
 // routeros api
-  $nonRouterPages = ['telegram', 'whatsapp', 'billing', 'shop', 'noderapay', 'qris', 'template-selector', 'store-template', 'uplogo', 'thermal-printer'];
+  $nonRouterPages = ['telegram', 'whatsapp', 'billing', 'shop', 'noderapay', 'qris', 'template-selector', 'store-template', 'uplogo', 'thermal-printer', 'about', 'update'];
   $currentHotspot = $_GET['hotspot'] ?? '';
   $isNonRouterPage = in_array($currentHotspot, $nonRouterPages);
 
@@ -359,6 +359,11 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
 // sync schedulers & clean expired vouchers
   elseif ($hotspot == "sync-schedulers") {
     include_once('./hotspot/sync_schedulers.php');
+  }
+
+// update
+  elseif ($hotspot == "update") {
+    include_once('./include/update.php');
   }
 
 // about

@@ -150,9 +150,12 @@ if (!isset($_SESSION["mikhmon"])) {
             <?php endif; ?>
             <span style="display: inline-block; margin-left: 4px; font-size: 11.5px; opacity: 0.75; font-family: monospace;">(HWID: <?= htmlspecialchars($hwid) ?>)</span>
           </div>
-          <div style="display: flex; gap: 12px; align-items: center;">
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <a href="./admin.php?id=update" class="btn btn-xs bg-primary" style="padding: 3px 8px; font-size: 11px; border-radius: 4px; text-decoration: none;">
+              <i class="fa fa-refresh"></i> <?= $_system_update ?? "Pembaruan Sistem" ?>
+            </a>
             <button type="button" onclick="openDesktopLicenseModal()" class="text-primary" style="background: none; border: none; padding: 0; font-size: 12px; font-weight: bold; text-decoration: underline; cursor: pointer;">
-              <i class="fa fa-refresh"></i> <?= $_change_license ?? "Ganti Lisensi" ?>
+              <i class="fa fa-key"></i> <?= $_change_license ?? "Ganti Lisensi" ?>
             </button>
             <a href="https://panel.dgtlnetsolution.com/desktop-licenses" target="_blank" class="text-primary" style="font-size: 12px; font-weight: bold; text-decoration: underline;">
               <i class="fa fa-external-link"></i> <?= $_manage_in_nodera ?? "Kelola di NODERA" ?>

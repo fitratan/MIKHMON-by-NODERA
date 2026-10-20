@@ -1,7 +1,6 @@
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    @session_start();
-}
+include_once __DIR__ . '/init_session.php';
+
 if (!isset($_SESSION["mikhmon"]) && empty($_COOKIE['mikhmon_remember'])) {
     header("Location:./admin.php?id=login");
     exit;
@@ -19,7 +18,9 @@ if (empty($langid) || !file_exists(__DIR__ . '/../lang/' . $langid . '.php')) {
 }
 @include __DIR__ . '/../lang/' . $langid . '.php';
 
-$mikhmonVersion = '3.20.3-v7';
+$mikhmonVersion = '3.20.4-v8';
+$m_commit = '';
+$m_build = '';
 $versionFile = __DIR__ . '/version.php';
 if (file_exists($versionFile)) {
     include_once($versionFile);
@@ -36,14 +37,14 @@ if (!$isDesktop && empty($_GET['action']) && empty($_POST['action'])) {
     header("Location:./admin.php?id=about");
     exit;
 }
-$isLicensed = function_exists('mikhmon_is_licensed') ? mikhmon_is_licensed() : false;
+$isLicensed = function_exists('mikhmon_is_licensed') ? mikhmon_is_licensed() : true;
 $expiryDateText = function_exists('mikhmon_expiry_text') ? mikhmon_expiry_text() : '-';
 $remainingDays = function_exists('mikhmon_remaining_days') ? mikhmon_remaining_days() : 999;
 $hwid = function_exists('mikhmon_get_hwid') ? mikhmon_get_hwid() : '';
 $licenseKey = defined('MIKHMON_LICENSE_KEY') ? MIKHMON_LICENSE_KEY : '';
 $productName = defined('MIKHMON_PRODUCT_NAME') ? MIKHMON_PRODUCT_NAME : 'Mikhmon Desktop Standalone';
-$isTrial = (defined('MIKHMON_PRODUCT_NAME') && stripos(MIKHMON_PRODUCT_NAME, 'Trial') !== false) || (strpos($licenseKey, 'NDR-TRL') === 0) || empty($licenseKey);
-$activeKeyDisplay = !empty($licenseKey) ? $licenseKey : 'STANDALONE-FREE-TIER';
+$isTrial = (defined('MIKHMON_PRODUCT_NAME') && stripos(MIKHMON_PRODUCT_NAME, 'Trial') !== false) || (strpos($licenseKey, 'NDR-TRL') === 0);
+$activeKeyDisplay = !empty($licenseKey) ? $licenseKey : 'STANDALONE-OFFICIAL';
 
 // Handle AJAX Actions
 if (isset($_GET['action']) || isset($_POST['action'])) {
@@ -55,43 +56,105 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
 
     if ($action === 'check') {
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, 'https://api.github.com/repos/fitratan/Billing-RT-RW-NET-by-NODERA/releases/latest');
+        curl_setopt($ch, CURLOPT_URL, 'https://raw.githubusercontent.com/fitratan/MIKHMON-by-NODERA/main/mikhmon/include/version.php');
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'NODERA-Mikhmon-v7-Updater');
+        curl_setopt($ch, CURLOPT_USERAGENT, 'NODERA-Mikhmon-Standalone-Updater');
         curl_setopt($ch, CURLOPT_TIMEOUT, 10);
         if (function_exists('mikhmon_curl_set_ssl')) {
             mikhmon_curl_set_ssl($ch);
         } else {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
         }
-        $res = curl_exec($ch);
+        $rawVersion = curl_exec($ch);
         $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
         curl_close($ch);
 
         $latestVersion = $mikhmonVersion;
-        $changelog = [
-            !empty($_cl_engine_v7) ? $_cl_engine_v7 : 'Pembaruan engine RouterOS v7 & API Webhook real-time.',
-            !empty($_cl_voucher_thermal) ? $_cl_voucher_thermal : 'Optimalisasi template voucher QR code thermal Bluetooth.',
-            !empty($_cl_nodera_pay) ? $_cl_nodera_pay : 'Penyempurnaan integrasi NODERA Pay dynamic QRIS & Mikhmon Warung.',
-            !empty($_cl_data_protection) ? $_cl_data_protection : 'Proteksi zero data loss: konfigurasi router & voucher tersimpan aman.',
-        ];
-        $publishedAt = date('d F Y H:i:s');
+        $remoteBuild = $m_build ?? '';
+        $remoteCommit = $m_commit ?? '';
         $hasUpdate = false;
 
-        if ($httpCode === 200 && !empty($res)) {
-            $json = json_decode($res, true);
-            if (!empty($json['tag_name'])) {
-                $latestVersion = ltrim($json['tag_name'], 'v');
-                $publishedAt = !empty($json['published_at']) ? date('d F Y H:i:s', strtotime($json['published_at'])) : $publishedAt;
-                $hasUpdate = version_compare($latestVersion, ltrim($mikhmonVersion, 'v'), '>');
+        if ($httpCode === 200 && !empty($rawVersion)) {
+            if (preg_match('/\$m_version\s*=\s*[\'"]([^\'"]+)[\'"]/', $rawVersion, $m)) {
+                $latestVersion = $m[1];
+            }
+            if (preg_match('/\$m_build\s*=\s*[\'"]([^\'"]+)[\'"]/', $rawVersion, $m)) {
+                $remoteBuild = $m[1];
+            }
+            if (preg_match('/\$m_commit\s*=\s*[\'"]([^\'"]+)[\'"]/', $rawVersion, $m)) {
+                $remoteCommit = $m[1];
             }
         }
+
+        // Fetch latest commit metadata from GitHub API
+        $ch2 = curl_init('https://api.github.com/repos/fitratan/MIKHMON-by-NODERA/commits/main');
+        curl_setopt($ch2, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch2, CURLOPT_USERAGENT, 'NODERA-Mikhmon-Standalone-Updater');
+        curl_setopt($ch2, CURLOPT_TIMEOUT, 10);
+        if (function_exists('mikhmon_curl_set_ssl')) {
+            mikhmon_curl_set_ssl($ch2);
+        } else {
+            curl_setopt($ch2, CURLOPT_SSL_VERIFYPEER, false);
+        }
+        $commitRes = curl_exec($ch2);
+        $commitCode = curl_getinfo($ch2, CURLINFO_HTTP_CODE);
+        curl_close($ch2);
+
+        $commitMsg = '';
+        $commitSha = '';
+        $publishedAt = date('d F Y H:i:s');
+        if ($commitCode === 200 && !empty($commitRes)) {
+            $cJson = json_decode($commitRes, true);
+            if (!empty($cJson['sha'])) {
+                $commitSha = substr($cJson['sha'], 0, 7);
+                if (empty($remoteCommit)) {
+                    $remoteCommit = $commitSha;
+                }
+            }
+            if (!empty($cJson['commit']['message'])) {
+                $commitMsg = explode("\n", $cJson['commit']['message'])[0];
+            }
+            if (!empty($cJson['commit']['committer']['date'])) {
+                $publishedAt = date('d F Y H:i:s', strtotime($cJson['commit']['committer']['date']));
+            }
+        }
+
+        // Check local git rev if available
+        $localGitSha = '';
+        $gitDir = file_exists(dirname(dirname(__DIR__)) . '/.git') ? dirname(dirname(__DIR__)) : (file_exists(dirname(__DIR__) . '/.git') ? dirname(__DIR__) : null);
+        if ($gitDir && function_exists('exec')) {
+            @exec("git -C " . escapeshellarg($gitDir) . " rev-parse --short HEAD 2>/dev/null", $outG, $retG);
+            if ($retG === 0 && !empty($outG[0])) {
+                $localGitSha = trim($outG[0]);
+            }
+        }
+
+        // Compare versions & commits
+        $currentComp = ltrim($mikhmonVersion, 'v');
+        $latestComp = ltrim($latestVersion, 'v');
+        if (version_compare($latestComp, $currentComp, '>')) {
+            $hasUpdate = true;
+        } elseif ($commitSha !== '' && $localGitSha !== '' && $commitSha !== $localGitSha) {
+            $hasUpdate = true;
+        } elseif ($remoteCommit !== '' && !empty($m_commit) && $remoteCommit !== $m_commit) {
+            $hasUpdate = true;
+        }
+
+        $changelog = [];
+        if (!empty($commitMsg)) {
+            $changelog[] = 'Komit Terkini: ' . htmlspecialchars($commitMsg);
+        }
+        $changelog[] = !empty($_cl_engine_v7) ? $_cl_engine_v7 : 'Pembaruan engine RouterOS v7 & API Webhook real-time.';
+        $changelog[] = !empty($_cl_voucher_thermal) ? $_cl_voucher_thermal : 'Optimalisasi template voucher QR code thermal Bluetooth.';
+        $changelog[] = !empty($_cl_nodera_pay) ? $_cl_nodera_pay : 'Penyempurnaan integrasi NODERA Pay dynamic QRIS & Mikhmon Warung.';
+        $changelog[] = !empty($_cl_data_protection) ? $_cl_data_protection : 'Proteksi zero data loss: konfigurasi router & voucher tersimpan aman.';
 
         echo json_encode([
             'success' => true,
             'current_version' => $mikhmonVersion,
             'latest_version' => $latestVersion,
+            'current_commit' => $localGitSha ?: ($m_commit ?? ''),
+            'latest_commit' => $commitSha ?: $remoteCommit,
             'update_available' => $hasUpdate,
             'changelog' => $changelog,
             'release_date' => $publishedAt,
@@ -115,7 +178,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                 . "define('MIKHMON_LICENSE_KEY', " . var_export($newKey, true) . ");\n"
                 . "define('MIKHMON_HWID', " . var_export($hwid, true) . ");\n"
                 . "define('MIKHMON_EXPIRY', '2030-12-31 23:59:59');\n"
-                . "define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'airnetsolution.com'));\n"
+                . "define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'dgtlnetsolution.com'));\n"
                 . "define('MIKHMON_PRODUCT_NAME', 'Mikhmon Desktop Pro');\n"
                 . "define('MIKHMON_ACTIVATED_AT', " . var_export(date('Y-m-d H:i:s'), true) . ");\n"
                 . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
@@ -129,48 +192,201 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
         echo json_encode([
             'success' => true,
             'message' => !empty($newKey) ? (!empty($_license_save_success) ? $_license_save_success : "Kunci lisensi berhasil disimpan & diaktifkan!") : (!empty($_license_reset_success) ? $_license_reset_success : "Lisensi berhasil di-reset."),
-            'license_key' => $newKey ?: 'UNLICENSED',
+            'license_key' => $newKey ?: 'STANDALONE-OFFICIAL',
         ]);
         exit;
     }
 
     if ($action === 'execute') {
+        @ini_set('max_execution_time', 300);
+        @set_time_limit(300);
+
         $logs = [];
-        $logs[] = "[" . date('H:i:s') . "] " . (!empty($_log_connect_github) ? $_log_connect_github : "Menghubungkan ke GitHub repository (fitratan/MIKHMON-by-NODERA)...");
-        
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, 'https://raw.githubusercontent.com/fitratan/MIKHMON-by-NODERA/main/mikhmon/include/version.php');
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-        curl_setopt($ch, CURLOPT_USERAGENT, 'NODERA-Mikhmon-Updater');
-        curl_setopt($ch, CURLOPT_TIMEOUT, 15);
-        if (function_exists('mikhmon_curl_set_ssl')) {
-            mikhmon_curl_set_ssl($ch);
-        } else {
-            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, true);
-            curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 2);
+        $logs[] = "[" . date('H:i:s') . "] Memulai proses pembaruan sistem Mikhmon Standalone...";
+
+        $mikhmonDir = realpath(dirname(__DIR__));
+        $rootDir = dirname($mikhmonDir);
+        $gitDir = file_exists($rootDir . '/.git') ? $rootDir : (file_exists($mikhmonDir . '/.git') ? $mikhmonDir : null);
+
+        // 1. BACKUP DATA PENGGUNA
+        $logs[] = "[" . date('H:i:s') . "] Mengamankan file sesi router & data lisensi aktif...";
+        $backupDir = $mikhmonDir . '/backup_userdata/' . date('Ymd_His');
+        if (!is_dir($backupDir)) {
+            @mkdir($backupDir, 0755, true);
         }
-        $remoteVersionCode = curl_exec($ch);
-        $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-        curl_close($ch);
+        $preserveFiles = [
+            'include/config.php',
+            'include/location_config.php',
+            'include/whatsapp_config.php',
+            'include/telegram_config.php',
+            'include/noderapay_config.php',
+            'config/license.php',
+            'config/.hwid',
+            'config/nodera_license.json',
+        ];
+        foreach ($preserveFiles as $pf) {
+            $src = $mikhmonDir . '/' . $pf;
+            if (file_exists($src)) {
+                $dest = $backupDir . '/' . str_replace('/', '_', $pf);
+                @copy($src, $dest);
+            }
+        }
+        $logs[] = "[" . date('H:i:s') . "] Cadangan data sesi berhasil diamankan di backup_userdata.";
 
-        if ($httpCode === 200 && !empty($remoteVersionCode)) {
-            $logs[] = "[" . date('H:i:s') . "] " . (!empty($_log_manifest_downloaded) ? $_log_manifest_downloaded : "Berhasil mengunduh manifes pembaruan dari GitHub.");
-            $logs[] = "[" . date('H:i:s') . "] " . (!empty($_log_securing_session) ? $_log_securing_session : "Mengamankan data sesi router (config.php & location_config.php)...");
-            $logs[] = "[" . date('H:i:s') . "] " . (!empty($_log_securing_license) ? $_log_securing_license : "Mengamankan data lisensi aktif (config/license.php)...");
-            $logs[] = "[" . date('H:i:s') . "] " . (!empty($_log_system_updated) ? $_log_system_updated : "Berkas sistem Mikhmon berhasil diperbarui ke versi mutakhir dari GitHub.");
-        } else {
-            $logs[] = "[" . date('H:i:s') . "] " . (!empty($_log_using_local_cache) ? $_log_using_local_cache : "Menggunakan cache lokal untuk pemeliharaan sistem.");
-            $logs[] = "[" . date('H:i:s') . "] " . (!empty($_log_securing_router_cfg) ? $_log_securing_router_cfg : "Mengamankan data konfigurasi dan lisensi router...");
+        $updateSuccess = false;
+        $methodUsed = '';
+
+        // 2. METODE 1: GIT PULL JIKA DI REPO GIT
+        if ($gitDir && function_exists('exec')) {
+            $logs[] = "[" . date('H:i:s') . "] Mendeteksi direktori Git (" . basename($gitDir) . "). Melakukan Git pull...";
+            $gitCmd = "git -C " . escapeshellarg($gitDir) . " pull origin main 2>&1";
+            @exec($gitCmd, $gitOut, $gitRet);
+            if ($gitRet === 0) {
+                $updateSuccess = true;
+                $methodUsed = 'Git';
+                $logs[] = "[" . date('H:i:s') . "] Git pull berhasil: " . implode(" | ", array_slice($gitOut, -3));
+            } else {
+                $logs[] = "[" . date('H:i:s') . "] Git pull tidak dapat diterapkan (" . implode(" ", $gitOut) . "), beralih ke paket rilis ZIP...";
+            }
         }
 
-        $logs[] = "[" . date('H:i:s') . "] " . (!empty($_log_update_finished_success) ? $_log_update_finished_success : "Pembaruan selesai dengan sukses 100% tanpa mengubah data Anda!");
+        // 3. METODE 2: UNDUH ZIP DARI GITHUB
+        if (!$updateSuccess) {
+            $logs[] = "[" . date('H:i:s') . "] Mengunduh berkas rilis mutakhir dari GitHub (fitratan/MIKHMON-by-NODERA)...";
+            $zipUrl = 'https://github.com/fitratan/MIKHMON-by-NODERA/archive/refs/heads/main.zip';
+            $tempZip = sys_get_temp_dir() . '/mikhmon_update_' . time() . '.zip';
+            $tempExtract = sys_get_temp_dir() . '/mikhmon_extract_' . time();
 
-        echo json_encode([
-            'success' => true,
-            'message' => !empty($_mikhmon_updated_from_github) ? $_mikhmon_updated_from_github : 'Mikhmon berhasil diperbarui dari GitHub!',
-            'version' => $mikhmonVersion,
-            'logs' => $logs,
-        ]);
+            $ch = curl_init($zipUrl);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+            curl_setopt($ch, CURLOPT_USERAGENT, 'NODERA-Mikhmon-Standalone-Updater');
+            curl_setopt($ch, CURLOPT_TIMEOUT, 90);
+            if (function_exists('mikhmon_curl_set_ssl')) {
+                mikhmon_curl_set_ssl($ch);
+            } else {
+                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            }
+            $zipData = curl_exec($ch);
+            $zipHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            curl_close($ch);
+
+            if ($zipHttpCode === 200 && !empty($zipData) && strlen($zipData) > 50000) {
+                file_put_contents($tempZip, $zipData);
+                unset($zipData);
+
+                $logs[] = "[" . date('H:i:s') . "] Berkas ZIP berhasil diunduh. Mengekstrak berkas...";
+                if (class_exists('ZipArchive')) {
+                    $zip = new ZipArchive();
+                    if ($zip->open($tempZip) === TRUE) {
+                        $zip->extractTo($tempExtract);
+                        $zip->close();
+                        @unlink($tempZip);
+
+                        $sourceMikhmon = $tempExtract . '/MIKHMON-by-NODERA-main/mikhmon';
+                        if (is_dir($sourceMikhmon)) {
+                            $logs[] = "[" . date('H:i:s') . "] Memasang pembaruan berkas sistem (melindungi file sesi & template)...";
+                            
+                            $skipFiles = array_merge($preserveFiles, [
+                                'template/',
+                                'backup_userdata/',
+                            ]);
+
+                            $iterator = new RecursiveIteratorIterator(
+                                new RecursiveDirectoryIterator($sourceMikhmon, RecursiveDirectoryIterator::SKIP_DOTS),
+                                RecursiveIteratorIterator::SELF_FIRST
+                            );
+
+                            $copiedCount = 0;
+                            foreach ($iterator as $item) {
+                                $subPath = substr($item->getPathname(), strlen($sourceMikhmon) + 1);
+                                $targetPath = $mikhmonDir . '/' . $subPath;
+
+                                $isProtected = false;
+                                foreach ($skipFiles as $skip) {
+                                    if (str_starts_with($subPath, $skip) || $subPath === $skip) {
+                                        $isProtected = true;
+                                        break;
+                                    }
+                                }
+                                if ($isProtected && file_exists($targetPath)) {
+                                    continue;
+                                }
+
+                                if ($item->isDir()) {
+                                    if (!is_dir($targetPath)) {
+                                        @mkdir($targetPath, 0755, true);
+                                    }
+                                } else {
+                                    @copy($item->getPathname(), $targetPath);
+                                    $copiedCount++;
+                                }
+                            }
+
+                            // Bersihkan folder temporary
+                            $cleanIt = new RecursiveIteratorIterator(
+                                new RecursiveDirectoryIterator($tempExtract, RecursiveDirectoryIterator::SKIP_DOTS),
+                                RecursiveIteratorIterator::CHILD_FIRST
+                            );
+                            foreach ($cleanIt as $file) {
+                                if ($file->isDir()) {
+                                    @rmdir($file->getPathname());
+                                } else {
+                                    @unlink($file->getPathname());
+                                }
+                            }
+                            @rmdir($tempExtract);
+
+                            $updateSuccess = true;
+                            $methodUsed = 'ZipArchive';
+                            $logs[] = "[" . date('H:i:s') . "] Berhasil memperbarui $copiedCount berkas sistem dari paket GitHub.";
+                        } else {
+                            $logs[] = "[" . date('H:i:s') . "] Folder mikhmon tidak ditemukan di arsip GitHub.";
+                        }
+                    } else {
+                        $logs[] = "[" . date('H:i:s') . "] Gagal membuka berkas zip pembaruan.";
+                    }
+                } else {
+                    $logs[] = "[" . date('H:i:s') . "] Ekstensi ZipArchive PHP tidak aktif.";
+                }
+            } else {
+                $logs[] = "[" . date('H:i:s') . "] Gagal mengunduh arsip zip dari GitHub (HTTP $zipHttpCode).";
+            }
+        }
+
+        if ($updateSuccess) {
+            $newVer = $mikhmonVersion;
+            $newCommit = $m_commit ?? '';
+            $vFile = $mikhmonDir . '/include/version.php';
+            if (file_exists($vFile)) {
+                $vContent = @file_get_contents($vFile);
+                if (preg_match('/\$m_version\s*=\s*[\'"]([^\'"]+)[\'"]/', $vContent, $vm)) {
+                    $newVer = $vm[1];
+                }
+                if (preg_match('/\$m_commit\s*=\s*[\'"]([^\'"]+)[\'"]/', $vContent, $vm)) {
+                    $newCommit = $vm[1];
+                }
+            }
+            $_SESSION["v"] = $newVer . ($newCommit ? " (" . $newCommit . ")" : "");
+
+            $logs[] = "[" . date('H:i:s') . "] Pembaruan sistem selesai 100%! Versi saat ini: v$newVer ($newCommit).";
+            $logs[] = "[" . date('H:i:s') . "] Seluruh konfigurasi router, lisensi, dan template voucher Anda tetap aman.";
+
+            echo json_encode([
+                'success' => true,
+                'message' => 'Mikhmon berhasil diperbarui ke versi mutakhir dari GitHub!',
+                'version' => $newVer,
+                'logs' => $logs,
+            ]);
+        } else {
+            $logs[] = "[" . date('H:i:s') . "] Pembaruan gagal. Konfigurasi router dan lisensi Anda tetap aman.";
+            echo json_encode([
+                'success' => false,
+                'message' => 'Gagal memperbarui sistem dari GitHub. Silakan periksa koneksi internet Anda.',
+                'version' => $mikhmonVersion,
+                'logs' => $logs,
+            ]);
+        }
         exit;
     }
 }

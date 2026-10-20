@@ -435,7 +435,7 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
   }
 
   include_once('./include/login.php');
-} elseif (function_exists('mikhmon_is_expired') && mikhmon_is_expired()) {
+} elseif (function_exists('mikhmon_is_expired') && mikhmon_is_expired() && $id !== 'update' && empty($_GET['action']) && empty($_POST['action'])) {
   @session_destroy();
   echo "<script>window.location='./admin.php?id=login'</script>";
 } elseif (!isset($_SESSION["mikhmon"])) {
