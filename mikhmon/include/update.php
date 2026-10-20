@@ -18,7 +18,7 @@ if (empty($langid) || !file_exists(__DIR__ . '/../lang/' . $langid . '.php')) {
 }
 @include __DIR__ . '/../lang/' . $langid . '.php';
 
-$mikhmonVersion = '3.20.4-v8';
+$mikhmonVersion = '3.20.5-v8';
 $m_commit = '';
 $m_build = '';
 $versionFile = __DIR__ . '/version.php';

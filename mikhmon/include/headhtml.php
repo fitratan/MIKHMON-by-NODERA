@@ -196,7 +196,7 @@ if ($isWarung) {
 			}
 
 			window.addEventListener('load', function() {
-				navigator.serviceWorker.register('./sw.js?v=12', { scope: './', updateViaCache: 'none' }).then(function(reg) {
+				navigator.serviceWorker.register('./sw.js?v=13', { scope: './', updateViaCache: 'none' }).then(function(reg) {
 					try { reg.update(); } catch(e) {}
 					if (reg.waiting) {
 						reg.waiting.postMessage({ action: 'skipWaiting' });

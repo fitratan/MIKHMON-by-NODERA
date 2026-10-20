@@ -1,5 +1,5 @@
-// MIKHMON PWA Service Worker - v12
-const CACHE_NAME = 'mikhmon-pwa-v12';
+// MIKHMON PWA Service Worker - v13
+const CACHE_NAME = 'mikhmon-pwa-v13';
 const STATIC_ASSETS = [
   './css/font-awesome/css/font-awesome.min.css',
   './js/jquery.min.js',
