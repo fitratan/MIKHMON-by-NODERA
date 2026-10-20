@@ -150,19 +150,23 @@ if (!isset($_SESSION["mikhmon"])) {
  
   <div class="col-6 pd-t-5 pd-b-5" style="display: flex; flex-wrap: wrap; gap: 4px; align-items: center;">
     <?php if ($comm != "") { ?>
-  <button class="btn bg-red" onclick="if(confirm('<?= $_confirm_delete_by_comment ?? 'Apakah Anda yakin ingin menghapus user ini?'; ?>')){loadpage('./?remove-hotspot-user-by-comment=<?= $comm; ?>&session=<?= $session; ?>');loader();}else{}" title="<?= $_delete_by_comment ?? "Delete users by comment"; ?> <?= htmlspecialchars($comm, ENT_QUOTES); ?>">  <i class="fa fa-trash"></i> <?= $_by_comment ?></button>
+  <button class="btn bg-red" onclick="if(confirm('<?= addslashes($_confirm_delete_by_comment ?? 'Apakah Anda yakin ingin menghapus user ini?'); ?>')){loadpage('./?remove-hotspot-user-by-comment=<?= $comm; ?>&session=<?= $session; ?>');loader();}else{}" title="<?= $_delete_by_comment ?? "Delete users by comment"; ?> <?= htmlspecialchars($comm, ENT_QUOTES); ?>">  <i class="fa fa-trash"></i> <?= $_by_comment ?></button>
     <?php ; }else if ($exp == "1"){ ?>
-  <button class="btn bg-red" onclick="if(confirm('<?= $_confirm_delete_expired ?? 'Apakah Anda yakin ingin menghapus user expired?'; ?>')){loadpage('./?remove-hotspot-user-expired=1&session=<?= $session; ?>');loader();}else{}" title="<?= $_delete ?? 'Hapus'; ?>">  <i class="fa fa-trash"></i> <?= $_user_expired_btn ?? 'User Expired'; ?></button>
+  <button class="btn bg-red" onclick="if(confirm('<?= addslashes($_confirm_delete_expired ?? 'Apakah Anda yakin ingin menghapus user expired?'); ?>')){loadpage('./?remove-hotspot-user-expired=1&session=<?= $session; ?>');loader();}else{}" title="<?= $_delete ?? 'Hapus'; ?>">  <i class="fa fa-trash"></i> <?= $_user_expired_btn ?? 'User Expired'; ?></button>
       <?php } ?>
   <script>
     function printV(a,b){
-    var comm = document.getElementById('comment').value;
-    var url = "./voucher/print.php?id="+comm+"&"+a+"="+b+"&session=<?= $session; ?>";
+    var commEl = document.getElementById('comment');
+    var comm = commEl ? commEl.value : '';
+    if (!comm && <?= json_encode($comm) ?>) {
+      comm = <?= json_encode($comm) ?>;
+    }
+    var url = "./voucher/print.php?id="+encodeURIComponent(comm)+"&"+a+"="+b+"&session=<?= $session; ?>";
     if (comm === "" ){
-      alert('<?= $_alert_select_comment_first ?? 'Silakan pilih salah satu Comment terlebih dulu!'; ?>');
+      alert(<?= json_encode($_alert_select_comment_first ?? 'Silakan pilih salah satu Comment terlebih dulu!'); ?>);
     }else{
       var win = window.open(url, '_blank');
-      win.focus();
+      if (win) win.focus();
     }}
   </script>
   <button class="btn bg-primary" title='<?= $_print ?? 'Cetak'; ?>' onclick="printV('qr','no');"><i class="fa fa-print"></i> <?= $_print_default ?></button>
@@ -218,7 +222,7 @@ for ($i = 0; $i < $TotalReg; $i++) {
 
   echo "<tr>";
   ?>
-  <td style='text-align:center;'>  <i class='fa fa-minus-square text-danger pointer' onclick="if(confirm('<?= $_confirm_delete ?? "Are you sure you want to delete?"; ?> (<?= htmlspecialchars($uname, ENT_QUOTES); ?>)')){loadpage('./?remove-hotspot-user=<?= $uid; ?>&session=<?= $session; ?>')}else{}" title='<?= $_delete ?? "Remove"; ?> <?= htmlspecialchars($uname, ENT_QUOTES); ?>'></i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+  <td style='text-align:center;'>  <i class='fa fa-minus-square text-danger pointer' onclick="if(confirm('<?= addslashes($_confirm_delete ?? "Are you sure you want to delete?"); ?> (<?= htmlspecialchars(addslashes($uname), ENT_QUOTES); ?>)')){loadpage('./?remove-hotspot-user=<?= $uid; ?>&session=<?= $session; ?>')}else{}" title='<?= $_delete ?? "Remove"; ?> <?= htmlspecialchars($uname, ENT_QUOTES); ?>'></i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
   <?php
   if ($udisabled == "true") {
     $uriprocess = "'./?enable-hotspot-user=" . $uid . "&session=" . $session."'";

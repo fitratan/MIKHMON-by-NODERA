@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"syscall"
-	"time"
 
 	webview2 "github.com/jchv/go-webview2"
 )
@@ -76,24 +75,8 @@ func RunDesktopApp(baseDir string) {
 	}
 	defer w.Destroy()
 
-	// 5. Check License State
-	savedLic, err := ReadSavedLicense(baseDir)
-	isLicensed := false
-	if err == nil && savedLic != nil && savedLic.Status == "ACTIVE" {
-		if VerifyLicenseSignature(*savedLic) {
-			isLicensed = true
-		}
-	}
-
-	// Auto trial on first run if never attempted
-	trialMarker := filepath.Join(baseDir, "mikhmon", "config", ".trial_attempted")
-	if !isLicensed && !fileExists(trialMarker) {
-		_ = os.WriteFile(trialMarker, []byte(time.Now().Format(time.RFC3339)), 0644)
-		if trialLic, err := ActivateTrial(baseDir); err == nil && trialLic != nil {
-			savedLic = trialLic
-			isLicensed = true
-		}
-	}
+	// 5. Ensure Clock Guard
+	_ = CheckClockGuard(baseDir)
 
 	// 6. Bind Native Go APIs to JavaScript in WebView
 	w.Bind("getHwid", func() (string, error) {
@@ -204,16 +187,13 @@ func RunDesktopApp(baseDir string) {
 	// 7. Inject Navigation & Bridge Scripts
 	w.Init(getInjectedDesktopScript(sm.Port, sm.LocalIP, hwid))
 
-	// 8. Launch Appropriate View
-	if isLicensed {
-		if err := sm.Start(); err != nil {
-			showAppDialog("Peringatan Server", fmt.Sprintf("Gagal memulai PHP web server: %v", err), 0x00000010)
-		}
-		w.Navigate(fmt.Sprintf("http://127.0.0.1:%d/admin.php?id=sessions", sm.Port))
-	} else {
-		// Render In-App Activation Page
-		w.SetHtml(getActivationHtml(hwid))
+	// 8. Selalu Jalankan PHP Web Server dan Langsung Buka Mikhmon
+	// Seluruh pengecekan lisensi, trial HWID, dan aktivasi dikelola terpusat oleh web app Mikhmon di login
+	if err := sm.Start(); err != nil {
+		showAppDialog("Peringatan Server", fmt.Sprintf("Gagal memulai PHP web server internal: %v", err), 0x00000010)
+		return
 	}
+	w.Navigate(fmt.Sprintf("http://127.0.0.1:%d/admin.php?id=sessions", sm.Port))
 
 	// 9. Run Native Message Loop
 	w.Run()
