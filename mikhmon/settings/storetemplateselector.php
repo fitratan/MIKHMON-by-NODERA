@@ -43,7 +43,7 @@ if (file_exists($configPath)) {
   @include($configPath);
   if (!empty($data) && is_array($data)) {
     foreach ($data as $k => $v) {
-      if ($k !== 'mikhmon' && is_array($v)) {
+      if ($k !== 'mikhmon' && $k !== 'desktop_license' && is_array($v)) {
         $allSessions[$k] = $v;
       }
     }

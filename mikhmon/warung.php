@@ -153,7 +153,7 @@ $session = $_GET['session'] ?? '';
 // Check active router session
 if (empty($session) && !empty($data)) {
     foreach (array_keys($data) as $sk) {
-        if ($sk !== 'mikhmon' && !empty($sk)) {
+        if ($sk !== 'mikhmon' && $sk !== 'desktop_license' && !empty($sk)) {
             $session = $sk;
             break;
         }

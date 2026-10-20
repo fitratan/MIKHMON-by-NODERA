@@ -2,9 +2,9 @@
 /**
  * MIKHMON by NODERA — Version & Engine Manifest
  */
-$m_version = '3.20.5-v8';
+$m_version = '3.20.6-v8';
 $m_build = '2026-10-21';
-$m_commit = '1134720';
+$m_commit = '9c2d38e';
 
 if (session_status() === PHP_SESSION_NONE && !headers_sent()) {
     @session_start();

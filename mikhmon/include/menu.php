@@ -471,13 +471,13 @@ include('./info.php');
       $allNavSessions = [];
       if (isset($data) && is_array($data)) {
         foreach ($data as $k => $v) {
-          if ($k !== 'mikhmon' && !empty($k)) $allNavSessions[$k] = $k;
+          if ($k !== 'mikhmon' && $k !== 'desktop_license' && !empty($k)) $allNavSessions[$k] = $k;
         }
       }
       if (!empty($cfgPath) && file_exists($cfgPath)) {
         foreach (file($cfgPath) as $line) {
           if (preg_match('/\$data\[[\'"]([^\'"]+)[\'"]\]/i', $line, $m)) {
-            if ($m[1] !== 'mikhmon' && !empty($m[1])) $allNavSessions[$m[1]] = $m[1];
+            if ($m[1] !== 'mikhmon' && $m[1] !== 'desktop_license' && !empty($m[1])) $allNavSessions[$m[1]] = $m[1];
           }
         }
       }

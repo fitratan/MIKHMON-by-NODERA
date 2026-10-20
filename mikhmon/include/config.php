@@ -6,9 +6,4 @@ $data = array (
     1 => 'mikhmon<|<nodera',
     2 => 'mikhmon>|>pqCWnaOT',
   ),
-  'desktop_license' => 
-  array (
-    'license_key' => '',
-    'updated_at' => '2026-10-08 05:37:16',
-  ),
 );

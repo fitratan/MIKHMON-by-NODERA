@@ -95,7 +95,7 @@ if (empty($session)) {
 }
 if (empty($session) && isset($data) && is_array($data)) {
     foreach ($data as $k => $v) {
-        if ($k !== 'mikhmon') {
+        if ($k !== 'mikhmon' && $k !== 'desktop_license') {
             $session = $k;
             break;
         }

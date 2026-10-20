@@ -186,7 +186,7 @@ if (!isset($_SESSION["mikhmon"])) {
               // 1. From in-memory $data array
               if (isset($data) && is_array($data)) {
                 foreach ($data as $k => $v) {
-                  if ($k !== 'mikhmon' && !empty($k)) {
+                  if ($k !== 'mikhmon' && $k !== 'desktop_license' && !empty($k)) {
                     $hsName = '';
                     if (is_array($v) && isset($v[4])) {
                       $hsParts = explode('%', $v[4]);
@@ -205,7 +205,7 @@ if (!isset($_SESSION["mikhmon"])) {
                   if (preg_match_all('/\$data\[\s*[\'"]([^\'"]+)[\'"]\s*\]\s*=\s*(?:array\s*\(|\[)(.*?)(?:\);|\];)/is', $cfgContent, $matches, PREG_SET_ORDER)) {
                     foreach ($matches as $m) {
                       $sName = trim($m[1]);
-                      if ($sName !== 'mikhmon' && !empty($sName)) {
+                      if ($sName !== 'mikhmon' && $sName !== 'desktop_license' && !empty($sName)) {
                         $hsName = '';
                         if (preg_match('/%([^%\'"]*)/', $m[2], $hsm)) {
                           $hsName = trim($hsm[1]);
@@ -219,7 +219,7 @@ if (!isset($_SESSION["mikhmon"])) {
                   foreach (explode("\n", $cfgContent) as $line) {
                     if (preg_match('/\$data\[\s*[\'"]([^\'"]+)[\'"]\s*\]/i', $line, $lm)) {
                       $sName = trim($lm[1]);
-                      if ($sName !== 'mikhmon' && !empty($sName) && !isset($allSessions[$sName])) {
+                      if ($sName !== 'mikhmon' && $sName !== 'desktop_license' && !empty($sName) && !isset($allSessions[$sName])) {
                         $hsName = '';
                         if (preg_match('/%([^%\'"]*)/', $line, $hsm)) {
                           $hsName = trim($hsm[1]);
@@ -234,8 +234,53 @@ if (!isset($_SESSION["mikhmon"])) {
               // 3. Fallback check for location_config entries
               if (isset($location_data['locations']) && is_array($location_data['locations'])) {
                 foreach ($location_data['locations'] as $locKey => $locVal) {
-                  if ($locKey !== 'mikhmon' && !empty($locKey) && !isset($allSessions[$locKey])) {
+                  if ($locKey !== 'mikhmon' && $locKey !== 'desktop_license' && !empty($locKey) && !isset($allSessions[$locKey])) {
                     $allSessions[$locKey] = $locVal;
+                  }
+                }
+              }
+
+              // 4. Auto-Recovery: Jika kosong pasca update, pulihkan otomatis dari backup_userdata
+              if (empty($allSessions)) {
+                $backupDirCandidates = [
+                  dirname(__DIR__) . '/backup_userdata',
+                  './backup_userdata',
+                  __DIR__ . '/../backup_userdata',
+                ];
+                foreach ($backupDirCandidates as $bDir) {
+                  if (is_dir($bDir)) {
+                    $backupFolders = glob($bDir . '/*', GLOB_ONLYDIR);
+                    if (!empty($backupFolders)) {
+                      rsort($backupFolders);
+                      foreach ($backupFolders as $bf) {
+                        $backupCfg = $bf . '/include_config.php';
+                        if (file_exists($backupCfg)) {
+                          $bContent = @file_get_contents($backupCfg);
+                          if (!empty($bContent) && (strpos($bContent, '<|<') !== false) && !empty($cfgFile)) {
+                            // Hitung sesi non-mikhmon dalam backup
+                            if (preg_match_all('/\$data\[\s*[\'"]([^\'"]+)[\'"]\s*\]/i', $bContent, $bMatches)) {
+                              $hasRouters = false;
+                              foreach ($bMatches[1] as $bmName) {
+                                if ($bmName !== 'mikhmon' && $bmName !== 'desktop_license') {
+                                  $hasRouters = true;
+                                  break;
+                                }
+                              }
+                              if ($hasRouters) {
+                                @copy($backupCfg, $cfgFile);
+                                $backupLoc = $bf . '/include_location_config.php';
+                                $targetLoc = dirname($cfgFile) . '/location_config.php';
+                                if (file_exists($backupLoc) && (!file_exists($targetLoc) || filesize($targetLoc) < 100)) {
+                                  @copy($backupLoc, $targetLoc);
+                                }
+                                echo "<script>location.reload();</script>";
+                                exit;
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
                   }
                 }
               }
