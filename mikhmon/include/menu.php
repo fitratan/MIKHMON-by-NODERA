@@ -240,10 +240,10 @@ if (!isset($_SESSION["mikhmon"]) && empty($_COOKIE['mikhmon_remember'])) {
   } elseif ($hotspot == "about") {
     $mpage = $_about;
     $sabout = "active";
-  } elseif ($id == "sessions" || $id == "remove" || $router == "new") {
+  } elseif ($id == "sessions" || $id == "remove" || explode("-", (string)$router)[0] === "new") {
     $ssesslist = "active";
     $mpage = $_admin_settings;
-  } elseif ($id == "settings" && $session == "new") {
+  } elseif ($id == "settings" && (explode("-", (string)$session)[0] === "new" || explode("-", (string)$router)[0] === "new")) {
     $snsettings = "active";
     $mpage = $_add_router;
   } elseif ($id == "settings" || $id == "connect") {
@@ -358,7 +358,7 @@ $themeSep = (strpos($cleanThemeUrl, '?') !== false) ? '&' : '?';
 </div>
 
 <div id="sidenav" class="sidenav">
-<?php if (($id == "settings" && $session == "new") || $id == "settings" && $router == "new") {
+<?php if (($id == "settings" && explode("-", (string)$session)[0] === "new") || ($id == "settings" && explode("-", (string)$router)[0] === "new") || explode("-", (string)$session)[0] === "new") {
 } else if ($id == "settings" || $id == "editor" || $id == "uplogo" || $id == "connect" || $id == "telegram" || $id == "whatsapp" || $id == "noderapay" || $id == "qris" || $id == "billing" || $id == "shop" || $id == "store-template" || $id == "shop-template" || $id == "thermal-printer") {
 ?>  
   <div class="menu text-center align-middle card-header" style="border-radius:0;"><h3 id="MikhmonSession"><?= $session; ?></h3></div>

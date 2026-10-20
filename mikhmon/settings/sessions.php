@@ -187,6 +187,13 @@ if (!isset($_SESSION["mikhmon"])) {
               if (isset($data) && is_array($data)) {
                 foreach ($data as $k => $v) {
                   if ($k !== 'mikhmon' && $k !== 'desktop_license' && !empty($k)) {
+                    // Abaikan draft sesi baru (new-XXXX) jika belum memiliki IP
+                    if (explode('-', (string)$k)[0] === 'new') {
+                      $ipPart = is_array($v) && isset($v[1]) ? trim(substr($v[1], strlen($k) + 1)) : '';
+                      if (empty($ipPart)) {
+                        continue;
+                      }
+                    }
                     $hsName = '';
                     if (is_array($v) && isset($v[4])) {
                       $hsParts = explode('%', $v[4]);
@@ -206,6 +213,13 @@ if (!isset($_SESSION["mikhmon"])) {
                     foreach ($matches as $m) {
                       $sName = trim($m[1]);
                       if ($sName !== 'mikhmon' && $sName !== 'desktop_license' && !empty($sName)) {
+                        if (explode('-', (string)$sName)[0] === 'new') {
+                          if (preg_match('/' . preg_quote($sName, '/') . '!([^\'"]*)/', $m[2], $ipM)) {
+                            if (empty(trim($ipM[1]))) continue;
+                          } else {
+                            continue;
+                          }
+                        }
                         $hsName = '';
                         if (preg_match('/%([^%\'"]*)/', $m[2], $hsm)) {
                           $hsName = trim($hsm[1]);
@@ -220,6 +234,13 @@ if (!isset($_SESSION["mikhmon"])) {
                     if (preg_match('/\$data\[\s*[\'"]([^\'"]+)[\'"]\s*\]/i', $line, $lm)) {
                       $sName = trim($lm[1]);
                       if ($sName !== 'mikhmon' && $sName !== 'desktop_license' && !empty($sName) && !isset($allSessions[$sName])) {
+                        if (explode('-', (string)$sName)[0] === 'new') {
+                          if (preg_match('/' . preg_quote($sName, '/') . '!([^\'"]*)/', $line, $ipM)) {
+                            if (empty(trim($ipM[1]))) continue;
+                          } else {
+                            continue;
+                          }
+                        }
                         $hsName = '';
                         if (preg_match('/%([^%\'"]*)/', $line, $hsm)) {
                           $hsName = trim($hsm[1]);
@@ -235,6 +256,7 @@ if (!isset($_SESSION["mikhmon"])) {
               if (isset($location_data['locations']) && is_array($location_data['locations'])) {
                 foreach ($location_data['locations'] as $locKey => $locVal) {
                   if ($locKey !== 'mikhmon' && $locKey !== 'desktop_license' && !empty($locKey) && !isset($allSessions[$locKey])) {
+                    if (explode('-', (string)$locKey)[0] === 'new') continue;
                     $allSessions[$locKey] = $locVal;
                   }
                 }

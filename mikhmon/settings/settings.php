@@ -347,16 +347,16 @@ if (!isset($_SESSION["mikhmon"])) {
         	     <div class="card-body">
 				<table class="table table-sm">
 					<tr>
-	  					<td class="align-middle">IP MikroTik </td><td><input class="form-control" type="text" size="15" name="ipmik" title="IP MikroTik / IP Cloud MikroTik" value="<?= $iphost; ?>" required="1"/></td>
+	  					<td class="align-middle">IP MikroTik </td><td><input class="form-control" type="text" size="15" name="ipmik" title="IP MikroTik / IP Cloud MikroTik" placeholder="Contoh: 192.168.88.1 atau vpn.domain.com:8728" autocomplete="off" value="<?= $iphost; ?>" required="1"/></td>
 					</tr>
 					<tr>
-						<td class="align-middle">Username  </td><td><input class="form-control" id="usermk" type="text" size="10" name="usermik" title="User MikroTik" value="<?= $userhost; ?>" required="1"/></td>
+						<td class="align-middle">Username  </td><td><input class="form-control" id="usermk" type="text" size="10" name="usermik" title="User MikroTik" placeholder="User API MikroTik" autocomplete="off" value="<?= $userhost; ?>" required="1"/></td>
 					</tr>
 					<tr>
 						<td class="align-middle">Password  </td><td>
 							<div class="input-group">
 								<div class="input-group-11 col-box-10">
-        						<input class="group-item group-item-l" id="passmk" type="password" name="passmik" title="Password MikroTik" value="<?= mikhmon_decrypt($passwdhost); ?>" required="1"/>
+        						<input class="group-item group-item-l" id="passmk" type="password" name="passmik" title="Password MikroTik" placeholder="Password API MikroTik" autocomplete="new-password" value="<?= mikhmon_decrypt($passwdhost); ?>" required="1"/>
         						</div>
             					<div class="input-group-1 col-box-2">
             						<div class="group-item group-item-r pd-2p5 text-center align-middle">
