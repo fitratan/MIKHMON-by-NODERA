@@ -40,6 +40,13 @@ var (
 
 	procGetModuleHandleW = kernel32DLL.NewProc("GetModuleHandleW")
 	procCreateFontW      = gdi32DLL.NewProc("CreateFontW")
+	procCreateSolidBrush = gdi32DLL.NewProc("CreateSolidBrush")
+	procSetBkMode        = gdi32DLL.NewProc("SetBkMode")
+	procSetTextColor     = gdi32DLL.NewProc("SetTextColor")
+)
+
+var (
+	hBackgroundBrush uintptr
 )
 
 const (
@@ -404,6 +411,12 @@ func wndProc(hwnd uintptr, msg uint32, wParam, lParam uintptr) uintptr {
 		removeTrayIcon()
 		procPostQuitMessage.Call(0)
 		return 0
+
+	case 0x0138, 0x0136: // WM_CTLCOLORSTATIC, WM_CTLCOLORDLG
+		hdc := wParam
+		procSetBkMode.Call(hdc, 1) // TRANSPARENT
+		procSetTextColor.Call(hdc, 0x00222222)
+		return hBackgroundBrush
 	}
 
 	r, _, _ := procDefWindowProcW.Call(hwnd, uintptr(msg), wParam, lParam)
@@ -434,7 +447,8 @@ func CreateAppWindow(baseDir string, sm *ServerManager, lic *LicenseData, hwid s
 	wc.hInstance = hInstance
 	wc.hIcon = hAppIcon
 	wc.hCursor = hCursor
-	wc.hbrBackground = 16 // COLOR_BTNFACE + 1
+	hBackgroundBrush, _, _ = procCreateSolidBrush.Call(0x00F0F0F0) // Clean light gray
+	wc.hbrBackground = hBackgroundBrush
 	wc.lpszClassName = className
 	wc.hIconSm = hAppIcon
 

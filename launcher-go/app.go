@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"syscall"
+	"time"
 
 	webview2 "github.com/jchv/go-webview2"
 )
@@ -33,7 +34,27 @@ func RunDesktopApp(baseDir string) {
 	sm := NewServerManager(baseDir, 8080, hwid)
 	defer sm.Stop()
 
-	// 3. Setup Persistent WebView2 Data Path in %APPDATA%\NoderaMikhmon
+	// 3. Special Wine Environment: Microsoft Edge WebView2 runtime is unsupported under Wine.
+	// Launch dedicated standalone desktop app window via host Chromium/Chrome with zero address bar!
+	if isRunningUnderWine() {
+		if err := sm.Start(); err != nil {
+			showAppDialog("Gagal Memulai Server", fmt.Sprintf("Gagal menjalankan engine PHP internal: %v", err), 0x00000010)
+			return
+		}
+		appUrl := fmt.Sprintf("http://127.0.0.1:%d/admin.php?id=sessions", sm.Port)
+		_, _ = OpenAppWindow(appUrl)
+
+		// Keep process and PHP server alive (monitor PHP process)
+		for {
+			time.Sleep(2 * time.Second)
+			if sm.Process != nil && sm.Process.ProcessState != nil && sm.Process.ProcessState.Exited() {
+				break
+			}
+		}
+		return
+	}
+
+	// 4. Setup Persistent WebView2 Data Path in %APPDATA%\NoderaMikhmon
 	appData := os.Getenv("APPDATA")
 	if appData == "" {
 		appData = baseDir
@@ -41,7 +62,7 @@ func RunDesktopApp(baseDir string) {
 	dataPath := filepath.Join(appData, "NoderaMikhmon", "webview_cache")
 	_ = os.MkdirAll(dataPath, 0755)
 
-	// 4. Create Native WebView2 Window
+	// 5. Create Native WebView2 Window on Windows
 	w := webview2.NewWithOptions(webview2.WebViewOptions{
 		Debug:     false,
 		DataPath:  dataPath,
@@ -57,18 +78,9 @@ func RunDesktopApp(baseDir string) {
 
 	// Fallback if WebView2 runtime is missing on old Windows machines
 	if w == nil {
-		res := showAppDialog(
-			"Microsoft Edge WebView2 Diperlukan",
-			"Aplikasi membutuhkan Microsoft Edge WebView2 Runtime untuk berjalan secara mandiri.\n\nKlik OK untuk mengunduh runtime resmi dari Microsoft (Evergreen Bootstrapper).",
-			0x00000001|0x00000030, // MB_OKCANCEL | MB_ICONWARNING
-		)
-		if res == 1 { // IDOK
-			_ = OpenBrowser("https://go.microsoft.com/fwlink/p/?LinkId=2124703")
-		}
-		// Fallback: start server and open browser
 		if err := sm.Start(); err == nil {
-			_ = OpenBrowser(fmt.Sprintf("http://127.0.0.1:%d/admin.php?id=sessions", sm.Port))
-			// Keep process alive
+			appUrl := fmt.Sprintf("http://127.0.0.1:%d/admin.php?id=sessions", sm.Port)
+			_, _ = OpenAppWindow(appUrl)
 			select {}
 		}
 		return

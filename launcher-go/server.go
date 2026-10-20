@@ -37,6 +37,46 @@ func OpenBrowser(url string) error {
 	return nil
 }
 
+// OpenAppWindow opens the application in a dedicated standalone desktop app window (no URL bar, no tabs)
+func OpenAppWindow(url string) (*exec.Cmd, error) {
+	if isRunningUnderWine() {
+		linuxBrowsers := []string{
+			"/usr/bin/google-chrome",
+			"/usr/bin/google-chrome-stable",
+			"/usr/bin/chromium-browser",
+			"/usr/bin/chromium",
+			"/usr/bin/brave-browser",
+			"/usr/bin/microsoft-edge-stable",
+			"/usr/bin/microsoft-edge",
+		}
+		for _, b := range linuxBrowsers {
+			cmd := exec.Command("cmd", "/c", "start", "/unix", b, "--app="+url, "--window-size=1240,820")
+			if err := cmd.Start(); err == nil {
+				return cmd, nil
+			}
+		}
+		cmd := exec.Command("cmd", "/c", "start", "/unix", "/usr/bin/xdg-open", url)
+		return cmd, cmd.Start()
+	}
+
+	winCandidates := []string{
+		`C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe`,
+		`C:\Program Files\Microsoft\Edge\Application\msedge.exe`,
+		`C:\Program Files\Google\Chrome\Application\chrome.exe`,
+		`C:\Program Files (x86)\Google\Chrome\Application\chrome.exe`,
+	}
+	for _, c := range winCandidates {
+		if fi, err := os.Stat(c); err == nil && !fi.IsDir() {
+			cmd := exec.Command(c, "--app="+url, "--window-size=1240,820")
+			if err := cmd.Start(); err == nil {
+				return cmd, nil
+			}
+		}
+	}
+
+	return nil, OpenBrowser(url)
+}
+
 func unsafePointer(p *uint16) uintptr {
 	return uintptr(unsafe.Pointer(p))
 }
