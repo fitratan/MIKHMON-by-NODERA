@@ -2,9 +2,11 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"syscall"
 )
 
 var (
@@ -46,16 +48,26 @@ func main() {
 
 	// 3. Mode Selection
 	exeName := filepath.Base(exePath)
-	if *serverOnly || strings.EqualFold(exeName, "MikhmonServer.exe") {
+	if *serverOnly || strings.EqualFold(exeName, "MikhmonServer.exe") || isRunningUnderWine() {
 		hwid := GetHardwareID(baseDir)
 		lic, _ := ReadSavedLicense(baseDir)
 		sm := NewServerManager(baseDir, 8080, hwid)
+		if isRunningUnderWine() {
+			if err := sm.Start(); err == nil {
+				_ = OpenBrowser(fmt.Sprintf("http://127.0.0.1:%d/admin.php?id=sessions", sm.Port))
+			}
+		}
 		CreateAppWindow(baseDir, sm, lic, hwid)
 		return
 	}
 
 	// Default: Run Standalone All-in-One Desktop App (Native WebView2 Window)
 	RunDesktopApp(baseDir)
+}
+
+func isRunningUnderWine() bool {
+	ntdll := syscall.NewLazyDLL("ntdll.dll")
+	return ntdll.NewProc("wine_get_version").Find() == nil
 }
 
 func fileExists(path string) bool {
