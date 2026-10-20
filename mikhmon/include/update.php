@@ -250,32 +250,46 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
             }
         }
 
-        // 3. METODE 2: UNDUH ZIP DARI GITHUB
+        // 3. METODE 2: UNDUH PAKET ZIP DARI GITHUB (Prioritas: Paket Ringan 2MB mikhmon-update.zip -> Fallback: main.zip 41MB)
         if (!$updateSuccess) {
-            $logs[] = "[" . date('H:i:s') . "] Mengunduh berkas rilis mutakhir dari GitHub (fitratan/MIKHMON-by-NODERA)...";
-            $zipUrl = 'https://github.com/fitratan/MIKHMON-by-NODERA/archive/refs/heads/main.zip';
+            $zipUrls = [
+                'https://raw.githubusercontent.com/fitratan/MIKHMON-by-NODERA/main/mikhmon-update.zip',
+                'https://github.com/fitratan/MIKHMON-by-NODERA/raw/main/mikhmon-update.zip',
+                'https://github.com/fitratan/MIKHMON-by-NODERA/archive/refs/heads/main.zip',
+            ];
             $tempZip = sys_get_temp_dir() . '/mikhmon_update_' . time() . '.zip';
             $tempExtract = sys_get_temp_dir() . '/mikhmon_extract_' . time();
 
-            $ch = curl_init($zipUrl);
-            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-            curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
-            curl_setopt($ch, CURLOPT_USERAGENT, 'NODERA-Mikhmon-Standalone-Updater');
-            curl_setopt($ch, CURLOPT_TIMEOUT, 90);
-            if (function_exists('mikhmon_curl_set_ssl')) {
-                mikhmon_curl_set_ssl($ch);
-            } else {
-                curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            $downloaded = false;
+            foreach ($zipUrls as $idx => $zipUrl) {
+                $isLight = (strpos($zipUrl, 'mikhmon-update.zip') !== false);
+                $logs[] = "[" . date('H:i:s') . "] Mengunduh paket pembaruan " . ($isLight ? "(Paket Ringan ~2MB)..." : "(Paket Lengkap)...");
+
+                $ch = curl_init($zipUrl);
+                curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+                curl_setopt($ch, CURLOPT_FOLLOWLOCATION, true);
+                curl_setopt($ch, CURLOPT_USERAGENT, 'NODERA-Mikhmon-Standalone-Updater');
+                curl_setopt($ch, CURLOPT_TIMEOUT, $isLight ? 45 : 180);
+                if (function_exists('mikhmon_curl_set_ssl')) {
+                    mikhmon_curl_set_ssl($ch);
+                } else {
+                    curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+                }
+                $zipData = curl_exec($ch);
+                $zipHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+                curl_close($ch);
+
+                if ($zipHttpCode === 200 && !empty($zipData) && strlen($zipData) > 50000) {
+                    file_put_contents($tempZip, $zipData);
+                    unset($zipData);
+                    $downloaded = true;
+                    $logs[] = "[" . date('H:i:s') . "] Berkas pembaruan berhasil diunduh (" . round(filesize($tempZip) / 1024 / 1024, 2) . " MB).";
+                    break;
+                }
             }
-            $zipData = curl_exec($ch);
-            $zipHttpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-            curl_close($ch);
 
-            if ($zipHttpCode === 200 && !empty($zipData) && strlen($zipData) > 50000) {
-                file_put_contents($tempZip, $zipData);
-                unset($zipData);
-
-                $logs[] = "[" . date('H:i:s') . "] Berkas ZIP berhasil diunduh. Mengekstrak berkas...";
+            if ($downloaded && file_exists($tempZip)) {
+                $logs[] = "[" . date('H:i:s') . "] Mengekstrak paket pembaruan...";
                 if (class_exists('ZipArchive')) {
                     $zip = new ZipArchive();
                     if ($zip->open($tempZip) === TRUE) {
@@ -283,8 +297,22 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                         $zip->close();
                         @unlink($tempZip);
 
-                        $sourceMikhmon = $tempExtract . '/MIKHMON-by-NODERA-main/mikhmon';
-                        if (is_dir($sourceMikhmon)) {
+                        // Deteksi letak folder mikhmon dalam hasil ekstraksi (bisa mikhmon/ atau MIKHMON-by-NODERA-main/mikhmon)
+                        $sourceMikhmon = null;
+                        $candidateSources = [
+                            $tempExtract . '/mikhmon',
+                            $tempExtract . '/MIKHMON-by-NODERA-main/mikhmon',
+                            $tempExtract . '/MIKHMON-by-NODERA-master/mikhmon',
+                            $tempExtract,
+                        ];
+                        foreach ($candidateSources as $cand) {
+                            if (is_dir($cand) && file_exists($cand . '/hotspot/users.php')) {
+                                $sourceMikhmon = $cand;
+                                break;
+                            }
+                        }
+
+                        if ($sourceMikhmon) {
                             $logs[] = "[" . date('H:i:s') . "] Memasang pembaruan berkas sistem (melindungi file sesi & template)...";
                             
                             $skipFiles = array_merge($preserveFiles, [
@@ -298,13 +326,17 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                             );
 
                             $copiedCount = 0;
+                            $normSource = rtrim(str_replace('\\', '/', $sourceMikhmon), '/');
+
                             foreach ($iterator as $item) {
-                                $subPath = substr($item->getPathname(), strlen($sourceMikhmon) + 1);
-                                $targetPath = $mikhmonDir . '/' . $subPath;
+                                $rawItemPath = str_replace('\\', '/', $item->getPathname());
+                                $subPath = ltrim(substr($rawItemPath, strlen($normSource)), '/');
+                                $targetPath = $mikhmonDir . '/' . str_replace('/', DIRECTORY_SEPARATOR, $subPath);
 
                                 $isProtected = false;
                                 foreach ($skipFiles as $skip) {
-                                    if (str_starts_with($subPath, $skip) || $subPath === $skip) {
+                                    $normSkip = str_replace('\\', '/', $skip);
+                                    if (str_starts_with($subPath, $normSkip) || $subPath === $normSkip) {
                                         $isProtected = true;
                                         break;
                                     }
@@ -318,8 +350,13 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                                         @mkdir($targetPath, 0755, true);
                                     }
                                 } else {
-                                    @copy($item->getPathname(), $targetPath);
-                                    $copiedCount++;
+                                    $parentDir = dirname($targetPath);
+                                    if (!is_dir($parentDir)) {
+                                        @mkdir($parentDir, 0755, true);
+                                    }
+                                    if (@copy($item->getPathname(), $targetPath)) {
+                                        $copiedCount++;
+                                    }
                                 }
                             }
 
@@ -339,9 +376,9 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
 
                             $updateSuccess = true;
                             $methodUsed = 'ZipArchive';
-                            $logs[] = "[" . date('H:i:s') . "] Berhasil memperbarui $copiedCount berkas sistem dari paket GitHub.";
+                            $logs[] = "[" . date('H:i:s') . "] Berhasil memperbarui $copiedCount berkas sistem secara instan.";
                         } else {
-                            $logs[] = "[" . date('H:i:s') . "] Folder mikhmon tidak ditemukan di arsip GitHub.";
+                            $logs[] = "[" . date('H:i:s') . "] Struktur berkas mikhmon tidak ditemukan di dalam paket rilis.";
                         }
                     } else {
                         $logs[] = "[" . date('H:i:s') . "] Gagal membuka berkas zip pembaruan.";
@@ -350,7 +387,7 @@ if (isset($_GET['action']) || isset($_POST['action'])) {
                     $logs[] = "[" . date('H:i:s') . "] Ekstensi ZipArchive PHP tidak aktif.";
                 }
             } else {
-                $logs[] = "[" . date('H:i:s') . "] Gagal mengunduh arsip zip dari GitHub (HTTP $zipHttpCode).";
+                $logs[] = "[" . date('H:i:s') . "] Gagal mengunduh berkas pembaruan dari server GitHub.";
             }
         }
 

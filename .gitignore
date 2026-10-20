@@ -10,6 +10,7 @@ bin/php-win/dev/
 bin/php-win/lib/
 *.zip
 *.tar.gz
+!mikhmon-update.zip
 
 # Environment & local files
 .env
