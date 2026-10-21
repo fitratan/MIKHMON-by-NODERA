@@ -25,6 +25,13 @@ if (session_status() === PHP_SESSION_NONE) {
     }
     @session_start();
 }
-$qs = !empty($_SERVER['QUERY_STRING']) ? '&' . $_SERVER['QUERY_STRING'] : '';
+$qs = '';
+if (!empty($_SERVER['QUERY_STRING'])) {
+    parse_str($_SERVER['QUERY_STRING'], $queryParams);
+    unset($queryParams['id']);
+    if (!empty($queryParams)) {
+        $qs = '&' . http_build_query($queryParams);
+    }
+}
 header("Location: ./admin.php?id=login" . $qs);
 exit;

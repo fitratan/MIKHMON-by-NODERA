@@ -81,8 +81,15 @@ if (!isset($_SESSION["mikhmon"]) && !empty($_COOKIE['mikhmon_remember'])) {
 }
 
 if (!isset($_SESSION["mikhmon"])) {
-  $qs = !empty($_SERVER['QUERY_STRING']) ? '?' . $_SERVER['QUERY_STRING'] : '';
-  header("Location: ./login.php" . $qs);
+  $qs = '';
+  if (!empty($_SERVER['QUERY_STRING'])) {
+    parse_str($_SERVER['QUERY_STRING'], $queryParams);
+    unset($queryParams['id']);
+    if (!empty($queryParams)) {
+      $qs = '&' . http_build_query($queryParams);
+    }
+  }
+  header("Location: ./admin.php?id=login" . $qs);
   exit;
 }
 
