@@ -219,21 +219,28 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
   include_once('./lib/formatbytesbites.php');
   $API = new RouterosAPI();
   $API->debug = false;
-  $API->timeout = 5;
+  $API->timeout = 2;
   $API->attempts = 1;
   $API->delay = 0;
 
   if (!$isNonRouterPage) {
-    $passwdhostDecrypted = function_exists('mikhmon_decrypt') ? mikhmon_decrypt($passwdhost) : mikhmon_decrypt($passwdhost);
-    @$API->connect($iphost, $userhost, $passwdhostDecrypted);
+    $passwdhostDecrypted = function_exists('mikhmon_decrypt') ? mikhmon_decrypt($passwdhost) : $passwdhost;
+    try {
+      @$API->connect($iphost, $userhost, $passwdhostDecrypted);
+    } catch (\Throwable $e) {}
   }
 
   if (isset($_SESSION[$session . '_identity']) && !empty($_SESSION[$session . '_identity'])) {
     $identity = $_SESSION[$session . '_identity'];
   } else {
-    $getidentity = $API->comm("/system/identity/print");
-    $identity = isset($getidentity[0]['name']) ? $getidentity[0]['name'] : 'MikroTik';
-    $_SESSION[$session . '_identity'] = $identity;
+    $identity = 'MikroTik';
+    if (!empty($API->connected)) {
+      try {
+        $getidentity = $API->comm("/system/identity/print");
+        $identity = isset($getidentity[0]['name']) ? $getidentity[0]['name'] : 'MikroTik';
+        $_SESSION[$session . '_identity'] = $identity;
+      } catch (\Throwable $e) {}
+    }
   }
   
 

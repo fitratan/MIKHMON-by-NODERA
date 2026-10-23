@@ -468,27 +468,40 @@ if ($id == "login" || (empty($id) && !isset($_SESSION["mikhmon"]))) {
     };
     </script>';
 } elseif ($id == "connect"  && !empty($session)) {
+  while (ob_get_level() > 0) {
+    @ob_end_clean();
+  }
   @ini_set('memory_limit', '512M');
-@ini_set("max_execution_time",5);  
-  include_once('./include/menu.php');
+  @ini_set("max_execution_time", 10);
   $API = new RouterosAPI();
   $API->debug = false;
-  $passwdhostDecrypted = function_exists('mikhmon_decrypt') ? mikhmon_decrypt($passwdhost) : mikhmon_decrypt($passwdhost);
-  if ($API->connect($iphost, $userhost, $passwdhostDecrypted)){
+  $API->timeout = 2;
+  $API->attempts = 1;
+  $API->delay = 0;
+  $passwdhostDecrypted = function_exists('mikhmon_decrypt') ? mikhmon_decrypt($passwdhost) : $passwdhost;
+  $connOk = false;
+  try {
+    $connOk = $API->connect($iphost, $userhost, $passwdhostDecrypted);
+  } catch (\Throwable $e) {
+    $connOk = false;
+  }
+  if ($connOk) {
     $_SESSION["connect"] = "<b class='text-green'>Connected</b>";
     unset($_SESSION['routerboard']);
     unset($_SESSION[$session . '_routerboard']);
-    echo "<script>window.location='./?session=" . $session . "'</script>";
+    echo "<script>if(typeof hideMikhmonOverlay==='function')hideMikhmonOverlay(); window.location='./?session=" . urlencode($session) . "';</script>";
   } else {
     $_SESSION["connect"] = "<b class='text-red'>Not Connected</b>";
     $notConnMsg = ($_mikhmon_not_connected ?? 'Mikhmon tidak terhubung!') . "\n" . ($_check_ip_user_port ?? 'Silakan periksa kembali IP, User, Password dan port API harus enable.') . "\n" . ($_vpn_check_notice ?? 'Jika menggunakan koneksi VPN, pastikan VPN tersebut terkoneksi.');
-    echo "<script>if(typeof hideMikhmonOverlay==='function')hideMikhmonOverlay(); alert(" . json_encode($notConnMsg) . ")</script>";
+    echo "<script>if(typeof hideMikhmonOverlay==='function')hideMikhmonOverlay(); alert(" . json_encode($notConnMsg) . ");";
     if($c == "settings"){
-      echo "<script>window.location='./admin.php?id=settings&session=" . $session . "'</script>";
+      echo "window.location='./admin.php?id=settings&session=" . urlencode($session) . "';";
     }else{
-      echo "<script>window.location='./admin.php?id=sessions'</script>";
+      echo "window.location='./admin.php?id=sessions';";
     }
+    echo "</script>";
   }
+  exit;
 } elseif ($id == "thermal-printer") {
   include_once('./include/menu.php');
   include_once('./settings/thermalprinter.php');

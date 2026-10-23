@@ -288,6 +288,19 @@ if (!isset($_SESSION["mikhmon"])) {
 }
 ?>
 <script>
+(function() {
+    var mc = document.querySelector('.main-container');
+    if (mc) mc.style.display = 'block';
+    var ld = document.getElementById('loading');
+    if (ld) ld.style.display = 'none';
+    if (typeof hideMikhmonOverlay === 'function') hideMikhmonOverlay();
+    if (typeof $ !== 'undefined') {
+        $('.main-container').show();
+        $('#loading').hide();
+    }
+})();
+</script>
+<script>
   function PassMk(){
     var x = document.getElementById('passmk');
     if (x.type === 'password') {

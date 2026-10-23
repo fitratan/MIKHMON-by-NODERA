@@ -52,22 +52,35 @@ include_once __DIR__ . '/../lang/' . $langid . '.php';
   include_once('../lib/formatbytesbites.php');
   $API = new RouterosAPI();
   $API->debug = false;
-
-
+  $API->timeout = 2;
+  $API->attempts = 1;
+  $API->delay = 0;
 
   if ($load == "sysresource") {
-
-    $API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost));
+    try {
+      @$API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost));
+    } catch (\Throwable $e) {}
 
 // get MikroTik system clock
-    $getclock = $API->comm("/system/clock/print", array(".proplist" => "time,date,time-zone-name"));
-    $clock = isset($getclock[0]) ? $getclock[0] : array();
-    $timezone = isset($getclock[0]['time-zone-name']) ? $getclock[0]['time-zone-name'] : 'UTC';
+    $clock = array();
+    $timezone = 'UTC';
+    if (!empty($API->connected)) {
+      try {
+        $getclock = $API->comm("/system/clock/print", array(".proplist" => "time,date,time-zone-name"));
+        $clock = isset($getclock[0]) ? $getclock[0] : array();
+        $timezone = isset($getclock[0]['time-zone-name']) ? $getclock[0]['time-zone-name'] : 'UTC';
+      } catch (\Throwable $e) {}
+    }
     date_default_timezone_set($timezone);
 
 // get system resource MikroTik
-    $getresource = $API->comm("/system/resource/print", array(".proplist" => "uptime,board-name,version,cpu-load,free-memory,free-hdd-space,architecture-name"));
-    $resource = isset($getresource[0]) ? $getresource[0] : array();
+    $resource = array();
+    if (!empty($API->connected)) {
+      try {
+        $getresource = $API->comm("/system/resource/print", array(".proplist" => "uptime,board-name,version,cpu-load,free-memory,free-hdd-space,architecture-name"));
+        $resource = isset($getresource[0]) ? $getresource[0] : array();
+      } catch (\Throwable $e) {}
+    }
 
 // get routeboard info (cached per router session)
     unset($_SESSION['routerboard']);
@@ -130,12 +143,16 @@ include_once __DIR__ . '/../lang/' . $langid . '.php';
 } else if ($load == "hotspot") {
 
   session_write_close();
-  $API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost));
+  try {
+    @$API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost));
+  } catch (\Throwable $e) {}
 
-  // 1. Scan and notify expired vouchers to Telegram
-  include_once __DIR__ . '/../include/telegram_helper.php';
-  if (function_exists('mikhmon_scan_and_notify_expired_vouchers')) {
-    mikhmon_scan_and_notify_expired_vouchers($API, $session, $identity ?? ($session ?? ''));
+  if (!empty($API->connected)) {
+    // 1. Scan and notify expired vouchers to Telegram
+    include_once __DIR__ . '/../include/telegram_helper.php';
+    if (function_exists('mikhmon_scan_and_notify_expired_vouchers')) {
+      mikhmon_scan_and_notify_expired_vouchers($API, $session, $identity ?? ($session ?? ''));
+    }
   }
 
   $acFile = '../include/autoclean_config.php';
@@ -219,10 +236,12 @@ include_once __DIR__ . '/../lang/' . $langid . '.php';
 <?php 
 } else if ($load == "logs") {
 
-  $API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost));
+  try {
+    @$API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost));
+  } catch (\Throwable $e) {}
 
   // move hotspot log to disk (checked once per session)
-  if (!isset($_SESSION['logging_checked_' . $session])) {
+  if (!empty($API->connected) && !isset($_SESSION['logging_checked_' . $session])) {
     $getlogging = $API->comm("/system/logging/print", array("?prefix" => "->", ));
     $logging = $getlogging[0];
     if ($logging['prefix'] != "->") {
@@ -304,55 +323,87 @@ include_once __DIR__ . '/../lang/' . $langid . '.php';
 <?php 
 } else if ($load == "all") {
 
-  $API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost));
+  try {
+    @$API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost));
+  } catch (\Throwable $e) {}
 
-  // Auto-scan and notify expired vouchers to Telegram
-  include_once __DIR__ . '/../include/telegram_helper.php';
-  if (function_exists('mikhmon_scan_and_notify_expired_vouchers')) {
-    mikhmon_scan_and_notify_expired_vouchers($API, $session, $identity ?? ($session ?? ''));
+  if (!empty($API->connected)) {
+    // Auto-scan and notify expired vouchers to Telegram
+    include_once __DIR__ . '/../include/telegram_helper.php';
+    if (function_exists('mikhmon_scan_and_notify_expired_vouchers')) {
+      mikhmon_scan_and_notify_expired_vouchers($API, $session, $identity ?? ($session ?? ''));
+    }
   }
 
   // 1. Clock & Resource
-  $getclock = $API->comm("/system/clock/print", array(".proplist" => "time,date,time-zone-name"));
-  $clock = isset($getclock[0]) ? $getclock[0] : array();
-  $timezone = isset($clock['time-zone-name']) ? $clock['time-zone-name'] : 'UTC';
+  $clock = array();
+  $timezone = 'UTC';
+  if (!empty($API->connected)) {
+    try {
+      $getclock = $API->comm("/system/clock/print", array(".proplist" => "time,date,time-zone-name"));
+      $clock = isset($getclock[0]) ? $getclock[0] : array();
+      $timezone = isset($clock['time-zone-name']) ? $clock['time-zone-name'] : 'UTC';
+    } catch (\Throwable $e) {}
+  }
   date_default_timezone_set($timezone);
 
-  $getresource = $API->comm("/system/resource/print", array(".proplist" => "uptime,board-name,version,cpu-load,free-memory,free-hdd-space,architecture-name"));
-  $resource = isset($getresource[0]) ? $getresource[0] : array();
+  $resource = array();
+  if (!empty($API->connected)) {
+    try {
+      $getresource = $API->comm("/system/resource/print", array(".proplist" => "uptime,board-name,version,cpu-load,free-memory,free-hdd-space,architecture-name"));
+      $resource = isset($getresource[0]) ? $getresource[0] : array();
+    } catch (\Throwable $e) {}
+  }
 
   unset($_SESSION['routerboard']);
   if (isset($_SESSION[$session . '_routerboard']) && is_array($_SESSION[$session . '_routerboard'])) {
     $routerboard = $_SESSION[$session . '_routerboard'];
   } else {
-    $getrouterboard = $API->comm("/system/routerboard/print");
-    $routerboard = (isset($getrouterboard[0]) && is_array($getrouterboard[0])) ? $getrouterboard[0] : array();
-    $_SESSION[$session . '_routerboard'] = $routerboard;
+    $routerboard = array();
+    if (!empty($API->connected)) {
+      try {
+        $getrouterboard = $API->comm("/system/routerboard/print");
+        $routerboard = (isset($getrouterboard[0]) && is_array($getrouterboard[0])) ? $getrouterboard[0] : array();
+        $_SESSION[$session . '_routerboard'] = $routerboard;
+      } catch (\Throwable $e) {}
+    }
   }
 
   // 2. Hotspot User Counts
-  $countallusers = $API->comm("/ip/hotspot/user/print", array("count-only" => ""));
-  if (is_array($countallusers)) {
-    $countallusers = isset($countallusers[0]['ret']) ? $countallusers[0]['ret'] : (isset($countallusers['ret']) ? $countallusers['ret'] : count($countallusers));
+  $countallusers = 0;
+  if (!empty($API->connected)) {
+    try {
+      $countallusers = $API->comm("/ip/hotspot/user/print", array("count-only" => ""));
+      if (is_array($countallusers)) {
+        $countallusers = isset($countallusers[0]['ret']) ? $countallusers[0]['ret'] : (isset($countallusers['ret']) ? $countallusers['ret'] : count($countallusers));
+      }
+    } catch (\Throwable $e) {}
   }
   $countallusers = is_numeric($countallusers) ? (int)$countallusers : 0;
   $uunit = ($countallusers > 1) ? "items" : "item";
 
-  $counthotspotactive = $API->comm("/ip/hotspot/active/print", array("count-only" => ""));
-  if (is_array($counthotspotactive)) {
-    $counthotspotactive = isset($counthotspotactive[0]['ret']) ? $counthotspotactive[0]['ret'] : (isset($counthotspotactive['ret']) ? $counthotspotactive['ret'] : count($counthotspotactive));
+  $counthotspotactive = 0;
+  if (!empty($API->connected)) {
+    try {
+      $counthotspotactive = $API->comm("/ip/hotspot/active/print", array("count-only" => ""));
+      if (is_array($counthotspotactive)) {
+        $counthotspotactive = isset($counthotspotactive[0]['ret']) ? $counthotspotactive[0]['ret'] : (isset($counthotspotactive['ret']) ? $counthotspotactive['ret'] : count($counthotspotactive));
+      }
+    } catch (\Throwable $e) {}
   }
   $counthotspotactive = is_numeric($counthotspotactive) ? (int)$counthotspotactive : 0;
   $hunit = ($counthotspotactive > 1) ? "items" : "item";
 
   // 3. Hotspot Logging
-  if (!isset($_SESSION['logging_checked_' . $session])) {
-    $getlogging = $API->comm("/system/logging/print", array("?prefix" => "->", ));
-    $logging = isset($getlogging[0]) ? $getlogging[0] : array();
-    if (isset($logging['prefix']) && $logging['prefix'] != "->") {
-      $API->comm("/system/logging/add", array("action" => "disk", "prefix" => "->", "topics" => "hotspot,info,debug", ));
-    }
-    $_SESSION['logging_checked_' . $session] = true;
+  if (!empty($API->connected) && !isset($_SESSION['logging_checked_' . $session])) {
+    try {
+      $getlogging = $API->comm("/system/logging/print", array("?prefix" => "->", ));
+      $logging = isset($getlogging[0]) ? $getlogging[0] : array();
+      if (isset($logging['prefix']) && $logging['prefix'] != "->") {
+        $API->comm("/system/logging/add", array("action" => "disk", "prefix" => "->", "topics" => "hotspot,info,debug", ));
+      }
+      $_SESSION['logging_checked_' . $session] = true;
+    } catch (\Throwable $e) {}
   }
   session_write_close();
 

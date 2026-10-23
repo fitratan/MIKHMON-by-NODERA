@@ -23,7 +23,12 @@ function connect(e){
     if (typeof window.showMikhmonOverlay === "function") {
         window.showMikhmonOverlay("Loading...", "");
     }
-    $("#temp").load("./admin.php?id=connect&session="+e);
+    $("#temp").load("./admin.php?id=connect&session="+encodeURIComponent(e), function(response, status, xhr) {
+        if (status === "error") {
+            if (typeof window.hideMikhmonOverlay === "function") window.hideMikhmonOverlay();
+            alert("Gagal menghubungi server MikroTik / Mikhmon.");
+        }
+    });
 }
 function switchMikhmonSetting(urlOrVal, type){
     if (!urlOrVal) return;

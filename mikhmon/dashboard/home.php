@@ -21,54 +21,80 @@ error_reporting(0);
 if (!isset($_SESSION["mikhmon"])) {
   header("Location:../admin.php?id=login");
 } else {
-
-
+?>
+<script>
+(function() {
+    var mc = document.querySelector('.main-container');
+    if (mc) mc.style.display = 'block';
+    var ld = document.getElementById('loading');
+    if (ld) ld.style.display = 'none';
+    if (typeof hideMikhmonOverlay === 'function') hideMikhmonOverlay();
+    if (typeof $ !== 'undefined') {
+        $('.main-container').show();
+        $('#loading').hide();
+    }
+})();
+</script>
+<?php
 // get MikroTik system clock
-  $getclock = $API->comm("/system/clock/print", array(".proplist" => "time,date,time-zone-name"));
-  $clock = isset($getclock[0]) ? $getclock[0] : array();
-  $timezone = isset($getclock[0]['time-zone-name']) ? $getclock[0]['time-zone-name'] : 'UTC';
+  $clock = array();
+  $timezone = 'UTC';
+  if (!empty($API->connected)) {
+    try {
+      $getclock = $API->comm("/system/clock/print", array(".proplist" => "time,date,time-zone-name"));
+      $clock = isset($getclock[0]) && is_array($getclock[0]) ? $getclock[0] : array();
+      $timezone = isset($clock['time-zone-name']) && !empty($clock['time-zone-name']) ? $clock['time-zone-name'] : 'UTC';
+    } catch (\Throwable $e) {}
+  }
   $_SESSION['timezone'] = $timezone;
   date_default_timezone_set($timezone);
 
 // get system resource MikroTik
-  $getresource = $API->comm("/system/resource/print", array(".proplist" => "uptime,board-name,version,cpu-load,free-memory,free-hdd-space,architecture-name"));
-  $resource = isset($getresource[0]) ? $getresource[0] : array();
+  $resource = array();
+  if (!empty($API->connected)) {
+    try {
+      $getresource = $API->comm("/system/resource/print", array(".proplist" => "uptime,board-name,version,cpu-load,free-memory,free-hdd-space,architecture-name"));
+      $resource = isset($getresource[0]) && is_array($getresource[0]) ? $getresource[0] : array();
+    } catch (\Throwable $e) {}
+  }
 
 // get routeboard info (cached per router session)
   unset($_SESSION['routerboard']);
   if (isset($_SESSION[$session . '_routerboard']) && is_array($_SESSION[$session . '_routerboard'])) {
     $routerboard = $_SESSION[$session . '_routerboard'];
   } else {
-    $getrouterboard = $API->comm("/system/routerboard/print");
-    $routerboard = (isset($getrouterboard[0]) && is_array($getrouterboard[0])) ? $getrouterboard[0] : array();
-    $_SESSION[$session . '_routerboard'] = $routerboard;
-  }
-/*
-// move hotspot log to disk *
-  $getlogging = $API->comm("/system/logging/print", array("?prefix" => "->", ));
-  $logging = $getlogging[0];
-  if ($logging['prefix'] == "->") {
-  } else {
-    $API->comm("/system/logging/add", array("action" => "disk", "prefix" => "->", "topics" => "hotspot,info,debug", ));
+    $routerboard = array();
+    if (!empty($API->connected)) {
+      try {
+        $getrouterboard = $API->comm("/system/routerboard/print");
+        $routerboard = (isset($getrouterboard[0]) && is_array($getrouterboard[0])) ? $getrouterboard[0] : array();
+        $_SESSION[$session . '_routerboard'] = $routerboard;
+      } catch (\Throwable $e) {}
+    }
   }
 
-// get hotspot log
-  $getlog = $API->comm("/log/print", array("?topics" => "hotspot,info,debug", ));
-  $log = array_reverse($getlog);
-  $THotspotLog = count($getlog);
-*/
 // get & counting hotspot users
-  $countallusers = $API->comm("/ip/hotspot/user/print", array("count-only" => ""));
-  if (is_array($countallusers)) {
-    $countallusers = isset($countallusers[0]['ret']) ? $countallusers[0]['ret'] : (isset($countallusers['ret']) ? $countallusers['ret'] : count($countallusers));
+  $countallusers = 0;
+  if (!empty($API->connected)) {
+    try {
+      $countallusers = $API->comm("/ip/hotspot/user/print", array("count-only" => ""));
+      if (is_array($countallusers)) {
+        $countallusers = isset($countallusers[0]['ret']) ? $countallusers[0]['ret'] : (isset($countallusers['ret']) ? $countallusers['ret'] : count($countallusers));
+      }
+    } catch (\Throwable $e) {}
   }
   $countallusers = is_numeric($countallusers) ? (int)$countallusers : 0;
   $uunit = ($countallusers > 1) ? "items" : "item";
 
 // get & counting hotspot active
-  $counthotspotactive = $API->comm("/ip/hotspot/active/print", array("count-only" => ""));
-  if (is_array($counthotspotactive)) {
-    $counthotspotactive = isset($counthotspotactive[0]['ret']) ? $counthotspotactive[0]['ret'] : (isset($counthotspotactive['ret']) ? $counthotspotactive['ret'] : count($counthotspotactive));
+  $counthotspotactive = 0;
+  if (!empty($API->connected)) {
+    try {
+      $counthotspotactive = $API->comm("/ip/hotspot/active/print", array("count-only" => ""));
+      if (is_array($counthotspotactive)) {
+        $counthotspotactive = isset($counthotspotactive[0]['ret']) ? $counthotspotactive[0]['ret'] : (isset($counthotspotactive['ret']) ? $counthotspotactive['ret'] : count($counthotspotactive));
+      }
+    } catch (\Throwable $e) {}
   }
   $counthotspotactive = is_numeric($counthotspotactive) ? (int)$counthotspotactive : 0;
   $hunit = ($counthotspotactive > 1) ? "items" : "item";
@@ -206,11 +232,17 @@ if (!isset($_SESSION["mikhmon"])) {
               <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                 <h3 style="margin: 0;"><i class="fa fa-area-chart"></i> <?= $_traffic ?> </h3>
                 <?php
-                $getallifaces = $API->comm("/interface/print", array(".proplist" => "name,disabled"));
-                $getallifaces = is_array($getallifaces) ? $getallifaces : array();
+                $getallifaces = array();
+                if (!empty($API->connected)) {
+                  try {
+                    $getallifaces = $API->comm("/interface/print", array(".proplist" => "name,disabled"));
+                    $getallifaces = is_array($getallifaces) ? $getallifaces : array();
+                  } catch (\Throwable $e) {}
+                }
 
                 $savedIface = $_SESSION[$session . '_iface_name'] ?? '';
-                $defaultIface = isset($getallifaces[$iface - 1]['name']) ? $getallifaces[$iface - 1]['name'] : (isset($getallifaces[0]['name']) ? $getallifaces[0]['name'] : ($interface ?? 'ether1'));
+                $ifaceIdx = (is_numeric($iface) && (int)$iface > 0) ? ((int)$iface - 1) : 0;
+                $defaultIface = isset($getallifaces[$ifaceIdx]['name']) ? $getallifaces[$ifaceIdx]['name'] : (isset($getallifaces[0]['name']) ? $getallifaces[0]['name'] : ($interface ?? 'ether1'));
 
                 if (!empty($savedIface)) {
                   $interface = $savedIface;

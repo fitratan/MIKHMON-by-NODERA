@@ -729,6 +729,16 @@ if ($isWarung) {
 		});
 		setTimeout(function() {
 			window.hideMikhmonOverlay();
+			var mc = document.querySelector('.main-container');
+			if (mc && (mc.style.display === 'none' || getComputedStyle(mc).display === 'none')) {
+				mc.style.display = 'block';
+			}
+			var ld = document.getElementById('loading');
+			if (ld) ld.style.display = 'none';
+			if (typeof $ !== 'undefined') {
+				$('.main-container').show();
+				$('#loading').hide();
+			}
 		}, 1200);
 		</script>
 		<div class="wrapper">
