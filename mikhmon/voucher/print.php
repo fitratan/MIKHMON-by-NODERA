@@ -51,7 +51,10 @@ if (!isset($_SESSION["mikhmon"])) {
   require_once('../lib/routeros_api.class.php');
   $API = new RouterosAPI();
   $API->debug = false;
-  $API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost));
+  if (!$API->connect($iphost, $userhost, mikhmon_decrypt($passwdhost))) {
+    echo "<div style='text-align:center; padding:40px; font-family:sans-serif;'><h3>Gagal terhubung ke MikroTik</h3><p>Periksa IP/Port/User/Password router Anda pada sesi [" . htmlspecialchars($session ?? '', ENT_QUOTES) . "].</p></div>";
+    exit;
+  }
 
   
 
@@ -90,29 +93,28 @@ if (!isset($_SESSION["mikhmon"])) {
     "?name" => "$getuprofile",
     ".proplist" => "shared-users,on-login"
   ));
-  $getsharedu = $getprofile[0]['shared-users'];
-  $ponlogin = $getprofile[0]['on-login'];
-  $validity = explode(",", $ponlogin)[3];
-  $getprice = explode(",", $ponlogin)[2];
-  $getsprice = explode(",", $ponlogin)[4];
+  $getsharedu = $getprofile[0]['shared-users'] ?? '1';
+  $ponlogin = $getprofile[0]['on-login'] ?? '';
+  $parts = explode(",", (string)$ponlogin);
+  $validity = $parts[3] ?? '-';
+  $getprice = $parts[2] ?? '0';
+  $getsprice = $parts[4] ?? '0';
 
- 
-  
-    if($getsprice == "0" && $getprice != "0"){
-      if ($currency == in_array($currency, $cekindo['indo'])) {
-        $price = $currency . " " . number_format((float)$getprice, 0, ",", ".");
-      } else {
-        $price = $currency . " " . number_format((float)$getprice, 2);
-      }
-    }else if($getsprice != "0"){
-      if ($currency == in_array($currency, $cekindo['indo'])) {
-        $price = $currency . " " . number_format((float)$getsprice, 0, ",", ".");
-      } else {
-        $price = $currency . " " . number_format((float)$getsprice, 2);
-      }
-    }else if ($getsprice == "0") {
-      $price = "";
+  if ($getsprice == "0" && $getprice != "0") {
+    if (isset($cekindo['indo']) && in_array($currency, $cekindo['indo'])) {
+      $price = $currency . " " . number_format((float)$getprice, 0, ",", ".");
+    } else {
+      $price = $currency . " " . number_format((float)$getprice, 2);
     }
+  } else if ($getsprice != "0") {
+    if (isset($cekindo['indo']) && in_array($currency, $cekindo['indo'])) {
+      $price = $currency . " " . number_format((float)$getsprice, 0, ",", ".");
+    } else {
+      $price = $currency . " " . number_format((float)$getsprice, 2);
+    }
+  } else {
+    $price = "";
+  }
 
     
   

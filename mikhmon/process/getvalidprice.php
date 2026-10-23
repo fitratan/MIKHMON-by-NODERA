@@ -68,20 +68,21 @@ include __DIR__ . '/../lang/' . $langid . '.php';
     $getvalid = $validityPart !== '' ? $_validity . " : " . $validityPart : '';
     $getlock = $lockPart !== '' ? "| " . $_lock_user . " : " . $lockPart : '';
 
+    $curr = !empty($currency) ? $currency : (!empty($curency) ? $curency : 'Rp');
     $price = "";
     if (is_numeric($priceRaw) && (float)$priceRaw > 0) {
-      if ($curency == "Rp" || $curency == "rp" || $curency == "IDR" || $curency == "idr") {
-        $price = "| " . $_price . " : " . $curency . " " . number_format((float)$priceRaw, 0, ",", ".");
+      if (in_array(strtolower($curr), ['rp', 'idr', 'rp.', 'idr.'])) {
+        $price = "| " . $_price . " : " . $curr . " " . number_format((float)$priceRaw, 0, ",", ".");
       } else {
-        $price = "| " . $_price . " : " . $curency . " " . number_format((float)$priceRaw);
+        $price = "| " . $_price . " : " . $curr . " " . number_format((float)$priceRaw);
       }
     }
     $sprice = "";
     if (is_numeric($spriceRaw) && (float)$spriceRaw > 0) {
-      if ($curency == "Rp" || $curency == "rp" || $curency == "IDR" || $curency == "idr") {
-        $sprice = "| " . $_selling_price . " : " . $curency . " " . number_format((float)$spriceRaw, 0, ",", ".");
+      if (in_array(strtolower($curr), ['rp', 'idr', 'rp.', 'idr.'])) {
+        $sprice = "| " . $_selling_price . " : " . $curr . " " . number_format((float)$spriceRaw, 0, ",", ".");
       } else {
-        $sprice = "| " . $_selling_price . " : " . $curency . " " . number_format((float)$spriceRaw);
+        $sprice = "| " . $_selling_price . " : " . $curr . " " . number_format((float)$spriceRaw);
       }
     }
     echo '<b id="getdata">' . trim($getvalid . ' ' . $price . ' ' . $sprice . ' ' . $getlock) . '</b>';

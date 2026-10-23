@@ -34,21 +34,17 @@ $genAuthToken = hash('sha256', ($session ?? '') . ':' . ($useradm ?? '') . ':' .
 		$getprofile = $API->comm("/ip/hotspot/user/profile/print", array(
 			"?name" => "$genprof",
 		));
-		$ponlogin = $getprofile[0]['on-login'];
-		$getprice = explode(",", $ponlogin)[2];
+		$ponlogin = $getprofile[0]['on-login'] ?? '';
+		$parts = explode(",", (string)$ponlogin);
+		$getprice = $parts[2] ?? '';
 		if ($getprice == "0") {
 			$getprice = "";
-		} else {
-			$getprice = $getprice;
 		}
 
-		$getvalid = explode(",", $ponlogin)[3];
-
-		$getlocku = explode(",", $ponlogin)[6];
+		$getvalid = $parts[3] ?? '-';
+		$getlocku = $parts[6] ?? '';
 		if ($getlocku == "") {
-			$getprice = "Disable";
-		} else {
-			$getlocku = $getlocku;
+			$getlocku = "Disable";
 		}
 
 		if ($currency == in_array($currency, $cekindo['indo'])) {
@@ -94,11 +90,12 @@ $genAuthToken = hash('sha256', ($session ?? '') . ':' . ($useradm ?? '') . ':' .
 			$adcomment = $adcomment;
 		}
 		$getprofile = $API->comm("/ip/hotspot/user/profile/print", array("?name" => "$profile"));
-		$ponlogin = $getprofile[0]['on-login'];
-		$getvalid = explode(",", $ponlogin)[3];
-		$getprice = explode(",", $ponlogin)[2];
-		$getsprice = explode(",", $ponlogin)[4];
-		$getlock = explode(",", $ponlogin)[6];
+		$ponlogin = $getprofile[0]['on-login'] ?? '';
+		$parts = explode(",", (string)$ponlogin);
+		$getvalid = $parts[3] ?? '-';
+		$getprice = $parts[2] ?? '0';
+		$getsprice = $parts[4] ?? '0';
+		$getlock = $parts[6] ?? 'Disable';
 		$_SESSION['ubp'] = $profile;
 		$commt = $user . "-" . rand(100, 999) . "-" . date("m.d.y") . "-" . $adcomment;
 		$gentemp = $commt . "|~" . $profile . "~" . $getvalid . "~" . $getprice . "!".$getsprice."~" . $timelimit . "~" . $datalimit . "~" . $getlock;

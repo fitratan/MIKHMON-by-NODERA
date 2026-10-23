@@ -175,9 +175,9 @@ if ($is_connected) {
 
                     $newOnLogin = '';
                     if ($expmode === "rem" || $expmode === "ntf") {
-                        $newOnLogin = ':put (",' . $expmode . ',' . $price . ',' . $validity . ',' . $sprice . ',,' . $getlock . ',' . $getsinglesession . ',");' . $singlescript . ' ' . $expHead . $lock . "}";
+                        $newOnLogin = ':put (",' . $expmode . ',' . $price . ',' . $validity . ',' . $sprice . ',,' . $getlock . ',' . $getsinglesession . ',");' . $singlescript . ' ' . $expHead . $lock . "}}";
                     } elseif ($expmode === "remc" || $expmode === "ntfc") {
-                        $newOnLogin = ':put (",' . $expmode . ',' . $price . ',' . $validity . ',' . $sprice . ',,' . $getlock . ',' . $getsinglesession . ',");' . $singlescript . ' ' . $expHead . $record . $lock . "}";
+                        $newOnLogin = ':put (",' . $expmode . ',' . $price . ',' . $validity . ',' . $sprice . ',,' . $getlock . ',' . $getsinglesession . ',");' . $singlescript . ' ' . $expHead . $record . $lock . "}}";
                     }
 
                     if (!empty($newOnLogin)) {

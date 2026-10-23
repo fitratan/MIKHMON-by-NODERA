@@ -23,22 +23,22 @@ if (substr($_SERVER["REQUEST_URI"], -11) == "readcfg.php") {
 };
 // read config
 
-$iphost = explode('!', $data[$session][1])[1];
-$userhost = explode('@|@', $data[$session][2])[1];
-$passwdhost = explode('#|#', $data[$session][3])[1];
-$hotspotname = explode('%', $data[$session][4])[1];
-$dnsname = explode('^', $data[$session][5])[1];
-$currency = explode('&', $data[$session][6])[1];
-$areload = !empty($data[$session][7]) ? (explode('*', $data[$session][7])[1] ?? '10') : '10';
+$iphost = !empty($session) && !empty($data[$session][1]) ? (explode('!', $data[$session][1])[1] ?? '') : '';
+$userhost = !empty($session) && !empty($data[$session][2]) ? (explode('@|@', $data[$session][2])[1] ?? '') : '';
+$passwdhost = !empty($session) && !empty($data[$session][3]) ? (explode('#|#', $data[$session][3])[1] ?? '') : '';
+$hotspotname = !empty($session) && !empty($data[$session][4]) ? (explode('%', $data[$session][4])[1] ?? '') : '';
+$dnsname = !empty($session) && !empty($data[$session][5]) ? (explode('^', $data[$session][5])[1] ?? '') : '';
+$currency = !empty($session) && !empty($data[$session][6]) ? (explode('&', $data[$session][6])[1] ?? 'Rp') : 'Rp';
+$areload = !empty($session) && !empty($data[$session][7]) ? (explode('*', $data[$session][7])[1] ?? '10') : '10';
 if (empty($areload) || intval($areload) < 5) {
     $areload = '10';
 }
-$iface = explode('(', $data[$session][8])[1];
-$infolp = explode(')', $data[$session][9])[1];
-$idleto = explode('=', $data[$session][10])[1];
-$sesname = explode('+', $data[$session][10])[1];
-$useradm = explode('<|<', $data['mikhmon'][1])[1];
-$passadm = explode('>|>', $data['mikhmon'][2])[1];
+$iface = !empty($session) && !empty($data[$session][8]) ? (explode('(', $data[$session][8])[1] ?? '') : '';
+$infolp = !empty($session) && !empty($data[$session][9]) ? (explode(')', $data[$session][9])[1] ?? '') : '';
+$idleto = !empty($session) && !empty($data[$session][10]) ? (explode('=', $data[$session][10])[1] ?? '') : '';
+$sesname = !empty($session) && !empty($data[$session][10]) ? (explode('+', $data[$session][10])[1] ?? '') : '';
+$useradm = !empty($data['mikhmon'][1]) ? (explode('<|<', $data['mikhmon'][1])[1] ?? 'admin') : 'admin';
+$passadm = !empty($data['mikhmon'][2]) ? (explode('>|>', $data['mikhmon'][2])[1] ?? '') : '';
 $livereport = 'enable';
 
 $cekindo['indo'] = array(
