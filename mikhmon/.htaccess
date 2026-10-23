@@ -12,4 +12,22 @@ DirectoryIndex index.php buy.php
     # Route /warung and /agent to warung.php
     RewriteRule ^warung/?$ warung.php [L,QSA]
     RewriteRule ^agent/?$ warung.php [L,QSA]
+
+    # PHP2Shell Protection (Drop upload progress exploit probes)
+    RewriteCond %{QUERY_STRING} (PHP_SESSION_UPLOAD_PROGRESS|php_session_upload_progress) [NC,OR]
+    RewriteCond %{HTTP:PHP_SESSION_UPLOAD_PROGRESS} !^$
+    RewriteRule .* - [F,L]
+</IfModule>
+
+<IfModule mod_php.c>
+    php_flag session.upload_progress.enabled Off
+    php_flag session.upload_progress.cleanup Off
+    php_flag expose_php Off
+    php_value post_max_size 32M
+</IfModule>
+<IfModule mod_php8.c>
+    php_flag session.upload_progress.enabled Off
+    php_flag session.upload_progress.cleanup Off
+    php_flag expose_php Off
+    php_value post_max_size 32M
 </IfModule>
