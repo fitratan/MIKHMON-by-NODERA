@@ -197,26 +197,70 @@ class LicenseManager(private val context: Context) {
     }
 
     /**
-     * Activate 3 days trial if eligible
+     * Activate trial if eligible (validated with Cloud Panel)
      */
-    fun activateTrial(): Pair<Boolean, String> {
+    suspend fun activateTrial(): Pair<Boolean, String> = withContext(Dispatchers.IO) {
         val hwid = getHardwareId()
         val already = prefs.getBoolean(KEY_TRIAL_ACTIVATED, false)
         if (already) {
-            return Pair(false, "Perangkat ini sudah pernah menggunakan uji coba (Trial)!")
+            return@withContext Pair(false, "Perangkat ini sudah pernah menggunakan uji coba (Trial)!")
         }
 
-        val nowSec = System.currentTimeMillis() / 1000L
-        val trialExpires = nowSec + (3 * 86400L) // 3 days
-        val trialSig = hmacSha256("$hwid:TRIAL:$trialExpires", SECRET_SALT)
+        // Online Cloud API Trial Verification
+        val endpoints = listOf(PRIMARY_API + "/trial", FALLBACK_API + "/trial")
+        val payload = JSONObject().apply {
+            put("action", "trial")
+            put("hwid", hwid)
+            put("device_name", "${Build.MANUFACTURER} ${Build.MODEL}")
+            put("os_info", "Android ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})")
+        }
 
-        prefs.edit()
-            .putBoolean(KEY_TRIAL_ACTIVATED, true)
-            .putLong(KEY_TRIAL_EXPIRES, trialExpires)
-            .putString(KEY_TRIAL_SIG, trialSig)
-            .apply()
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val body = payload.toString().toRequestBody(mediaType)
 
-        return Pair(true, "Trial 3 Hari berhasil diaktifkan!")
+        for (url in endpoints) {
+            try {
+                val request = Request.Builder()
+                    .url(url)
+                    .post(body)
+                    .header("User-Agent", "MikhmonAndroidAdmin/3.4.0")
+                    .build()
+
+                httpClient.newCall(request).execute().use { response ->
+                    val respBody = response.body?.string() ?: ""
+                    if (respBody.isNotEmpty()) {
+                        val json = JSONObject(respBody)
+                        val success = json.optBoolean("success", false) || json.optBoolean("valid", false)
+                        val code = json.optString("code", "")
+                        val msg = json.optString("message", "")
+
+                        if (success) {
+                            val data = json.optJSONObject("data")
+                            val expSec = data?.optLong("expires_at_timestamp") ?: (System.currentTimeMillis() / 1000L + (7 * 86400L))
+                            val trialSig = hmacSha256("$hwid:TRIAL:$expSec", SECRET_SALT)
+
+                            prefs.edit()
+                                .putBoolean(KEY_TRIAL_ACTIVATED, true)
+                                .putLong(KEY_TRIAL_EXPIRES, expSec)
+                                .putString(KEY_TRIAL_SIG, trialSig)
+                                .apply()
+
+                            return@withContext Pair(true, "Masa percobaan gratis berhasil diaktifkan!")
+                        } else if (response.code == 403 || code == "TRIAL_ALREADY_USED" || code == "LICENSE_EXPIRED") {
+                            prefs.edit()
+                                .putBoolean(KEY_TRIAL_ACTIVATED, true)
+                                .putLong(KEY_TRIAL_EXPIRES, 1L)
+                                .apply()
+                            return@withContext Pair(false, if (msg.isNotEmpty()) msg else "Perangkat ini sudah pernah menggunakan masa percobaan / lisensi telah berakhir.")
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                // Try next endpoint
+            }
+        }
+
+        return@withContext Pair(false, "Aktivasi masa percobaan (Trial) memerlukan koneksi internet untuk validasi perangkat.")
     }
 
     /**

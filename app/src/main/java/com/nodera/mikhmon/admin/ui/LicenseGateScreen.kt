@@ -251,19 +251,25 @@ fun LicenseGateScreen(
             // Trial Button
             OutlinedButton(
                 onClick = {
-                    val trialRes = licenseManager.activateTrial()
-                    if (trialRes.first) {
-                        Toast.makeText(context, trialRes.second, Toast.LENGTH_LONG).show()
-                        onLicenseActivated()
-                    } else {
-                        errorMessage = trialRes.second
+                    coroutineScope.launch {
+                        isLoading = true
+                        errorMessage = null
+                        val trialRes = licenseManager.activateTrial()
+                        isLoading = false
+                        if (trialRes.first) {
+                            Toast.makeText(context, trialRes.second, Toast.LENGTH_LONG).show()
+                            onLicenseActivated()
+                        } else {
+                            errorMessage = trialRes.second
+                        }
                     }
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(40.dp),
                 shape = RoundedCornerShape(4.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = MikhmonYellow)
+                colors = ButtonDefaults.outlinedButtonColors(contentColor = MikhmonYellow),
+                enabled = !isLoading
             ) {
                 Icon(Icons.Default.RocketLaunch, contentDescription = null, modifier = Modifier.size(14.dp), tint = MikhmonYellow)
                 Spacer(modifier = Modifier.width(6.dp))
