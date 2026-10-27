@@ -1,0 +1,63 @@
+name: Publish Release with Desktop Standalone Asset
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag version for release (e.g. v3.20.5-v8)'
+        required: true
+        default: 'v3.20.5-v8'
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Publish Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Package Mikhmon Desktop Standalone
+        run: |
+          mkdir -p package/Mikhmon-Desktop
+          cp -r Mikhmon.exe MikhmonServer.exe mikhmon bin assets README.txt package/Mikhmon-Desktop/
+          # Bersihkan file session dan log temporary
+          rm -rf package/Mikhmon-Desktop/mikhmon/session/* package/Mikhmon-Desktop/mikhmon/logs/*
+          cd package
+          zip -r -9 ../Mikhmon-Desktop.zip Mikhmon-Desktop
+          cd ..
+          ls -lh Mikhmon-Desktop.zip
+
+      - name: Determine Target Tag
+        id: tag_info
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag_name }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release & Upload Asset
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag_info.outputs.tag }}
+          name: MIKHMON by NODERA ${{ steps.tag_info.outputs.tag }}
+          body: |
+            ## MIKHMON Standalone Desktop & Micro-Server by NODERA (${{ steps.tag_info.outputs.tag }})
+            
+            Aplikasi manajemen hotspot dan billing MikroTik standalone mandiri tanpa memerlukan XAMPP.
+            
+            ### 📦 Cara Unduh & Menjalankan:
+            1. Unduh paket biner **`Mikhmon-Desktop.zip`** di bagian *Assets* di bawah.
+            2. Ekstrak ke folder pilihan Anda (misal `C:\Mikhmon-Desktop`).
+            3. Jalankan `Mikhmon.exe` untuk memulai aplikasi.
+          files: |
+            Mikhmon-Desktop.zip
+          draft: false
+          prerelease: false

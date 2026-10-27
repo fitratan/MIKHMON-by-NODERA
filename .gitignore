@@ -1,0 +1,37 @@
+# Dependency directories
+node_modules/
+dist/
+build/windows/
+*.tmp
+*.log
+
+# Windows specific
+bin/php-win/dev/
+bin/php-win/lib/
+*.zip
+*.tar.gz
+!mikhmon-update.zip
+
+# Environment & local files
+.env
+.DS_Store
+Thumbs.db
+mikhmon/include/login_throttle.json
+mikhmon/include/packages_cache_*.json
+mikhmon/config/.hwid
+mikhmon/config/.clock_guard
+mikhmon/config/.trial_attempted
+mikhmon/config/.reset_alert
+mikhmon/config/.last_hwid_query
+mikhmon/config/.last_verified
+mikhmon/config/nodera_license.json
+mikhmon/backup_userdata/
+config/
+mikhmon-src/
+
+# Local development & IDE
+docs/
+CLAUDE.md
+.agents/
+.claude/
+.gemini/
