@@ -1,7 +1,7 @@
 <?php
 /**
  * LICENSE MIKHMON DESKTOP STANDALONE — NODERA
- * Terikat otomatis pada HWID perangkat via Cloud Panel NODERA (panel.dgtlnetsolution.com).
+ * Belum diaktivasi / Reset.
  */
 define('MIKHMON_MODE', 'DESKTOP');
 define('MIKHMON_STATUS', 'UNLICENSED');

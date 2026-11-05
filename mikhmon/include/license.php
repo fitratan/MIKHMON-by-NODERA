@@ -135,7 +135,7 @@ if (!function_exists('mikhmon_save_desktop_license_data')) {
             . "define('MIKHMON_EXPIRY', " . var_export($expFormatted, true) . ");\n"
             . "define('MIKHMON_EXPIRY_RAW', " . var_export($rawExp, true) . ");\n"
             . "define('MIKHMON_SIGNATURE', " . var_export($signature, true) . ");\n"
-            . "define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'airnetsolution.com'));\n"
+            . "define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'dgtlnetsolution.com'));\n"
             . "define('MIKHMON_PRODUCT_NAME', " . var_export($prodName, true) . ");\n"
             . "define('MIKHMON_ACTIVATED_AT', " . var_export($nowStr, true) . ");\n"
             . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
@@ -156,6 +156,23 @@ if (!function_exists('mikhmon_save_desktop_license_data')) {
         $resetAlert = __DIR__ . '/../config/.reset_alert';
         if (file_exists($resetAlert)) {
             @unlink($resetAlert);
+        }
+
+        // Sync ke root project config jika berjalan via Go launcher / standalone
+        $parentConfig = dirname(dirname(__DIR__)) . '/config';
+        if (is_dir($parentConfig) && is_writable($parentConfig)) {
+            @file_put_contents($parentConfig . '/license.php', $licensePhp);
+            @file_put_contents($parentConfig . '/.hwid', $hwid);
+            @file_put_contents($parentConfig . '/nodera_license.json', json_encode($data, JSON_PRETTY_PRINT));
+            @file_put_contents($parentConfig . '/.last_verified', (string)time());
+            if (file_exists($parentConfig . '/.trial_expired')) @unlink($parentConfig . '/.trial_expired');
+            if (file_exists($parentConfig . '/.reset_alert')) @unlink($parentConfig . '/.reset_alert');
+        }
+
+        // Sync ke NODERA_LICENSE_FILE (Electron AppData) jika terdefinisi
+        $envLicFile = getenv('NODERA_LICENSE_FILE');
+        if (!empty($envLicFile) && is_writable(dirname($envLicFile))) {
+            @file_put_contents($envLicFile, json_encode($data, JSON_PRETTY_PRINT));
         }
 
         return [
@@ -193,19 +210,36 @@ if (!function_exists('mikhmon_sync_license_from_storage')) {
         $lFile = __DIR__ . '/../config/license.php';
         $currentHwid = mikhmon_get_hwid();
 
-        // Jika config/license.php sudah valid untuk HWID perangkat ini, tidak perlu timpa
+        // 1. Jika mikhmon/config/license.php sudah ACTIVE dan cocok dengan HWID, jangan timpa
         if (file_exists($lFile) && filesize($lFile) > 100) {
             $content = (string)@file_get_contents($lFile);
             if (strpos($content, "'MIKHMON_STATUS', 'ACTIVE'") !== false) {
-                if (defined('MIKHMON_HWID') && !empty(MIKHMON_HWID) && strcasecmp(trim(MIKHMON_HWID), trim($currentHwid)) === 0) {
-                    return;
+                if (preg_match("/define\s*\(\s*['\"]MIKHMON_HWID['\"]\s*,\s*['\"]([^'\"]+)['\"]\s*\)/i", $content, $m)) {
+                    if (strcasecmp(trim($m[1]), trim($currentHwid)) === 0) {
+                        return;
+                    }
+                }
+            }
+        }
+
+        // 2. Cek apakah ada config/license.php aktif di parent directory (disimpan oleh Go launcher)
+        $parentLFile = dirname(dirname(__DIR__)) . '/config/license.php';
+        if (file_exists($parentLFile) && filesize($parentLFile) > 100) {
+            $parentContent = (string)@file_get_contents($parentLFile);
+            if (strpos($parentContent, "'MIKHMON_STATUS', 'ACTIVE'") !== false) {
+                if (preg_match("/define\s*\(\s*['\"]MIKHMON_HWID['\"]\s*,\s*['\"]([^'\"]+)['\"]\s*\)/i", $parentContent, $m)) {
+                    if (strcasecmp(trim($m[1]), trim($currentHwid)) === 0) {
+                        @file_put_contents($lFile, $parentContent);
+                        return;
+                    }
                 }
             }
         }
 
         $jsonCandidates = [
-            getenv('NODERA_LICENSE_FILE') ?: '',
             __DIR__ . '/../config/nodera_license.json',
+            dirname(dirname(__DIR__)) . '/config/nodera_license.json',
+            getenv('NODERA_LICENSE_FILE') ?: '',
             getenv('APPDATA') ? (getenv('APPDATA') . '/mikhmon-desktop-nodera/nodera_license.json') : '',
             getenv('APPDATA') ? (getenv('APPDATA') . '/Mikhmon Desktop by NODERA/nodera_license.json') : '',
             getenv('HOME') ? (getenv('HOME') . '/.config/mikhmon-desktop-nodera/nodera_license.json') : '',
@@ -229,8 +263,13 @@ if (!function_exists('mikhmon_sync_license_from_storage')) {
 mikhmon_sync_license_from_storage();
 
 $__licenseFile = __DIR__ . '/../config/license.php';
-if (!file_exists($__licenseFile)) {
-    $__licenseFile = __DIR__ . '/license_data.php';
+if (!file_exists($__licenseFile) || filesize($__licenseFile) < 50) {
+    $parentLic = dirname(dirname(__DIR__)) . '/config/license.php';
+    if (file_exists($parentLic) && filesize($parentLic) >= 50) {
+        $__licenseFile = $parentLic;
+    } else {
+        $__licenseFile = __DIR__ . '/license_data.php';
+    }
 }
 if (file_exists($__licenseFile)) {
     @include_once $__licenseFile;
@@ -268,11 +307,11 @@ if (!function_exists('mikhmon_get_platform_domain')) {
             return 'nodera.ci';
         }
         if (defined('MIKHMON_BRAND')) {
-            if (strpos(MIKHMON_BRAND, 'airnetsolution.com') !== false) {
-                return 'airnetsolution.com';
-            }
             if (strpos(MIKHMON_BRAND, 'dgtlnetsolution.com') !== false) {
                 return 'dgtlnetsolution.com';
+            }
+            if (strpos(MIKHMON_BRAND, 'airnetsolution.com') !== false) {
+                return 'airnetsolution.com';
             }
             if (strpos(MIKHMON_BRAND, 'nodera.africa') !== false) {
                 return 'nodera.africa';
@@ -561,6 +600,7 @@ if (!function_exists('mikhmon_verify_desktop_license')) {
         ]));
 
         $response = null;
+        $lastErrorJson = null;
         foreach ($endpoints as $url) {
             $ch = curl_init($url);
             curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
@@ -585,10 +625,17 @@ if (!function_exists('mikhmon_verify_desktop_license')) {
             if ($raw && ($httpCode === 200 || $httpCode === 403 || $httpCode === 404)) {
                 $json = @json_decode($raw, true);
                 if (is_array($json)) {
-                    $response = $json;
-                    break;
+                    if (!empty($json['success'])) {
+                        $response = $json;
+                        break;
+                    }
+                    $lastErrorJson = $json;
                 }
             }
+        }
+
+        if (!$response && $lastErrorJson) {
+            $response = $lastErrorJson;
         }
 
         if (!$response) {
@@ -641,13 +688,24 @@ if (!function_exists('mikhmon_reset_local_license')) {
             . "define('MIKHMON_EXPIRY', '0000-00-00');\n"
             . "define('MIKHMON_EXPIRY_RAW', '0000-00-00');\n"
             . "define('MIKHMON_SIGNATURE', '');\n"
-            . "define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'airnetsolution.com'));\n"
+            . "define('MIKHMON_BRAND', 'by ' . (function_exists('mikhmon_get_platform_domain') ? mikhmon_get_platform_domain() : 'dgtlnetsolution.com'));\n"
             . "define('MIKHMON_PRODUCT_NAME', 'Mikhmon Desktop Standalone');\n"
             . "define('MIKHMON_ACTIVATED_AT', '');\n"
             . "define('MIKHMON_SUBDOMAIN', 'desktop');\n";
 
         $configFile = __DIR__ . '/../config/license.php';
         @unlink(__DIR__ . '/../config/nodera_license.json');
+        @unlink(__DIR__ . '/../config/.trial_expired');
+        @unlink(__DIR__ . '/../config/.reset_alert');
+
+        $parentConfig = dirname(dirname(__DIR__)) . '/config';
+        if (is_dir($parentConfig)) {
+            @unlink($parentConfig . '/nodera_license.json');
+            @unlink($parentConfig . '/.trial_expired');
+            @unlink($parentConfig . '/.reset_alert');
+            @file_put_contents($parentConfig . '/license.php', $licensePhp);
+        }
+
         return (bool) @file_put_contents($configFile, $licensePhp);
     }
 }
@@ -682,6 +740,7 @@ if (!function_exists('mikhmon_activate_desktop_license')) {
         ]));
 
         $response = null;
+        $lastErrorJson = null;
         $lastErr = '';
 
         foreach ($endpoints as $url) {
@@ -709,12 +768,19 @@ if (!function_exists('mikhmon_activate_desktop_license')) {
             if ($raw && ($httpCode === 200 || $httpCode === 403 || $httpCode === 404 || $httpCode === 422)) {
                 $json = @json_decode($raw, true);
                 if (is_array($json)) {
-                    $response = $json;
-                    break;
+                    if (!empty($json['success'])) {
+                        $response = $json;
+                        break;
+                    }
+                    $lastErrorJson = $json;
                 }
             } else if ($err) {
                 $lastErr = $err;
             }
+        }
+
+        if (!$response && $lastErrorJson) {
+            $response = $lastErrorJson;
         }
 
         if (!$response) {
@@ -767,6 +833,7 @@ if (!function_exists('mikhmon_activate_trial_license')) {
         ]));
 
         $response = null;
+        $lastErrorJson = null;
         $lastErr = '';
 
         foreach ($endpoints as $url) {
@@ -794,12 +861,19 @@ if (!function_exists('mikhmon_activate_trial_license')) {
             if ($raw && ($httpCode === 200 || $httpCode === 403 || $httpCode === 404 || $httpCode === 422)) {
                 $json = @json_decode($raw, true);
                 if (is_array($json)) {
-                    $response = $json;
-                    break;
+                    if (!empty($json['success'])) {
+                        $response = $json;
+                        break;
+                    }
+                    $lastErrorJson = $json;
                 }
             } else if ($err) {
                 $lastErr = $err;
             }
+        }
+
+        if (!$response && $lastErrorJson) {
+            $response = $lastErrorJson;
         }
 
         if ($response && !empty($response['success'])) {
@@ -852,10 +926,10 @@ if (!function_exists('mikhmon_render_desktop_heartbeat_script')) {
 
           function _ndrCheckLicenseHeartbeat() {
             var apis = [
-              <?= json_encode(mikhmon_get_panel_url() . '/api/desktop-license/verify') ?>,
-              <?= json_encode(mikhmon_get_api_url() . '/api/desktop-license/verify') ?>,
               'https://panel.dgtlnetsolution.com/api/desktop-license/verify',
               'https://digitalnet.dgtlnetsolution.com/api/desktop-license/verify',
+              <?= json_encode(mikhmon_get_panel_url() . '/api/desktop-license/verify') ?>,
+              <?= json_encode(mikhmon_get_api_url() . '/api/desktop-license/verify') ?>,
               'https://panel.airnetsolution.com/api/desktop-license/verify'
             ];
             
@@ -868,7 +942,15 @@ if (!function_exists('mikhmon_render_desktop_heartbeat_script')) {
               })
               .then(function(res) { return res.json(); })
               .then(function(data) {
-                if (data && data.success === false && (data.code === 'HWID_MISMATCH' || data.code === 'HWID_UNBOUND' || data.code === 'INVALID_KEY' || data.code === 'LICENSE_SUSPENDED' || data.code === 'LICENSE_EXPIRED' || data.code === 'TRIAL_ALREADY_USED' || data.code === 'NOT_ACTIVE')) {
+                if (data && data.success === true) {
+                  return;
+                }
+                // Jika INVALID_KEY dan masih ada server lain, teruskan pengecekan
+                if (data && data.code === 'INVALID_KEY' && (idx + 1) < apis.length) {
+                  tryApi(idx + 1);
+                  return;
+                }
+                if (data && data.success === false && (data.code === 'HWID_MISMATCH' || data.code === 'HWID_UNBOUND' || data.code === 'LICENSE_SUSPENDED' || data.code === 'LICENSE_EXPIRED')) {
                   var fd = new FormData();
                   fd.append('action', 'ajax_revoke_local_license');
                   fetch('./admin.php', { method: 'POST', body: fd })

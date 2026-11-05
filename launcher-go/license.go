@@ -74,17 +74,39 @@ func GetWindowsMachineGuid() string {
 	return syscall.UTF16ToString(buf[:])
 }
 
+// GetDocConfigDirs returns all config directories (both docRoot/config and baseDir/config)
+func GetDocConfigDirs(mikhmonDir string) []string {
+	var dirs []string
+	docRoot := FindDocRoot(mikhmonDir)
+	docConfig := filepath.Join(docRoot, "config")
+	dirs = append(dirs, docConfig)
+
+	baseConfig := filepath.Join(mikhmonDir, "config")
+	if filepath.Clean(baseConfig) != filepath.Clean(docConfig) {
+		dirs = append(dirs, baseConfig)
+	}
+	for _, d := range dirs {
+		_ = os.MkdirAll(d, 0755)
+	}
+	return dirs
+}
+
 // GetHardwareID generates or reads persistent NDR-HWID-XXXX-XXXX-XXXX
 func GetHardwareID(mikhmonDir string) string {
-	configDir := filepath.Join(mikhmonDir, "config")
-	_ = os.MkdirAll(configDir, 0755)
-	hwidFile := filepath.Join(configDir, ".hwid")
+	configDirs := GetDocConfigDirs(mikhmonDir)
 
-	// 1. Check existing saved .hwid file
-	if data, err := os.ReadFile(hwidFile); err == nil {
-		saved := strings.TrimSpace(string(data))
-		if strings.HasPrefix(saved, "NDR-HWID-") && len(saved) >= 21 {
-			return saved
+	// 1. Check existing saved .hwid file in any config dir
+	for _, d := range configDirs {
+		hwidFile := filepath.Join(d, ".hwid")
+		if data, err := os.ReadFile(hwidFile); err == nil {
+			saved := strings.TrimSpace(string(data))
+			if strings.HasPrefix(saved, "NDR-HWID-") && len(saved) >= 21 {
+				// Sync to all other config dirs
+				for _, otherDir := range configDirs {
+					_ = os.WriteFile(filepath.Join(otherDir, ".hwid"), []byte(saved), 0644)
+				}
+				return saved
+			}
 		}
 	}
 
@@ -100,27 +122,29 @@ func GetHardwareID(mikhmonDir string) string {
 
 	hwid := fmt.Sprintf("NDR-HWID-%s-%s-%s", hash[0:4], hash[4:8], hash[8:12])
 
-	// 3. Persist to config/.hwid
-	_ = os.WriteFile(hwidFile, []byte(hwid), 0644)
+	// 3. Persist to all config/.hwid
+	for _, d := range configDirs {
+		_ = os.WriteFile(filepath.Join(d, ".hwid"), []byte(hwid), 0644)
+	}
 	return hwid
 }
 
 // CheckClockGuard detects if Windows system clock was rolled back
 func CheckClockGuard(mikhmonDir string) bool {
-	configDir := filepath.Join(mikhmonDir, "config")
-	_ = os.MkdirAll(configDir, 0755)
-	guardFile := filepath.Join(configDir, ".clock_guard")
+	configDirs := GetDocConfigDirs(mikhmonDir)
 	now := time.Now().Unix()
 
-	if data, err := os.ReadFile(guardFile); err == nil {
-		if last, err := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64); err == nil {
-			if last > 0 && now < (last-300) {
-				return false // Tampering detected
+	for _, d := range configDirs {
+		guardFile := filepath.Join(d, ".clock_guard")
+		if data, err := os.ReadFile(guardFile); err == nil {
+			if last, err := strconv.ParseInt(strings.TrimSpace(string(data)), 10, 64); err == nil {
+				if last > 0 && now < (last-300) {
+					return false // Tampering detected
+				}
 			}
 		}
+		_ = os.WriteFile(guardFile, []byte(strconv.FormatInt(now, 10)), 0644)
 	}
-
-	_ = os.WriteFile(guardFile, []byte(strconv.FormatInt(now, 10)), 0644)
 	return true
 }
 
@@ -145,32 +169,24 @@ func VerifyLicenseSignature(lic LicenseData) bool {
 
 // ReadSavedLicense reads local nodera_license.json
 func ReadSavedLicense(mikhmonDir string) (*LicenseData, error) {
-	licPath := filepath.Join(mikhmonDir, "config", "nodera_license.json")
-	data, err := os.ReadFile(licPath)
-	if err != nil {
-		return nil, err
+	configDirs := GetDocConfigDirs(mikhmonDir)
+	for _, d := range configDirs {
+		licPath := filepath.Join(d, "nodera_license.json")
+		data, err := os.ReadFile(licPath)
+		if err == nil {
+			var lic LicenseData
+			if err := json.Unmarshal(data, &lic); err == nil && lic.LicenseKey != "" {
+				return &lic, nil
+			}
+		}
 	}
-
-	var lic LicenseData
-	if err := json.Unmarshal(data, &lic); err != nil {
-		return nil, err
-	}
-
-	return &lic, nil
+	return nil, fmt.Errorf("no saved license found")
 }
 
 // SaveLicenseData saves license to both nodera_license.json and PHP config/license.php
 func SaveLicenseData(mikhmonDir string, lic LicenseData) error {
-	configDir := filepath.Join(mikhmonDir, "config")
-	_ = os.MkdirAll(configDir, 0755)
+	configDirs := GetDocConfigDirs(mikhmonDir)
 
-	// 1. Save nodera_license.json
-	jsonData, _ := json.MarshalIndent(lic, "", "  ")
-	_ = os.WriteFile(filepath.Join(configDir, "nodera_license.json"), jsonData, 0644)
-	_ = os.WriteFile(filepath.Join(configDir, ".hwid"), []byte(lic.Hwid), 0644)
-	_ = os.WriteFile(filepath.Join(configDir, ".last_verified"), []byte(strconv.FormatInt(time.Now().Unix(), 10)), 0644)
-
-	// 2. Sync to mikhmon/config/license.php
 	expFormatted := "0000-00-00"
 	if lic.ExpiresAt != "" && lic.ExpiresAt != "LIFETIME" {
 		if t, err := time.Parse(time.RFC3339, lic.ExpiresAt); err == nil {
@@ -216,7 +232,19 @@ define('MIKHMON_SUBDOMAIN', 'desktop');
 		time.Now().Format("2006-01-02 15:04:05"),
 	)
 
-	return os.WriteFile(filepath.Join(configDir, "license.php"), []byte(phpCode), 0644)
+	jsonData, _ := json.MarshalIndent(lic, "", "  ")
+
+	// Persist to all config directories (mikhmon/config and baseDir/config)
+	for _, configDir := range configDirs {
+		_ = os.WriteFile(filepath.Join(configDir, "nodera_license.json"), jsonData, 0644)
+		_ = os.WriteFile(filepath.Join(configDir, ".hwid"), []byte(lic.Hwid), 0644)
+		_ = os.WriteFile(filepath.Join(configDir, ".last_verified"), []byte(strconv.FormatInt(time.Now().Unix(), 10)), 0644)
+		_ = os.WriteFile(filepath.Join(configDir, "license.php"), []byte(phpCode), 0644)
+		_ = os.Remove(filepath.Join(configDir, ".reset_alert"))
+		_ = os.Remove(filepath.Join(configDir, ".trial_expired"))
+	}
+
+	return nil
 }
 
 // CallLicenseApi executes request with multi-endpoint fallback
