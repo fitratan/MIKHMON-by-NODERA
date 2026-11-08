@@ -26,17 +26,21 @@ if ($is_connected) {
         $clockTime = $clock[0]['time'] ?? date('H:i:s');
         $timeZone = $clock[0]['time-zone-name'] ?? '';
 
-        // For Indonesia: Set Timezone to Asia/Jakarta if empty, manual, or GMT
-        if (empty($timeZone) || $timeZone === 'manual' || strpos($timeZone, 'GMT') !== false) {
-            @$API->comm("/system/clock/set", ["time-zone-name" => "Asia/Jakarta"]);
+        // Resolve target timezone: respect session timezone if configured, otherwise preserve router timezone
+        $targetTz = !empty($_SESSION['timezone']) ? $_SESSION['timezone'] : '';
+        if (empty($targetTz)) {
+            $targetTz = (!empty($timeZone) && $timeZone !== 'manual' && strpos($timeZone, 'GMT') === false) ? $timeZone : 'Africa/Abidjan';
+        }
+        if (!empty($targetTz) && ($timeZone !== $targetTz || empty($timeZone) || $timeZone === 'manual' || strpos($timeZone, 'GMT') !== false)) {
+            @$API->comm("/system/clock/set", ["time-zone-name" => $targetTz]);
         }
 
-        // Attempt NTP activation for ROS6 & ROS7 safely
+        // Attempt NTP activation for ROS6 & ROS7 safely with universal global servers
         try {
             @$API->comm("/system/ntp/client/set", [
                 "enabled" => "yes",
                 "primary-ntp" => "162.159.200.1",
-                "secondary-ntp" => "103.119.16.2"
+                "secondary-ntp" => "1.1.1.1"
             ]);
             @$API->comm("/system/ntp/client/set", ["enabled" => "yes"]);
             
@@ -46,14 +50,15 @@ if ($is_connected) {
             if (is_array($servers)) {
                 foreach ($servers as $srv) {
                     $addr = $srv['address'] ?? '';
-                    if ($addr === 'id.pool.ntp.org' || $addr === 'pool.ntp.org' || $addr === 'time.cloudflare.com') {
+                    if ($addr === 'pool.ntp.org' || $addr === 'time.cloudflare.com' || $addr === 'time.google.com') {
                         $hasServer = true;
                         break;
                     }
                 }
             }
             if (!$hasServer) {
-                @$API->comm("/system/ntp/client/servers/add", ["address" => "id.pool.ntp.org"]);
+                @$API->comm("/system/ntp/client/servers/add", ["address" => "pool.ntp.org"]);
+                @$API->comm("/system/ntp/client/servers/add", ["address" => "time.cloudflare.com"]);
             }
         } catch (\Throwable $e) {}
 
@@ -220,7 +225,7 @@ if ($is_connected) {
         }
 
         // 3. Install Master 24/7 Universal Auto-Cleaner on MikroTik
-        $masterCleaner = ':foreach u in=[/ip hotspot user find where disabled=no] do={ :local lu [/ip hotspot user get $u limit-uptime]; :local ut [/ip hotspot user get $u uptime]; :if ($lu > 0s and $ut >= $lu) do={ :local uname [/ip hotspot user get $u name]; :local uprof [/ip hotspot user get $u profile]; :do { /system script add name=("EXP-|-" . [/system clock get date] . "-|-" . [/system clock get time] . "-|-" . $uname . "-|-" . $uprof . "-|-expired") owner="mikhmon" source="expired" comment="mikhmon_expired"; } on-error={}; /ip hotspot active remove [find where user=$uname]; /ip hotspot user remove $u; }; };';
+        $masterCleaner = ':foreach a in=[/ip hotspot active find] do={ :local aname [/ip hotspot active get $a user]; :if ([:len [/ip hotspot user find where name=$aname]] = 0) do={ /ip hotspot active remove $a; /ip hotspot cookie remove [find where user=$aname]; }; }; :foreach u in=[/ip hotspot user find where disabled=no] do={ :local lu [/ip hotspot user get $u limit-uptime]; :local ut [/ip hotspot user get $u uptime]; :if ($lu > 0s and $ut >= $lu) do={ :local uname [/ip hotspot user get $u name]; :local uprof [/ip hotspot user get $u profile]; :do { /system script add name=("EXP-|-" . [/system clock get date] . "-|-" . [/system clock get time] . "-|-" . $uname . "-|-" . $uprof . "-|-expired") owner="mikhmon" source="expired" comment="mikhmon_expired"; } on-error={}; /ip hotspot active remove [find where user=$uname]; /ip hotspot cookie remove [find where user=$uname]; /ip hotspot user remove $u; }; };';
         $randCleanerTime = "00:" . str_pad(rand(1, 5), 2, "0", STR_PAD_LEFT) . ":" . str_pad(rand(10, 59), 2, "0", STR_PAD_LEFT);
         if (isset($schedByName['AutoCleanExpiredVouchers']) && !empty($schedByName['AutoCleanExpiredVouchers']['.id'])) {
             @$API->comm("/system/scheduler/set", [
