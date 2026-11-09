@@ -242,6 +242,17 @@ include_once(__DIR__ . '/lang/'.$langid.'.php');
       } catch (\Throwable $e) {}
     }
   }
+
+  // Auto-sync router schedulers & clean expired vouchers silently in the background
+  if (!empty($API->connected)) {
+    @include_once(__DIR__ . '/include/auto_sync.php');
+    if (function_exists('mikhmon_auto_sync_router')) {
+      try {
+        $fallbackTz = (!empty($_SESSION['timezone'])) ? $_SESSION['timezone'] : 'Asia/Jakarta';
+        mikhmon_auto_sync_router($API, $session ?? '', false, $fallbackTz);
+      } catch (\Throwable $e) {}
+    }
+  }
   
 
 // get variable
