@@ -52,47 +52,18 @@ if (!isset($_SESSION["mikhmon"])) {
   if(empty($ppool)){$ppool = "none";}
   if(empty($sparent)){$sparent = "none";}
 
-  $getexpmode = explode(",", $ponlogin)[1];
+  $parsedMeta = function_exists('mikhmon_parse_onlogin_meta') ? mikhmon_parse_onlogin_meta($ponlogin) : [
+    'mode' => '0', 'modet' => 'None', 'price' => '', 'validity' => '', 'sprice' => '', 'grace' => '', 'lock' => 'Disable', 'singlesession' => 'Disable'
+  ];
+  $getexpmode = $parsedMeta['mode'];
+  $getexpmodet = $parsedMeta['modet'];
+  $getprice = $parsedMeta['price'];
+  $getsprice = $parsedMeta['sprice'];
+  $getvalid = $parsedMeta['validity'];
+  $getgracep = $parsedMeta['grace'];
+  $getlocku = $parsedMeta['lock'];
+  $getsinglesession = $parsedMeta['singlesession'];
 
-  if ($getexpmode == "rem") {
-    $getexpmodet = "Remove";
-  } elseif ($getexpmode == "ntf") {
-    $getexpmodet = "Notice";
-  } elseif ($getexpmode == "remc") {
-    $getexpmodet = "Remove & Record";
-  } elseif ($getexpmode == "ntfc") {
-    $getexpmodet = "Notice & Record";
-  } else {
-    $getexpmode = "0";
-    $getexpmodet = "None";
-  }
-
-  $getprice = explode(",", $ponlogin)[2];
-  if ($getprice == "0") {
-    $getprice = "";
-  } else {
-    $getprice = $getprice;
-  }
-
-  $getsprice = explode(",", $ponlogin)[4];
-  if ($getsprice == "0") {
-    $getsprice = "";
-  } else {
-    $getsprice = $getsprice;
-  }
-
-  $getvalid = explode(",", $ponlogin)[3];
-
-  $getgracep = explode(",", $ponlogin)[4];
-
-  $getlocku = explode(",", $ponlogin)[6] ?? '';
-  if ($getlocku == "") {
-    $getlocku = "Disable";
-  } else {
-    $getlocku = $getlocku;
-  }
-
-  $getsinglesession = explode(",", $ponlogin)[7] ?? '';
   if ($getsinglesession == "" || ($getsinglesession != "Enable" && $getsinglesession != "Disable" && $getsinglesession != "Username" && $getsinglesession != "MAC")) {
     if (strpos((string)$ponlogin, '/ip hotspot active remove') !== false) {
       if (strpos((string)$ponlogin, 'mac-address') !== false) {

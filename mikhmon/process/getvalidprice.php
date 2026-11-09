@@ -59,11 +59,11 @@ include __DIR__ . '/../lang/' . $langid . '.php';
   if ($uprofname != "") {
     $getprofile = $API->comm("/ip/hotspot/user/profile/print", array("?name" => "$uprofname"));
     $ponlogin = isset($getprofile[0]['on-login']) ? (string)$getprofile[0]['on-login'] : '';
-    $parts = explode(",", $ponlogin);
-    $validityPart = isset($parts[3]) ? trim($parts[3]) : '';
-    $priceRaw = isset($parts[2]) ? trim($parts[2]) : '';
-    $spriceRaw = isset($parts[4]) ? trim($parts[4]) : '';
-    $lockPart = isset($parts[6]) ? trim($parts[6]) : '';
+    $parsedMeta = function_exists('mikhmon_parse_onlogin_meta') ? mikhmon_parse_onlogin_meta($ponlogin) : [];
+    $validityPart = $parsedMeta['validity'] ?? (explode(",", $ponlogin)[3] ?? '');
+    $priceRaw = $parsedMeta['price'] ?? (explode(",", $ponlogin)[2] ?? '');
+    $spriceRaw = $parsedMeta['sprice'] ?? (explode(",", $ponlogin)[4] ?? '');
+    $lockPart = $parsedMeta['lock'] ?? (explode(",", $ponlogin)[6] ?? '');
 
     $getvalid = $validityPart !== '' ? $_validity . " : " . $validityPart : '';
     $getlock = $lockPart !== '' ? "| " . $_lock_user . " : " . $lockPart : '';

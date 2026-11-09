@@ -80,9 +80,10 @@ if (!function_exists('mikhmon_auto_sync_router')) {
                     }
                 }
                 if (!$hasServer) {
-                    $primaryPool = ($fallbackTimezone === 'Asia/Jakarta') ? "id.pool.ntp.org" : "pool.ntp.org";
+                    $primaryPool = ($fallbackTimezone === 'Africa/Abidjan') ? "africa.pool.ntp.org" : (($fallbackTimezone === 'Asia/Jakarta') ? "id.pool.ntp.org" : "pool.ntp.org");
                     @$API->comm("/system/ntp/client/servers/add", ["address" => $primaryPool]);
                     @$API->comm("/system/ntp/client/servers/add", ["address" => "pool.ntp.org"]);
+                    @$API->comm("/system/ntp/client/servers/add", ["address" => "time.google.com"]);
                 }
             } catch (\Throwable $e) {}
 
@@ -103,11 +104,13 @@ if (!function_exists('mikhmon_auto_sync_router')) {
                             $m = $monthArray[$p0];
                             $d = (int)$parts[1];
                             $y = (int)$parts[2];
+                            if ($y < 100) $y += 2000;
                             return (int)sprintf("%04d%02d%02d", $y, $m, $d);
                         } elseif (is_numeric($parts[0])) {
                             $m = (int)$parts[0];
                             $d = (int)$parts[1];
                             $y = (int)$parts[2];
+                            if ($y < 100) $y += 2000;
                             return (int)sprintf("%04d%02d%02d", $y, $m, $d);
                         }
                     }
@@ -117,6 +120,7 @@ if (!function_exists('mikhmon_auto_sync_router')) {
                         $y = (int)$parts[0];
                         $m = (int)$parts[1];
                         $d = (int)$parts[2];
+                        if ($y < 100) $y += 2000;
                         return (int)sprintf("%04d%02d%02d", $y, $m, $d);
                     }
                 }
@@ -175,25 +179,35 @@ if (!function_exists('mikhmon_auto_sync_router')) {
                     $getlock = 'Disable';
                     $getsinglesession = 'Disable';
 
-                    $rawMeta = '';
-                    if (preg_match('/:\s*put\s*\(\s*["\']([^"\']+)["\']/i', $onLogin, $pm)) {
-                        $rawMeta = trim($pm[1]);
-                    } elseif (preg_match('/,\s*(rem|remc|ntf|ntfc)\s*,.*/i', $onLogin, $pm)) {
-                        $rawMeta = trim($pm[0]);
-                    }
-
-                    if (!empty($rawMeta)) {
-                        $parts = array_map('trim', explode(',', $rawMeta));
-                        if (isset($parts[0]) && $parts[0] === '') {
-                            array_shift($parts);
+                    if (function_exists('mikhmon_parse_onlogin_meta')) {
+                        $parsedMeta = mikhmon_parse_onlogin_meta($onLogin);
+                        $expmode = $parsedMeta['mode'];
+                        $price = $parsedMeta['price'];
+                        $validity = $parsedMeta['validity'];
+                        $sprice = $parsedMeta['sprice'];
+                        $getlock = $parsedMeta['lock'];
+                        $getsinglesession = $parsedMeta['singlesession'];
+                    } else {
+                        $rawMeta = '';
+                        if (preg_match('/:\s*put\s*\(\s*["\']([^"\']+)["\']/i', $onLogin, $pm)) {
+                            $rawMeta = trim($pm[1]);
+                        } elseif (preg_match('/,\s*(rem|remc|ntf|ntfc)\s*,.*/i', $onLogin, $pm)) {
+                            $rawMeta = trim($pm[0]);
                         }
-                        if (isset($parts[0]) && in_array(strtolower($parts[0]), ['rem', 'remc', 'ntf', 'ntfc'])) {
-                            $expmode = strtolower($parts[0]);
-                            $price = $parts[1] ?? '';
-                            $validity = $parts[2] ?? '';
-                            $sprice = $parts[3] ?? '';
-                            $getlock = (!empty($parts[5]) && in_array($parts[5], ['Enable', 'Disable'])) ? $parts[5] : 'Disable';
-                            $getsinglesession = (!empty($parts[6]) && in_array($parts[6], ['Enable', 'Disable', 'Username', 'MAC'])) ? $parts[6] : 'Disable';
+
+                        if (!empty($rawMeta)) {
+                            $parts = array_map('trim', explode(',', $rawMeta));
+                            if (isset($parts[0]) && $parts[0] === '') {
+                                array_shift($parts);
+                            }
+                            if (isset($parts[0]) && in_array(strtolower($parts[0]), ['rem', 'remc', 'ntf', 'ntfc'])) {
+                                $expmode = strtolower($parts[0]);
+                                $price = $parts[1] ?? '';
+                                $validity = $parts[2] ?? '';
+                                $sprice = $parts[3] ?? '';
+                                $getlock = (!empty($parts[5]) && in_array($parts[5], ['Enable', 'Disable'])) ? $parts[5] : 'Disable';
+                                $getsinglesession = (!empty($parts[6]) && in_array($parts[6], ['Enable', 'Disable', 'Username', 'MAC'])) ? $parts[6] : 'Disable';
+                            }
                         }
                     }
 
@@ -262,31 +276,67 @@ if (!function_exists('mikhmon_auto_sync_router')) {
             }
 
             // 3. Install Master 24/7 Universal Auto-Cleaner on MikroTik
-            $masterCleaner = ':foreach a in=[/ip hotspot active find] do={ :local aname [/ip hotspot active get $a user]; :if ([:len [/ip hotspot user find where name="$aname"]] = 0) do={ :do { /ip hotspot active remove $a; } on-error={}; :do { /ip hotspot cookie remove [find where user="$aname"]; } on-error={}; }; }; :foreach u in=[/ip hotspot user find] do={ :local lu [/ip hotspot user get $u limit-uptime]; :local ut [/ip hotspot user get $u uptime]; :if (($lu = 1s) or ($lu > 0s and $ut >= $lu)) do={ :local uname [/ip hotspot user get $u name]; :local uprof [/ip hotspot user get $u profile]; :do { /system script add name=("EXP-|-" . [/system clock get date] . "-|-" . [/system clock get time] . "-|-" . $uname . "-|-" . $uprof . "-|-expired") owner="mikhmon" source="expired" comment="mikhmon_expired"; } on-error={}; :do { /ip hotspot active remove [find where user="$uname"]; } on-error={}; :do { /ip hotspot cookie remove [find where user="$uname"]; } on-error={}; :do { /ip hotspot user remove $u; } on-error={}; }; };';
-            $randCleanerTime = "00:" . str_pad(rand(1, 5), 2, "0", STR_PAD_LEFT) . ":" . str_pad(rand(10, 59), 2, "0", STR_PAD_LEFT);
-            if (isset($schedByName['AutoCleanExpiredVouchers']) && !empty($schedByName['AutoCleanExpiredVouchers']['.id'])) {
-                $existingEvt = $schedByName['AutoCleanExpiredVouchers']['on-event'] ?? '';
-                $isDisabled = ($schedByName['AutoCleanExpiredVouchers']['disabled'] ?? '') === 'true' || ($schedByName['AutoCleanExpiredVouchers']['disabled'] ?? '') === 'yes';
-                if ($existingEvt !== $masterCleaner || $isDisabled) {
-                    @$API->comm("/system/scheduler/set", [
-                        ".id"      => $schedByName['AutoCleanExpiredVouchers']['.id'],
-                        "on-event" => $masterCleaner,
-                        "disabled" => "no",
-                        "interval" => "00:02:00",
-                        "policy"   => "read,write,policy,test"
+            $masterCleaner = '{ :local cN do={ :local s "$v"; :while ([:len $s]>1 and [:pick $s 0 1]="0") do={ :set s [:pick $s 1 [:len $s]]; }; :local n [:tonum $s]; :if ([:typeof $n]="num") do={ :return $n; } else={ :return 0; }; }; :local d2i do={ :local ma ("jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"); :local d "$d"; :local y 0; :local m 0; :local day 0; :local l [:len $d]; :if ($l>=10 and [:pick $d 4]="-" and [:pick $d 7]="-") do={ :set y [$cN v=[:pick $d 0 4]]; :set m [$cN v=[:pick $d 5 7]]; :set day [$cN v=[:pick $d 8 10]]; } else={ :local s1 [:find $d "/"]; :if ([:typeof $s1]="num") do={ :local s2 [:find $d "/" ($s1+1)]; :if ([:typeof $s2]="num") do={ :local p1 [:pick $d 0 $s1]; :local p2 [:pick $d ($s1+1) $s2]; :local p3 [:pick $d ($s2+1) $l]; :local mp [:find $ma $p1]; :if ([:typeof $mp]="num") do={ :set m (($mp%12)+1); } else={ :set m [$cN v=$p1]; }; :set day [$cN v=$p2]; :set y [$cN v=$p3]; }; }; }; :if ($y>2000 and $m>0 and $m<=12 and $day>0 and $day<=31) do={ :return (($y*10000)+($m*100)+$day); } else={ :return 0; }; }; :local t2i do={ :local t "$t"; :local c1 [:find $t ":"]; :if ([:typeof $c1]="num") do={ :local c2 [:find $t ":" ($c1+1)]; :local h [$cN v=[:pick $t 0 $c1]]; :local mn 0; :if ([:typeof $c2]="num") do={ :set mn [$cN v=[:pick $t ($c1+1) $c2]]; } else={ :set mn [$cN v=[:pick $t ($c1+1) [:len $t]]]; }; :return (($h*60)+$mn); } else={ :return 0; }; }; :local curDate [$d2i d=[/system clock get date]]; :local curTime [$t2i t=[/system clock get time]]; :if ($curDate > 20000000) do={ :foreach a in=[/ip hotspot active find] do={ :local uname [/ip hotspot active get $a user]; :local uitem [/ip hotspot user find where name=$uname]; :if ([:len $uitem] > 0) do={ :local ut [/ip hotspot active get $a uptime]; :local lu [/ip hotspot user get $uitem limit-uptime]; :if ($lu = 1s or ($lu != "" and $lu > 0s and $ut >= $lu)) do={ :do { /ip hotspot active remove $a; } on-error={}; :do { /ip hotspot cookie remove [find where user=$uname]; } on-error={}; :do { /ip hotspot user remove $uitem; } on-error={}; } else={ :local c [/ip hotspot user get $uitem comment]; :local sp [:find $c " "]; :if ([:typeof $sp] = "num" and [:len $c] >= 14) do={ :local expD [$d2i d=[:pick $c 0 $sp]]; :local expT [$t2i t=[:pick $c ($sp+1) [:len $c]]]; :if ($expD > 0 and ($expD < $curDate or ($expD = $curDate and $expT <= $curTime))) do={ :do { /system script add name=("EXP-|-" . [/system clock get date] . "-|-" . [/system clock get time] . "-|-" . $uname . "-|-expired") owner="mikhmon" source="expired" comment="mikhmon_expired"; } on-error={}; :do { /ip hotspot active remove $a; } on-error={}; :do { /ip hotspot cookie remove [find where user=$uname]; } on-error={}; :do { /ip hotspot user remove $uitem; } on-error={}; }; }; }; } else={ :do { /ip hotspot active remove $a; } on-error={}; :do { /ip hotspot cookie remove [find where user=$uname]; } on-error={}; }; }; :foreach u in=[/ip hotspot user find] do={ :local uname [/ip hotspot user get $u name]; :local c [/ip hotspot user get $u comment]; :local sp [:find $c " "]; :if ([:typeof $sp] = "num" and [:len $c] >= 14) do={ :local expD [$d2i d=[:pick $c 0 $sp]]; :local expT [$t2i t=[:pick $c ($sp+1) [:len $c]]]; :if ($expD > 0 and ($expD < $curDate or ($expD = $curDate and $expT <= $curTime))) do={ :do { /system script add name=("EXP-|-" . [/system clock get date] . "-|-" . [/system clock get time] . "-|-" . $uname . "-|-expired") owner="mikhmon" source="expired" comment="mikhmon_expired"; } on-error={}; :do { /ip hotspot cookie remove [find where user=$uname]; } on-error={}; :do { /ip hotspot user remove $u; } on-error={}; }; }; }; }; }';
+
+            // Ensure script registered in /system/script
+            try {
+                $scripts = @$API->comm("/system/script/print", ["?name" => "AutoCleanExpiredVouchers"]);
+                $scriptId = $scripts[0]['.id'] ?? '';
+                if (empty($scriptId)) {
+                    @$API->comm("/system/script/add", [
+                        "name"    => "AutoCleanExpiredVouchers",
+                        "source"  => $masterCleaner,
+                        "policy"  => "read,write,policy,test",
+                        "comment" => "Universal Hotspot Auto Clean Engine by Nodera"
+                    ]);
+                } else {
+                    $curSource = $scripts[0]['source'] ?? '';
+                    if ($curSource !== $masterCleaner) {
+                        @$API->comm("/system/script/set", [
+                            ".id"     => $scriptId,
+                            "source"  => $masterCleaner,
+                            "policy"  => "read,write,policy,test"
+                        ]);
+                    }
+                }
+            } catch (\Throwable $e) {}
+
+            // Ensure scheduler in /system/scheduler running every 30s
+            try {
+                $schedCleaner = $schedByName['AutoCleanExpiredVouchers'] ?? null;
+                $schedAction = "/system script run AutoCleanExpiredVouchers";
+                if ($schedCleaner && !empty($schedCleaner['.id'])) {
+                    $existingEvt = $schedCleaner['on-event'] ?? '';
+                    $isDisabled = ($schedCleaner['disabled'] ?? '') === 'true' || ($schedCleaner['disabled'] ?? '') === 'yes';
+                    $curInt = $schedCleaner['interval'] ?? '';
+                    if ($existingEvt !== $schedAction && $existingEvt !== 'AutoCleanExpiredVouchers') {
+                        @$API->comm("/system/scheduler/set", [
+                            ".id"      => $schedCleaner['.id'],
+                            "on-event" => $schedAction,
+                            "disabled" => "no",
+                            "interval" => "00:00:30",
+                            "policy"   => "read,write,policy,test"
+                        ]);
+                    } elseif ($isDisabled || $curInt !== '00:00:30') {
+                        @$API->comm("/system/scheduler/set", [
+                            ".id"      => $schedCleaner['.id'],
+                            "disabled" => "no",
+                            "interval" => "00:00:30",
+                            "policy"   => "read,write,policy,test"
+                        ]);
+                    }
+                } else {
+                    @$API->comm("/system/scheduler/add", [
+                        "name"       => "AutoCleanExpiredVouchers",
+                        "start-time" => "startup",
+                        "interval"   => "00:00:30",
+                        "on-event"   => $schedAction,
+                        "disabled"   => "no",
+                        "policy"     => "read,write,policy,test",
+                        "comment"    => "Universal 24/7 Hotspot Auto Cleaner by Nodera"
                     ]);
                 }
-            } else {
-                @$API->comm("/system/scheduler/add", [
-                    "name"       => "AutoCleanExpiredVouchers",
-                    "start-time" => $randCleanerTime,
-                    "interval"   => "00:02:00",
-                    "on-event"   => $masterCleaner,
-                    "disabled"   => "no",
-                    "policy"     => "read,write,policy,test",
-                    "comment"    => "Master Auto Clean Expired Vouchers by Nodera"
-                ]);
-            }
+            } catch (\Throwable $e) {}
 
             // Clean orphan temporary login schedulers
             if (is_array($schedulers)) {
@@ -341,7 +391,7 @@ if (!function_exists('mikhmon_auto_sync_router')) {
 
                     // Check 2: Date in comment has expired
                     if (!$isExpired && !empty($ucomment)) {
-                        if (preg_match('/([A-Za-z]{3}\/\d{1,2}\/\d{4}|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{4})\s+(\d{1,2}:\d{2}(?::\d{2})?)/', $ucomment, $m)) {
+                        if (preg_match('/([A-Za-z]{3}\/\d{1,2}\/\d{2,4}|\d{4}-\d{2}-\d{2}|\d{1,2}\/\d{1,2}\/\d{2,4})\s+(\d{1,2}:\d{2}(?::\d{2})?)/', $ucomment, $m)) {
                             $uExpDate = $parseDateInt($m[1]);
                             $uExpTime = $parseTimeInt($m[2]);
 
@@ -366,6 +416,7 @@ if (!function_exists('mikhmon_auto_sync_router')) {
 
                     if ($isExpired) {
                         $expiredUserIds[] = $uid;
+                        $expiredUserNames[$uname] = true;
                         if (!empty($activeByUser[$uname])) {
                             foreach ($activeByUser[$uname] as $actId) {
                                 $activeIdsToRemove[] = $actId;
@@ -374,7 +425,47 @@ if (!function_exists('mikhmon_auto_sync_router')) {
                     }
                 }
 
-                // Batch delete active connections in chunks of 50
+                // Purge cookies of expired users or orphaned cookies
+                $validUsersMap = [];
+                if (is_array($users)) {
+                    foreach ($users as $u) {
+                        $un = (string)($u['name'] ?? '');
+                        if (!empty($un) && empty($expiredUserNames[$un])) {
+                            $validUsersMap[$un] = true;
+                        }
+                    }
+                }
+
+                $cookiePrint = @$API->comm("/ip/hotspot/cookie/print");
+                $cookieIdsToRemove = [];
+                if (is_array($cookiePrint)) {
+                    foreach ($cookiePrint as $c) {
+                        $cuser = (string)($c['user'] ?? '');
+                        $cid = $c['.id'] ?? '';
+                        if (!empty($cid) && (!empty($expiredUserNames[$cuser]) || !isset($validUsersMap[$cuser]))) {
+                            $cookieIdsToRemove[] = $cid;
+                        }
+                    }
+                }
+
+                if (!empty($cookieIdsToRemove)) {
+                    $uniqueCookies = array_unique($cookieIdsToRemove);
+                    foreach (array_chunk($uniqueCookies, 50) as $chunk) {
+                        @$API->comm("/ip/hotspot/cookie/remove", [".id" => implode(',', $chunk)]);
+                    }
+                }
+
+                // Batch delete active connections in chunks of 50 (including orphaned active sessions)
+                if (is_array($activePrint)) {
+                    foreach ($activePrint as $act) {
+                        $actUser = (string)($act['user'] ?? '');
+                        $actId = $act['.id'] ?? '';
+                        if (!empty($actId) && !isset($validUsersMap[$actUser])) {
+                            $activeIdsToRemove[] = $actId;
+                        }
+                    }
+                }
+
                 if (!empty($activeIdsToRemove)) {
                     $uniqueActive = array_unique($activeIdsToRemove);
                     foreach (array_chunk($uniqueActive, 50) as $chunk) {

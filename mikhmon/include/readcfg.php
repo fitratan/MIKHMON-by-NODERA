@@ -72,4 +72,72 @@ if (!function_exists('mikhmon_encrypt')) {
     }
 }
 
+if (!function_exists('mikhmon_parse_onlogin_meta')) {
+    function mikhmon_parse_onlogin_meta($onlogin) {
+        $meta = [
+            'mode' => '0',
+            'modet' => 'None',
+            'price' => '',
+            'validity' => '',
+            'sprice' => '',
+            'grace' => '',
+            'lock' => 'Disable',
+            'singlesession' => 'Disable',
+        ];
+        $onlogin = (string)$onlogin;
+        $raw = '';
+        if (preg_match('/:\s*put\s*\(\s*["\']([^"\']+)["\']/i', $onlogin, $pm)) {
+            $raw = trim($pm[1]);
+        } elseif (preg_match('/,\s*(rem|remc|ntf|ntfc)\s*,.*/i', $onlogin, $pm)) {
+            $raw = trim($pm[0]);
+        }
+
+        if (!empty($raw)) {
+            $parts = array_map('trim', explode(',', $raw));
+            if (isset($parts[0]) && $parts[0] === '') {
+                array_shift($parts);
+            }
+            if (isset($parts[0]) && in_array(strtolower($parts[0]), ['rem', 'remc', 'ntf', 'ntfc'])) {
+                $meta['mode'] = strtolower($parts[0]);
+                $meta['price'] = ($parts[1] ?? '0') === '0' ? '' : ($parts[1] ?? '');
+                $meta['validity'] = $parts[2] ?? '';
+                $meta['sprice'] = ($parts[3] ?? '0') === '0' ? '' : ($parts[3] ?? '');
+                $meta['grace'] = $parts[4] ?? '';
+                $meta['lock'] = (!empty($parts[5]) && in_array($parts[5], ['Enable', 'Disable'])) ? $parts[5] : 'Disable';
+                $meta['singlesession'] = (!empty($parts[6]) && in_array($parts[6], ['Enable', 'Disable', 'Username', 'MAC'])) ? $parts[6] : 'Disable';
+            } elseif (isset($parts[4]) && $parts[4] === 'noexp') {
+                $meta['mode'] = '0';
+                $meta['price'] = ($parts[1] ?? '0') === '0' ? '' : ($parts[1] ?? '');
+                $meta['lock'] = (!empty($parts[5]) && in_array($parts[5], ['Enable', 'Disable'])) ? $parts[5] : 'Disable';
+                $meta['singlesession'] = (!empty($parts[6]) && in_array($parts[6], ['Enable', 'Disable', 'Username', 'MAC'])) ? $parts[6] : 'Disable';
+            }
+        } else {
+            $legacy = explode(',', $onlogin);
+            if (isset($legacy[1]) && in_array($legacy[1], ['rem', 'ntf', 'remc', 'ntfc'])) {
+                $meta['mode'] = $legacy[1];
+                $meta['price'] = ($legacy[2] ?? '0') === '0' ? '' : ($legacy[2] ?? '');
+                $meta['validity'] = $legacy[3] ?? '';
+                $meta['sprice'] = ($legacy[4] ?? '0') === '0' ? '' : ($legacy[4] ?? '');
+                $meta['lock'] = (!empty($legacy[6]) && in_array($legacy[6], ['Enable', 'Disable'])) ? $legacy[6] : 'Disable';
+                $meta['singlesession'] = $legacy[7] ?? 'Disable';
+            }
+        }
+
+        if ($meta['mode'] === 'rem') {
+            $meta['modet'] = 'Remove';
+        } elseif ($meta['mode'] === 'ntf') {
+            $meta['modet'] = 'Notice';
+        } elseif ($meta['mode'] === 'remc') {
+            $meta['modet'] = 'Remove & Record';
+        } elseif ($meta['mode'] === 'ntfc') {
+            $meta['modet'] = 'Notice & Record';
+        } else {
+            $meta['mode'] = '0';
+            $meta['modet'] = 'None';
+        }
+
+        return $meta;
+    }
+}
+
 

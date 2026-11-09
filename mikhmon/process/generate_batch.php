@@ -110,10 +110,11 @@ if ($action === 'init') {
 
     $getprofile = $API->comm("/ip/hotspot/user/profile/print", array("?name" => "$profile"));
     $ponlogin = $getprofile[0]['on-login'] ?? '';
-    $getvalid = explode(",", $ponlogin)[3] ?? '';
-    $getprice = explode(",", $ponlogin)[2] ?? '';
-    $getsprice = explode(",", $ponlogin)[4] ?? '';
-    $getlock = explode(",", $ponlogin)[6] ?? '';
+    $parsedMeta = function_exists('mikhmon_parse_onlogin_meta') ? mikhmon_parse_onlogin_meta($ponlogin) : [];
+    $getvalid = $parsedMeta['validity'] ?? (explode(",", $ponlogin)[3] ?? '');
+    $getprice = $parsedMeta['price'] ?? (explode(",", $ponlogin)[2] ?? '');
+    $getsprice = $parsedMeta['sprice'] ?? (explode(",", $ponlogin)[4] ?? '');
+    $getlock = $parsedMeta['lock'] ?? (explode(",", $ponlogin)[6] ?? '');
     $_SESSION['ubp'] = $profile;
 
     $commt = $user . "-" . rand(100, 999) . "-" . date("m.d.y") . "-" . $adcomment;
