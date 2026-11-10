@@ -228,7 +228,7 @@ fun NoderaLauncherScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(top = 16.dp)
             ) {
-                // Official NODERA Logo
+                // Official Logo
                 Box(
                     modifier = Modifier
                         .size(110.dp)
@@ -239,7 +239,7 @@ fun NoderaLauncherScreen(
                 ) {
                     Image(
                         painter = painterResource(id = R.drawable.nodera_logo),
-                        contentDescription = "NODERA Logo",
+                        contentDescription = "Drapeau Côte d'Ivoire",
                         modifier = Modifier
                             .size(96.dp)
                             .clip(CircleShape)
@@ -259,10 +259,10 @@ fun NoderaLauncherScreen(
                 Spacer(modifier = Modifier.height(6.dp))
 
                 Text(
-                    text = "MikroTik Hotspot Manager • Standalone Engine",
-                    color = MikhmonTextMuted,
+                    text = "Côte d'Ivoire Edition • Standalone Engine",
+                    color = Color(0xFF94A3B8),
                     fontSize = 13.sp,
-                    textAlign = TextAlign.Center
+                    fontWeight = FontWeight.Medium
                 )
 
                 Spacer(modifier = Modifier.height(14.dp))
