@@ -58,7 +58,7 @@ foreach ($logoCandidates as $cand) {
       <div class="text-center">
         <span style="font-size: 18px; margin: 2px 0 2px; font-weight: bold; display: block; letter-spacing: 0.5px;">MIKHMON</span>
         <div class="text-muted" style="font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px;">
-          <?= htmlspecialchars($brand) ?>
+          <?= $isDesktop ? "Côte d'Ivoire Edition" : htmlspecialchars($brand) ?>
         </div>
 
         <?php if ($isDesktop): ?>
@@ -66,7 +66,7 @@ foreach ($logoCandidates as $cand) {
             <div style="margin: 0 auto 14px; max-width: 320px; text-align: left; background: rgba(39, 174, 96, 0.08); border: 1px solid rgba(39, 174, 96, 0.4); border-radius: 8px; padding: 8px 12px;">
               <div style="display: flex; align-items: center; justify-content: space-between;">
                 <span style="font-size: 11.5px; font-weight: bold; color: #27ae60;">
-                  <i class="fa fa-shield"></i> Mikhmon Desktop by NODERA
+                  <i class="fa fa-shield"></i> Mikhmon Standalone • Côte d'Ivoire
                 </span>
                 <span style="font-size: 10px; padding: 2px 7px; background: #27ae60; color: #fff; border-radius: 4px; font-weight: bold;">
                   <?= $remainingDays > 365 ? 'LIFETIME' : $remainingDays . ' ' . ($_days_left ?? 'Hari Tersisa') ?>

@@ -92,7 +92,7 @@ $aboutLang = [
         "community" => "Community & Support",
     ],
     "fr" => [
-        "hero_title" => "Moteur MIKHMON par NODERA",
+        "hero_title" => "Moteur MIKHMON • Côte d'Ivoire",
         "hero_sub" => "Édition Spéciale Intégrée Plateforme de Facturation FAI & Gestion Hotspot MikroTik <b>" . $panelDomain . "</b>.",
         "f1_title" => "Dual Core ROS 6 & ROS 7",
         "f1_desc" => "Prise en charge simultanée complète de l'API MikroTik RouterOS v6 et v7 avec chiffrement TLS.",
@@ -261,7 +261,7 @@ $aTxt = $aboutLang[$langid] ?? $aboutLang['id'];
   <div class="col-12">
     <div class="card">
       <div class="card-header">
-        <h3 class="card-title"><i class="fa fa-info-circle"></i> <?= !empty($_about) ? $_about : 'About'; ?> MIKHMON by NODERA</h3>
+        <h3 class="card-title"><i class="fa fa-info-circle"></i> <?= !empty($_about) ? $_about : 'About'; ?> MIKHMON</h3>
       </div>
       <div class="card-body">
         
